@@ -122,40 +122,47 @@ export function TimelineItem({ record }: TimelineItemProps) {
           {/* 内容区域 */}
           <div className="flex-1 min-w-0">
             {isEditing ? (
-              <div className="space-y-3">
-                <Textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="min-h-[100px] text-[15px] rounded-lg border-2 focus:border-primary/50 resize-none"
-                  autoFocus
-                  placeholder="输入内容..."
-                />
-                <div className="flex items-center gap-2">
-                  <Button 
-                    size="sm" 
-                    onClick={handleSave} 
-                    disabled={!editContent.trim() || editContent === record.content}
-                    className="h-8 px-4 text-xs rounded-lg bg-foreground hover:bg-foreground/90 text-background"
-                  >
-                    <Check className="h-3.5 w-3.5 mr-1.5" />
-                    保存
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    onClick={handleCancel} 
-                    className="h-8 px-4 text-xs rounded-lg"
-                  >
-                    <X className="h-3.5 w-3.5 mr-1.5" />
-                    取消
-                  </Button>
-                  {/* 快捷键提示 - 仅桌面端显示 */}
+              <div className="relative rounded-[28px] border border-border/40 bg-muted/50 backdrop-blur-sm shadow-lg transition-all duration-300 ease-out hover:border-primary/30 hover:shadow-xl focus-within:border-primary/50 focus-within:shadow-[0_0_0_3px_rgba(var(--primary-rgb),0.1)] focus-within:bg-background/50 p-4">
+                {/* Textarea 编辑区 */}
+                <div className="mb-3">
+                  <Textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className="w-full min-h-[120px] text-[15px] leading-relaxed bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 resize-none placeholder:text-muted-foreground/60"
+                    autoFocus
+                    placeholder="输入你想记录的内容..."
+                  />
+                </div>
+                
+                {/* 底部按钮栏 - Lovable 风格 */}
+                <div className="flex items-center gap-2 pt-2 border-t border-border/30">
+                  {/* 快捷键提示 - 左侧，仅桌面端显示 */}
                   {isDesktop && (
-                    <span className="text-xs text-muted-foreground/50 ml-auto">
-                      Esc 取消 · ⌘Enter 保存
+                    <span className="text-xs text-muted-foreground/40 font-mono">
+                      ⌘Enter 保存
                     </span>
                   )}
+                  
+                  {/* 右侧按钮组 */}
+                  <div className="flex items-center gap-2 ml-auto">
+                    <Button 
+                      size="sm"
+                      onClick={handleCancel}
+                      className="h-8 px-3 text-xs rounded-lg bg-transparent hover:bg-muted text-muted-foreground hover:text-foreground border-0 transition-all duration-200"
+                    >
+                      取消
+                    </Button>
+                    <Button 
+                      size="sm"
+                      onClick={handleSave}
+                      disabled={!editContent.trim() || editContent === record.content}
+                      className="h-8 w-8 p-0 rounded-full bg-foreground hover:bg-foreground/90 text-background disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 flex items-center justify-center"
+                      title="保存 (⌘Enter)"
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ) : (
