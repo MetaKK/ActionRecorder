@@ -3,12 +3,16 @@
 import { RecordInput } from "@/components/record-input";
 import { Timeline } from "@/components/timeline";
 import { ExportDialog } from "@/components/export-dialog";
+import { TechBackground } from "@/components/tech-background";
 import { siteConfig } from "@/config/site";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-4xl px-6 py-8 sm:px-8 sm:py-12">
+    <div className="relative min-h-screen">
+      {/* 科技感背景 */}
+      <TechBackground />
+      
+      <div className="relative mx-auto max-w-4xl px-6 py-8 sm:px-8 sm:py-12">
         {/* Header - Notion 风格极简 */}
         <header className="mb-12">
           <h1 className="text-[2.5rem] font-semibold tracking-tight text-foreground leading-tight">

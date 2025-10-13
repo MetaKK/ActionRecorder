@@ -5,7 +5,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Mic, MicOff, Send } from 'lucide-react';
+import { Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { PermissionGuide } from '@/components/permission-guide';

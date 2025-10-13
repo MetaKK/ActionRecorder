@@ -8,7 +8,6 @@ import { useState, useCallback } from 'react';
 import { Pencil, Trash2, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
 import { Record } from '@/lib/types';
 import { formatTime } from '@/lib/utils/date';
 import { useRecords } from '@/lib/hooks/use-records';
