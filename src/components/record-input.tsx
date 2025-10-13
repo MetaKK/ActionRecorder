@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { PermissionGuide } from '@/components/permission-guide';
 import { useSpeech } from '@/lib/hooks/use-speech';
 import { useRecords } from '@/lib/hooks/use-records';
+import { useIsDesktop } from '@/lib/hooks/use-device-type';
 import { toast } from 'sonner';
 
 export function RecordInput() {
@@ -44,6 +45,8 @@ export function RecordInput() {
     continuous: true,  // 改为 true，持续识别直到用户手动停止
     interimResults: true,
   });
+  
+  const isDesktop = useIsDesktop();
   
   // 同步最终识别结果到输入框
   useEffect(() => {
@@ -245,10 +248,12 @@ export function RecordInput() {
         </div>
       )}
       
-      {/* 快捷键提示 */}
-      <p className="mt-3 text-xs text-muted-foreground/40 text-center">
-        Cmd/Ctrl + Enter 快速保存
-      </p>
+      {/* 快捷键提示 - 仅桌面端显示 */}
+      {isDesktop && (
+        <p className="mt-3 text-xs text-muted-foreground/40 text-center">
+          Cmd/Ctrl + Enter 快速保存
+        </p>
+      )}
     </div>
   );
 }
