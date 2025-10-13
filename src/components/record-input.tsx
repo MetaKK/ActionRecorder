@@ -161,7 +161,7 @@ export function RecordInput() {
             e.preventDefault();
             handleSave();
           }}
-          className="group relative flex flex-col gap-2 p-4 w-full rounded-[28px] border border-border/40 bg-muted/50 backdrop-blur-sm text-base shadow-lg transition-all duration-300 ease-out hover:border-primary/30 hover:shadow-xl focus-within:border-primary/50 focus-within:shadow-[0_0_0_3px_rgba(var(--primary-rgb),0.1)] focus-within:bg-background/50"
+          className="group relative flex flex-col gap-2 p-4 w-full rounded-[28px] border-border/40 bg-muted/50 backdrop-blur-sm text-base shadow-lg transition-all duration-300 ease-out hover:border-primary/30 hover:shadow-xl focus-within:border-primary/50 focus-within:shadow-[0_0_0_.5px_rgba(var(--primary-rgb),0.1)] focus-within:bg-background/50"
         >
           {/* Textarea */}
           <div className="relative flex flex-1 items-center">

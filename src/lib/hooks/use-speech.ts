@@ -138,22 +138,35 @@ export function useSpeech(options: UseSpeechOptions = {}): UseSpeechReturn {
       
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error:', event.error);
-        setIsListening(false);
         
         switch (event.error) {
           case 'no-speech':
-            setError('未检测到语音，请重试');
+            // 在持续模式下，不把 no-speech 当作错误
+            // 用户可能只是暂停说话，不需要停止录音
+            if (!continuous) {
+              setIsListening(false);
+              setError('未检测到语音，请重试');
+            }
+            // 持续模式下忽略此错误，继续录音
             break;
           case 'audio-capture':
+            setIsListening(false);
             setError('无法访问麦克风，请检查麦克风是否正常工作');
             break;
           case 'not-allowed':
-            setError('麦克风权限被拒绝。请在浏览器设置中允许此网站访问麦克风，然后刷新页面重试。');
+            setIsListening(false);
+            setError('麦克风权限被拒绝，请点击地址栏🔒图标允许麦克风访问');
             break;
           case 'network':
+            setIsListening(false);
             setError('网络错误，语音识别需要网络连接');
             break;
+          case 'aborted':
+            // 用户主动停止，不显示错误
+            setIsListening(false);
+            break;
           default:
+            setIsListening(false);
             setError(`语音识别出错 (${event.error})，请重试`);
         }
       };
@@ -174,20 +187,41 @@ export function useSpeech(options: UseSpeechOptions = {}): UseSpeechReturn {
       return;
     }
     
+    // 如果已经在监听，先停止
+    if (isListening) {
+      try {
+        recognitionRef.current.stop();
+      } catch (err) {
+        console.error('Failed to stop recognition:', err);
+      }
+    }
+    
     try {
       setError(null);
+      setTranscript('');
+      setInterimTranscript('');
       recognitionRef.current.start();
     } catch (err) {
       console.error('Failed to start recognition:', err);
       const errorMessage = err instanceof Error ? err.message : String(err);
       
       if (errorMessage.includes('already started')) {
-        setError('语音识别已在运行中');
+        // 如果已经启动，尝试重启
+        try {
+          recognitionRef.current.stop();
+          setTimeout(() => {
+            if (recognitionRef.current) {
+              recognitionRef.current.start();
+            }
+          }, 100);
+        } catch {
+          setError('启动语音识别失败，请重试');
+        }
       } else {
         setError('启动语音识别失败，请刷新页面重试');
       }
     }
-  }, []);
+  }, [isListening]);
   
   const stopListening = useCallback(() => {
     if (recognitionRef.current && isListening) {
