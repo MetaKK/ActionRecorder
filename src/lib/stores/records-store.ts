@@ -13,11 +13,22 @@ export const useRecordsStore = create<RecordsStore>((set, get) => ({
   /**
    * 添加新记录
    */
-  addRecord: (content: string, location?: Location) => {
+  addRecord: (content: string, location?: Location, audio?: {
+    audioData: string;
+    audioDuration: number;
+    audioFormat: string;
+  }) => {
     const newRecord: Record = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       content: content.trim(),
       location,  // 添加位置信息
+      
+      // 添加音频信息
+      audioData: audio?.audioData,
+      audioDuration: audio?.audioDuration,
+      audioFormat: audio?.audioFormat,
+      hasAudio: !!audio,
+      
       timestamp: Date.now(),
       createdAt: new Date(),
       updatedAt: new Date(),

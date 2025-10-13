@@ -5,22 +5,34 @@
 'use client';
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { Mic, MicOff } from 'lucide-react';
+import { Trash2, Circle, StopCircle, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { PermissionGuide } from '@/components/permission-guide';
+import { AudioPlayer } from '@/components/audio-player';
 import { useSpeech } from '@/lib/hooks/use-speech';
 import { useRecords } from '@/lib/hooks/use-records';
 import { useLocation } from '@/lib/hooks/use-location';
+import { useAudioRecorder } from '@/lib/hooks/use-audio-recorder';
 import { useIsDesktop } from '@/lib/hooks/use-device-type';
 import { toast } from 'sonner';
 import { MapPin } from 'lucide-react';
+import { blobToBase64, formatDuration } from '@/lib/utils/audio';
 
 export function RecordInput() {
   const [inputText, setInputText] = useState('');
   const [placeholder, setPlaceholder] = useState('');
   const { addRecord } = useRecords();
   const { location, isLoading: isLocationLoading, isEnabled: isLocationEnabled, toggleLocation } = useLocation();
+  const { 
+    isRecording: isRecordingAudio, 
+    audioBlob, 
+    duration: audioDuration, 
+    startRecording: startAudioRecording, 
+    stopRecording: stopAudioRecording,
+    clearAudio,
+    audioURL 
+  } = useAudioRecorder();
   
   // 动态 placeholder 文本列表（使用 useMemo 避免每次渲染重新创建）
   const placeholders = useMemo(() => [
@@ -125,15 +137,28 @@ export function RecordInput() {
   
   // 保存记录
   const handleSave = useCallback(async () => {
-    // 如果正在录音，先停止录音
+    // 如果正在语音转文字，先停止
     if (isListening) {
       stopListening();
     }
     
+    // 如果正在录制音频，先停止并获取 Blob
+    let finalAudioBlob = audioBlob;
+    let finalAudioDuration = audioDuration;
+    
+    if (isRecordingAudio) {
+      const recordedBlob = await stopAudioRecording();
+      if (recordedBlob) {
+        finalAudioBlob = recordedBlob;
+        finalAudioDuration = audioDuration; // 使用当前时长
+      }
+    }
+    
     const content = inputText.trim();
     
-    if (!content) {
-      toast.error('请输入内容');
+    // 至少需要内容或音频之一
+    if (!content && !finalAudioBlob) {
+      toast.error('请输入内容或录制语音');
       return;
     }
     
@@ -141,21 +166,56 @@ export function RecordInput() {
       // 只有启用位置时才保存位置信息
       const currentLocation = isLocationEnabled && location ? location : undefined;
       
-      addRecord(content, currentLocation);
+      // 处理音频数据
+      let audioData: { audioData: string; audioDuration: number; audioFormat: string } | undefined;
+      if (finalAudioBlob) {
+        const base64 = await blobToBase64(finalAudioBlob);
+        audioData = {
+          audioData: base64,
+          audioDuration: finalAudioDuration,
+          audioFormat: finalAudioBlob.type,
+        };
+        
+        console.log('💾 保存音频:', {
+          size: `${(finalAudioBlob.size / 1024).toFixed(2)} KB`,
+          duration: `${finalAudioDuration.toFixed(1)}秒`,
+          format: finalAudioBlob.type,
+        });
+      }
+      
+      console.log('💾 保存内容:', {
+        文本: content || '(无文本)',
+        文本长度: content.length,
+        有音频: !!audioData,
+        有位置: !!currentLocation,
+      });
+      
+      addRecord(content, currentLocation, audioData);
       setInputText('');
+      clearAudio();
+      
+      // 成功提示
+      let message = '记录已保存';
+      if (content && audioData) {
+        message += ' 📝🎤'; // 文本+音频
+      } else if (audioData) {
+        message += ' 🎤'; // 仅音频
+      } else if (content) {
+        message += ' 📝'; // 仅文本
+      }
       
       if (currentLocation) {
         const locationText = currentLocation.city 
           ? `${currentLocation.city}${currentLocation.district ? `, ${currentLocation.district}` : ''}`
           : '位置已记录';
-        toast.success(`记录已保存 📍 ${locationText}`);
-      } else {
-        toast.success('记录已保存');
+        message += ` 📍 ${locationText}`;
       }
-    } catch {
+      toast.success(message);
+    } catch (error) {
+      console.error('保存失败:', error);
       toast.error('保存失败，请重试');
     }
-  }, [inputText, addRecord, isListening, stopListening, isLocationEnabled, location]);
+  }, [inputText, audioBlob, audioDuration, addRecord, isListening, stopListening, isRecordingAudio, stopAudioRecording, clearAudio, isLocationEnabled, location]);
   
   // 处理键盘快捷键
   const handleKeyDown = useCallback(
@@ -180,6 +240,38 @@ export function RecordInput() {
           }}
           className="group relative flex flex-col gap-2 p-4 w-full rounded-[28px] border-border/40 bg-muted/50 backdrop-blur-sm text-base shadow-lg transition-all duration-300 ease-out hover:border-primary/30 hover:shadow-xl focus-within:border-primary/50 focus-within:shadow-[0_0_0_.5px_rgba(var(--primary-rgb),0.1)] focus-within:bg-background/50"
         >
+          {/* 音频预览 */}
+          {audioBlob && audioURL && (
+            <div 
+              className="space-y-2 p-3 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Circle className="h-3.5 w-3.5 text-green-600 dark:text-green-400 fill-current" />
+                  <span className="text-xs text-green-700 dark:text-green-300 font-semibold">录音完成</span>
+                  <span className="text-xs text-muted-foreground">({formatDuration(audioDuration)})</span>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs hover:bg-destructive/10 hover:text-destructive transition-all"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    clearAudio();
+                  }}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+              <div onClick={(e) => e.stopPropagation()}>
+                <AudioPlayer audioData={audioURL} duration={audioDuration} compact />
+              </div>
+            </div>
+          )}
+          
           {/* Textarea */}
           <div className="relative flex flex-1 items-center">
             <Textarea
@@ -197,22 +289,45 @@ export function RecordInput() {
           <div className="flex gap-1.5 flex-wrap items-center pt-1">
             {/* 左侧按钮组 */}
             <div className="flex gap-1.5 items-center">
-              {/* 语音按钮 - 圆形 */}
+              {/* 音频录制按钮 */}
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className={`h-10 w-10 rounded-full p-0 border border-border/40 bg-background/50 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/50 hover:shadow-lg text-muted-foreground hover:text-primary md:h-9 md:w-9 transition-all duration-300 ${
-                  isListening ? 'border-destructive/60 bg-destructive/10 text-destructive shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse' : ''
+                className={`h-10 w-10 rounded-full p-0 border transition-all duration-300 md:h-9 md:w-9 ${
+                  isRecordingAudio 
+                    ? 'border-red-500/80 bg-red-500/20 text-red-600 dark:text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse' 
+                    : audioBlob
+                    ? 'border-green-500/80 bg-green-500/20 text-green-600 dark:text-green-400 shadow-lg shadow-green-500/20'
+                    : 'border-border/40 bg-background/50 backdrop-blur-sm text-muted-foreground hover:bg-red/10 hover:border-red-500/50 hover:shadow-lg hover:text-red-600'
                 }`}
-                onClick={toggleRecording}
-                disabled={!isSupported}
-                title={!isSupported ? '浏览器不支持' : isListening ? '停止录音' : '开始录音'}
+                onClick={async () => {
+                  if (isRecordingAudio) {
+                    await stopAudioRecording();
+                    toast.success(`录音完成 (${formatDuration(audioDuration)})`);
+                  } else {
+                    try {
+                      await startAudioRecording();
+                      toast.success('🎙️ 开始录音');
+                    } catch {
+                      toast.error('录音失败，请检查麦克风权限');
+                    }
+                  }
+                }}
+                title={
+                  isRecordingAudio 
+                    ? `⏹️ 停止录音 (${formatDuration(audioDuration)}) - 保留原声` 
+                    : audioBlob 
+                    ? `✅ 已录制 (${formatDuration(audioDuration)}) - 点击重新录制` 
+                    : '🎙️ 录制音频 (保存完整原声)'
+                }
               >
-                {isListening ? (
-                  <MicOff className="h-5 w-5" />
+                {isRecordingAudio ? (
+                  <StopCircle className="h-5 w-5 fill-current" />
+                ) : audioBlob ? (
+                  <Circle className="h-5 w-5 fill-current" />
                 ) : (
-                  <Mic className="h-5 w-5" />
+                  <Circle className="h-5 w-5" />
                 )}
               </Button>
               
@@ -244,10 +359,20 @@ export function RecordInput() {
             {isListening && (
               <div className="flex items-center gap-1.5 px-2">
                 <span className="flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-destructive opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
+                  <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-purple-500 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
                 </span>
-                <span className="text-xs text-destructive font-medium">录音中</span>
+                <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">转文字中...</span>
+              </div>
+            )}
+            
+            {isRecordingAudio && (
+              <div className="flex items-center gap-1.5 px-2">
+                <span className="flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-red-500 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+                <span className="text-xs text-red-600 dark:text-red-400 font-medium">录音中 {formatDuration(audioDuration)}</span>
               </div>
             )}
             
@@ -258,11 +383,32 @@ export function RecordInput() {
                 {inputText.length} 字
               </span>
               
+              {/* 语音转文本按钮 - 话筒 */}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={`h-10 w-10 rounded-full p-0 border transition-all duration-300 md:h-9 md:w-9 ${
+                  isListening 
+                    ? 'border-purple-500/80 bg-purple-500/20 text-purple-600 dark:text-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.4)] animate-pulse' 
+                    : 'border-border/40 bg-background/50 backdrop-blur-sm text-muted-foreground hover:bg-purple/10 hover:border-purple-500/50 hover:shadow-lg hover:text-purple-600'
+                }`}
+                onClick={toggleRecording}
+                disabled={!isSupported}
+                title={!isSupported ? '浏览器不支持' : isListening ? '停止语音转文本 (转为可编辑文字)' : '语音转文本 (实时识别)'}
+              >
+                {isListening ? (
+                  <MicOff className="h-5 w-5" />
+                ) : (
+                  <Mic className="h-5 w-5" />
+                )}
+              </Button>
+              
               {/* 发送按钮 - 圆形黑色 */}
               <Button
                 type="submit"
                 size="icon"
-                disabled={!inputText.trim()}
+                disabled={!inputText.trim() && !audioBlob}
                 className="gap-2 whitespace-nowrap text-sm font-medium ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 disabled:pointer-events-none relative z-10 flex rounded-full p-0 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-30 items-center justify-center h-10 w-10 md:h-9 md:w-9 bg-foreground hover:bg-foreground/90 hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] text-background"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="100%" height="100%" className="shrink-0 h-5 w-5">

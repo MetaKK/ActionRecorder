@@ -33,6 +33,13 @@ export interface Record {
   id: string;
   content: string;
   location?: Location;  // 地理位置（可选）
+  
+  // 音频字段
+  audioData?: string;        // Base64 音频数据
+  audioDuration?: number;    // 音频时长（秒）
+  audioFormat?: string;      // 音频格式（audio/webm）
+  hasAudio?: boolean;        // 是否包含音频
+  
   timestamp: number;
   createdAt: Date;
   updatedAt: Date;
@@ -40,7 +47,11 @@ export interface Record {
 
 export interface RecordsStore {
   records: Record[];
-  addRecord: (content: string, location?: Location) => void;
+  addRecord: (content: string, location?: Location, audio?: {
+    audioData: string;
+    audioDuration: number;
+    audioFormat: string;
+  }) => void;
   updateRecord: (id: string, content: string) => void;
   deleteRecord: (id: string) => void;
   getRecordsByDateRange: (days?: number) => Record[];

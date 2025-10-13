@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { DeleteConfirmDialog } from '@/components/delete-confirm-dialog';
+import { AudioPlayer } from '@/components/audio-player';
 import { Record } from '@/lib/types';
 import { formatShortDateTime } from '@/lib/utils/date';
 import { formatLocation } from '@/lib/hooks/use-location';
@@ -167,10 +168,25 @@ export function TimelineItem({ record }: TimelineItemProps) {
                 </div>
               </div>
             ) : (
-              <div className="space-y-2">
-                <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words text-foreground/85">
-                  {record.content}
-                </p>
+              <div className="space-y-3">
+                {/* 文本内容 */}
+                {record.content && (
+                  <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words text-foreground/85">
+                    {record.content}
+                  </p>
+                )}
+                
+                {/* 音频播放器 */}
+                {record.hasAudio && record.audioData && (
+                  <div className="pt-1">
+                    <AudioPlayer 
+                      audioData={record.audioData} 
+                      duration={record.audioDuration || 0}
+                      compact
+                    />
+                  </div>
+                )}
+                
                 {/* 时间和位置信息同一行 */}
                 <div className="flex items-center gap-3 text-xs text-muted-foreground/60">
                   {/* 时间 */}
