@@ -10,7 +10,7 @@ interface PermissionGuideProps {
   isListening: boolean;
 }
 
-export function PermissionGuide({ error, isSupported, isListening }: PermissionGuideProps) {
+export function PermissionGuide({ error, isSupported }: PermissionGuideProps) {
   // 不支持语音识别 - Notion 风格极简提示
   if (!isSupported) {
     return (

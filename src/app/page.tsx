@@ -23,10 +23,10 @@ export default function Home() {
           </p>
         </header>
 
-        {/* 录入区域 - 无卡片，直接展示 */}
+        {/* 录入区域 - Lovable 风格 */}
         <div className="mb-16">
           <RecordInput />
-          <div className="mt-6">
+          <div className="mt-6 max-w-3xl mx-auto">
             <ExportDialog />
           </div>
         </div>

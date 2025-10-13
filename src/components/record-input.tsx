@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,7 +15,20 @@ import { toast } from 'sonner';
 
 export function RecordInput() {
   const [inputText, setInputText] = useState('');
+  const [placeholder, setPlaceholder] = useState('');
   const { addRecord } = useRecords();
+  
+  // 动态 placeholder 文本列表（使用 useMemo 避免每次渲染重新创建）
+  const placeholders = useMemo(() => [
+    '记录今天的美好瞬间...',
+    '分享你的想法和感受...',
+    '写下今天发生的事情...',
+    '记录你的灵感和创意...',
+    '描述一个难忘的时刻...',
+    '分享今天学到的东西...',
+    '记录你的心情变化...',
+    '写下你的目标和计划...',
+  ], []);
   
   const {
     isListening,
@@ -48,6 +61,52 @@ export function RecordInput() {
   
   // 显示临时识别结果（实时反馈）
   const displayText = inputText + interimTranscript;
+  
+  // 动态 placeholder 效果 - 打字机动画
+  useEffect(() => {
+    let currentIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let timeoutId: NodeJS.Timeout;
+    
+    const typeWriter = () => {
+      const fullText = placeholders[currentIndex];
+      
+      if (!isDeleting) {
+        // 打字效果
+        if (charIndex <= fullText.length) {
+          setPlaceholder(fullText.substring(0, charIndex));
+          charIndex++;
+          timeoutId = setTimeout(typeWriter, 100); // 打字速度
+        } else {
+          // 完成打字，等待后开始删除
+          timeoutId = setTimeout(() => {
+            isDeleting = true;
+            typeWriter();
+          }, 2000); // 停留 2 秒
+        }
+      } else {
+        // 删除效果
+        if (charIndex > 0) {
+          charIndex--;
+          setPlaceholder(fullText.substring(0, charIndex));
+          timeoutId = setTimeout(typeWriter, 50); // 删除速度更快
+        } else {
+          // 完成删除，切换到下一个
+          isDeleting = false;
+          currentIndex = (currentIndex + 1) % placeholders.length;
+          timeoutId = setTimeout(typeWriter, 500); // 切换前稍微停顿
+        }
+      }
+    };
+    
+    // 开始打字机效果
+    typeWriter();
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [placeholders]);
   
   // 切换录音状态
   const toggleRecording = useCallback(() => {
@@ -94,80 +153,88 @@ export function RecordInput() {
   );
   
   return (
-    <div className="w-full">
-      {/* Notion 风格的极简输入框 */}
+    <div className="w-full max-w-3xl mx-auto">
+      {/* Lovable.dev 风格输入框 */}
       <div className="relative w-full">
         <form 
           onSubmit={(e) => {
             e.preventDefault();
             handleSave();
           }}
-          className="group flex flex-col gap-3 p-5 w-full rounded-2xl border border-border/40 bg-background hover:bg-accent/5 text-base shadow-sm transition-all duration-200 ease-out focus-within:shadow-md focus-within:border-border"
+          className="group relative flex flex-col gap-2 p-4 w-full rounded-[28px] border border-border/40 bg-muted/50 backdrop-blur-sm text-base shadow-lg transition-all duration-300 ease-out hover:border-primary/30 hover:shadow-xl focus-within:border-primary/50 focus-within:shadow-[0_0_0_3px_rgba(var(--primary-rgb),0.1)] focus-within:bg-background/50"
         >
           {/* Textarea */}
           <div className="relative flex flex-1 items-center">
             <Textarea
-              placeholder="记录您的生活..."
+              placeholder={placeholder}
               value={displayText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full resize-none text-[15px] leading-normal bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 border-0 px-1 py-0 min-h-[100px] placeholder:text-muted-foreground/40"
+              className="flex w-full rounded-md px-3 py-3 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none text-[16px] leading-relaxed placeholder-shown:text-ellipsis placeholder-shown:whitespace-nowrap md:text-base focus-visible:ring-0 focus-visible:ring-offset-0 max-h-[max(40svh,8rem)] bg-transparent focus:bg-transparent flex-1 border-0"
               disabled={isListening}
+              style={{ minHeight: '140px', height: '140px' }}
             />
           </div>
           
-          {/* 底部工具栏 */}
-          <div className="flex gap-2 items-center pt-2 border-t border-border/30">
+          {/* 底部按钮栏 */}
+          <div className="flex gap-1.5 flex-wrap items-center pt-1">
             {/* 左侧按钮组 */}
-            <div className="flex gap-1 items-center">
-              {/* 语音按钮 */}
+            <div className="flex gap-1.5 items-center">
+              {/* 语音按钮 - 圆形 */}
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
-                className={`h-8 px-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all ${
-                  isListening ? 'bg-destructive/10 text-destructive' : ''
+                size="icon"
+                className={`h-10 w-10 rounded-full p-0 border border-border/40 bg-background/50 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/50 hover:shadow-lg text-muted-foreground hover:text-primary md:h-9 md:w-9 transition-all duration-300 ${
+                  isListening ? 'border-destructive/60 bg-destructive/10 text-destructive shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse' : ''
                 }`}
                 onClick={toggleRecording}
                 disabled={!isSupported}
-                title={!isSupported ? '浏览器不支持' : isListening ? '停止' : '语音'}
+                title={!isSupported ? '浏览器不支持' : isListening ? '停止录音' : '开始录音'}
               >
                 {isListening ? (
-                  <MicOff className="h-4 w-4" />
+                  <MicOff className="h-5 w-5" />
                 ) : (
-                  <Mic className="h-4 w-4" />
+                  <Mic className="h-5 w-5" />
                 )}
-                <span className="ml-1.5 text-xs">
-                  {isListening ? '停止' : '语音'}
-                </span>
               </Button>
             </div>
             
-            {/* 中间状态指示 */}
-            <div className="flex-1 flex items-center gap-3 text-xs text-muted-foreground/60">
-              {isListening && (
-                <span className="flex items-center gap-1.5 text-destructive/80">
-                  <span className="w-1 h-1 rounded-full bg-destructive animate-pulse"></span>
-                  录音中
+            {/* 状态指示 */}
+            {isListening && (
+              <div className="flex items-center gap-1.5 px-2">
+                <span className="flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-destructive opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
                 </span>
-              )}
-              <span>{inputText.length} 字</span>
-            </div>
+                <span className="text-xs text-destructive font-medium">录音中</span>
+              </div>
+            )}
             
-            {/* 右侧发送按钮 */}
-            <Button
-              type="submit"
-              size="sm"
-              disabled={!inputText.trim()}
-              className="h-8 px-4 rounded-lg bg-foreground hover:bg-foreground/90 text-background text-xs font-medium transition-all disabled:opacity-30"
-            >
-              保存
-            </Button>
+            {/* 右侧按钮组 */}
+            <div className="ml-auto flex items-center gap-1.5 md:gap-2">
+              {/* 字数统计 */}
+              <span className="text-xs text-muted-foreground/70 px-2 hidden md:inline">
+                {inputText.length} 字
+              </span>
+              
+              {/* 发送按钮 - 圆形黑色 */}
+              <Button
+                type="submit"
+                size="icon"
+                disabled={!inputText.trim()}
+                className="gap-2 whitespace-nowrap text-sm font-medium ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 disabled:pointer-events-none relative z-10 flex rounded-full p-0 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-30 items-center justify-center h-10 w-10 md:h-9 md:w-9 bg-foreground hover:bg-foreground/90 hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] text-background"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="100%" height="100%" className="shrink-0 h-5 w-5">
+                  <path fill="currentColor" d="M11 19V7.415l-3.293 3.293a1 1 0 1 1-1.414-1.414l5-5 .074-.067a1 1 0 0 1 1.34.067l5 5a1 1 0 1 1-1.414 1.414L13 7.415V19a1 1 0 1 1-2 0"></path>
+                </svg>
+              </Button>
+            </div>
           </div>
         </form>
       </div>
       
-      {/* 精简的提示 - 只在有错误或特殊状态时显示 */}
+      {/* 精简的提示 - 只在有错误时显示 */}
       {(error || (!isSupported && !isListening)) && (
         <div className="mt-3">
           <PermissionGuide 
@@ -178,8 +245,8 @@ export function RecordInput() {
         </div>
       )}
       
-      {/* 快捷键提示 - 更精简 */}
-      <p className="mt-3 text-xs text-muted-foreground/50 text-center">
+      {/* 快捷键提示 */}
+      <p className="mt-3 text-xs text-muted-foreground/40 text-center">
         Cmd/Ctrl + Enter 快速保存
       </p>
     </div>
