@@ -60,6 +60,11 @@ export function RecordInput() {
   
   // 保存记录
   const handleSave = useCallback(() => {
+    // 如果正在录音，先停止录音
+    if (isListening) {
+      stopListening();
+    }
+    
     const content = inputText.trim();
     
     if (!content) {
@@ -74,7 +79,7 @@ export function RecordInput() {
     } catch {
       toast.error('保存失败，请重试');
     }
-  }, [inputText, addRecord]);
+  }, [inputText, addRecord, isListening, stopListening]);
   
   // 处理键盘快捷键
   const handleKeyDown = useCallback(
@@ -89,64 +94,93 @@ export function RecordInput() {
   );
   
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        {/* 语音录入按钮 */}
-        <Button
-          size="lg"
-          variant={isListening ? 'destructive' : 'default'}
-          className={`flex-1 h-14 text-lg font-medium transition-all ${
-            isListening ? 'animate-pulse' : ''
-          }`}
-          onClick={toggleRecording}
-          disabled={!isSupported}
-          title={!isSupported ? '您的浏览器不支持语音识别' : ''}
+    <div className="w-full">
+      {/* Lovable 风格的输入框容器 */}
+      <div className="relative w-full">
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSave();
+          }}
+          className="group flex flex-col gap-3 p-4 w-full rounded-[28px] border border-border/50 bg-card text-base shadow-xl transition-all duration-150 ease-in-out focus-within:border-primary/30 hover:border-border focus-within:hover:border-primary/30"
         >
-          {isListening ? (
-            <>
-              <MicOff className="mr-2 h-5 w-5" />
-              停止录音
-            </>
-          ) : (
-            <>
-              <Mic className="mr-2 h-5 w-5" />
-              开始录音
-            </>
-          )}
-        </Button>
-        
-        {/* 保存按钮 */}
-        <Button
-          size="lg"
-          variant="secondary"
-          className="h-14 px-6"
-          onClick={handleSave}
-          disabled={!inputText.trim()}
-        >
-          <Send className="h-5 w-5" />
-        </Button>
+          {/* Textarea */}
+          <div className="relative flex flex-1 items-center">
+            <Textarea
+              placeholder="记录您的生活..."
+              value={displayText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="w-full resize-none text-base leading-snug bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 border-0 px-2 py-2 min-h-[80px] placeholder:text-muted-foreground/60"
+              disabled={isListening}
+              style={{ height: '80px' }}
+            />
+          </div>
+          
+          {/* 按钮区域 */}
+          <div className="flex gap-2 flex-wrap items-center">
+            {/* 语音按钮 */}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className={`h-10 w-10 rounded-full border border-border/50 bg-muted hover:bg-accent hover:border-accent text-muted-foreground hover:text-foreground transition-all duration-150 ${
+                isListening ? 'animate-pulse border-destructive bg-destructive/10' : ''
+              }`}
+              onClick={toggleRecording}
+              disabled={!isSupported}
+              title={!isSupported ? '您的浏览器不支持语音识别' : isListening ? '停止录音' : '开始录音'}
+            >
+              {isListening ? (
+                <MicOff className="h-5 w-5 text-destructive" />
+              ) : (
+                <Mic className="h-5 w-5" />
+              )}
+            </Button>
+            
+            {/* 字数统计 */}
+            <span className="text-xs text-muted-foreground px-2">
+              {inputText.length} 字
+            </span>
+            
+            {/* 录音状态指示 */}
+            {isListening && (
+              <span className="text-xs text-destructive font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse"></span>
+                录音中
+              </span>
+            )}
+            
+            {/* 右侧按钮组 */}
+            <div className="ml-auto flex items-center gap-2">
+              {/* 发送按钮 - Lovable 风格 */}
+              <Button
+                type="submit"
+                size="icon"
+                disabled={!inputText.trim()}
+                className="h-10 w-10 rounded-full bg-foreground hover:bg-foreground/90 text-background transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                <Send className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        </form>
       </div>
       
+      
       {/* 权限引导提示 */}
-      <PermissionGuide 
-        error={error} 
-        isSupported={isSupported} 
-        isListening={isListening}
-      />
+      <div className="mt-4">
+        <PermissionGuide 
+          error={error} 
+          isSupported={isSupported} 
+          isListening={isListening}
+        />
+      </div>
       
-      {/* 文本输入框 */}
-      <Textarea
-        placeholder="在这里输入或使用语音记录..."
-        value={displayText}
-        onChange={(e) => setInputText(e.target.value)}
-        onKeyDown={handleKeyDown}
-        className="min-h-[120px] text-base resize-none"
-        disabled={isListening}
-      />
-      
-      <p className="text-xs text-muted-foreground text-center">
-        提示：使用 Cmd/Ctrl + Enter 快速保存
-      </p>
+      {/* 提示信息 */}
+      <div className="mt-3 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+        <span>💡 Cmd/Ctrl + Enter 快速保存</span>
+      </div>
     </div>
   );
 }

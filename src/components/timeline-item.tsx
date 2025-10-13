@@ -60,12 +60,12 @@ export function TimelineItem({ record }: TimelineItemProps) {
   }, [record.id, deleteRecord]);
   
   return (
-    <Card className="group hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex gap-3">
+    <Card className="group hover:shadow-lg hover:scale-[1.01] transition-all duration-200 border-border/50">
+      <CardContent className="p-5">
+        <div className="flex gap-4">
           {/* 时间标签 */}
           <div className="flex-shrink-0">
-            <span className="inline-block px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded">
+            <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-primary/10 text-primary rounded-lg">
               {formatTime(record.createdAt)}
             </span>
           </div>
@@ -73,26 +73,26 @@ export function TimelineItem({ record }: TimelineItemProps) {
           {/* 内容区域 */}
           <div className="flex-1 min-w-0">
             {isEditing ? (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Textarea
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
-                  className="min-h-[80px] text-sm"
+                  className="min-h-[100px] text-sm rounded-lg border-2 focus:border-primary"
                   autoFocus
                 />
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={handleSave}>
+                  <Button size="sm" onClick={handleSave} className="rounded-lg">
                     <Check className="h-4 w-4 mr-1" />
                     保存
                   </Button>
-                  <Button size="sm" variant="outline" onClick={handleCancel}>
+                  <Button size="sm" variant="outline" onClick={handleCancel} className="rounded-lg">
                     <X className="h-4 w-4 mr-1" />
                     取消
                   </Button>
                 </div>
               </div>
             ) : (
-              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words text-foreground/90">
                 {record.content}
               </p>
             )}
@@ -100,21 +100,23 @@ export function TimelineItem({ record }: TimelineItemProps) {
           
           {/* 操作按钮 */}
           {!isEditing && (
-            <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-200">
               <div className="flex gap-1">
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8"
+                  className="h-9 w-9 rounded-lg hover:bg-primary/10"
                   onClick={() => setIsEditing(true)}
+                  title="编辑"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  className="h-9 w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10"
                   onClick={handleDelete}
+                  title="删除"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -125,8 +127,11 @@ export function TimelineItem({ record }: TimelineItemProps) {
         
         {/* 更新时间提示 */}
         {record.updatedAt.getTime() !== record.createdAt.getTime() && !isEditing && (
-          <div className="mt-2 text-xs text-muted-foreground">
-            已编辑
+          <div className="mt-3 pt-3 border-t border-border/50">
+            <span className="inline-flex items-center text-xs text-muted-foreground">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/50 mr-1.5"></span>
+              已编辑
+            </span>
           </div>
         )}
       </CardContent>

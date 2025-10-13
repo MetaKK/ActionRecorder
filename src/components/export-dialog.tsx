@@ -74,7 +74,11 @@ export function ExportDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="lg" className="w-full">
+        <Button 
+          variant="outline" 
+          size="lg" 
+          className="w-full h-12 rounded-xl border-2 hover:border-primary hover:bg-primary/5 transition-all font-medium shadow-sm"
+        >
           <Download className="mr-2 h-5 w-5" />
           导出记录
         </Button>

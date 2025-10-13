@@ -29,57 +29,48 @@ export function Timeline() {
   
   if (records.length === 0) {
     return (
-      <div className="text-center py-16">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-          <svg
-            className="w-8 h-8 text-muted-foreground"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-            />
-          </svg>
+      <div className="text-center py-20">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-muted to-muted/50 mb-6 shadow-sm">
+          <span className="text-4xl">📝</span>
         </div>
-        <h3 className="text-lg font-medium text-foreground mb-2">
+        <h3 className="text-xl font-semibold text-foreground mb-3">
           还没有记录
         </h3>
-        <p className="text-sm text-muted-foreground">
-          点击上方按钮开始记录您的生活
+        <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+          开始使用语音或文本记录您的日常生活<br />
+          让 AI 更好地了解您 ✨
         </p>
       </div>
     );
   }
   
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {sortedGroups.map(([dateKey, items]) => {
         const dateLabel = getDateLabel(items[0].createdAt);
         
         return (
-          <div key={dateKey} className="space-y-3">
+          <div key={dateKey} className="space-y-4">
             {/* 日期标题 */}
-            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 py-2">
-              <div className="flex items-baseline gap-2">
-                <h2 className="text-sm font-semibold text-foreground">
-                  {dateLabel}
-                </h2>
-                <span className="text-xs text-muted-foreground">
-                  {formatDate(items[0].createdAt)}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {items.length} 条记录
+            <div className="sticky top-0 z-10 bg-gradient-to-b from-background via-background to-transparent pb-4 pt-2">
+              <div className="flex items-center gap-3">
+                <div className="flex items-baseline gap-2 flex-1">
+                  <h2 className="text-base font-bold text-foreground">
+                    {dateLabel}
+                  </h2>
+                  <span className="text-xs text-muted-foreground font-medium">
+                    {formatDate(items[0].createdAt)}
+                  </span>
+                </div>
+                <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                  {items.length} 条
                 </span>
               </div>
-              <div className="h-px bg-border mt-2" />
+              <div className="h-0.5 bg-gradient-to-r from-primary/50 via-primary/20 to-transparent mt-3 rounded-full" />
             </div>
             
             {/* 记录列表 */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               {items
                 .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
                 .map((record) => (
