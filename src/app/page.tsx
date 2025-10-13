@@ -31,11 +31,14 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 简洁分割 */}
-        <div className="mb-12">
-          <h2 className="text-sm font-medium text-muted-foreground/60 tracking-wide uppercase mb-6">
+        {/* Timeline 标题 - Lovable 风格 */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold text-foreground/90 tracking-tight">
             Timeline
           </h2>
+          <p className="mt-1.5 text-sm text-muted-foreground/60">
+            记录你的每一个瞬间
+          </p>
         </div>
 
         {/* 时间线 */}

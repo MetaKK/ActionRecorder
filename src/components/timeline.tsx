@@ -43,22 +43,28 @@ export function Timeline() {
         const dateLabel = getDateLabel(items[0].createdAt);
         
         return (
-          <div key={dateKey} className="space-y-3">
-            {/* 日期标题 - Notion 风格极简 */}
-            <div className="flex items-baseline gap-3 pb-2">
-              <h2 className="text-sm font-medium text-foreground/70">
+          <div key={dateKey} className="space-y-4">
+            {/* 日期标题 - Lovable 风格优雅 */}
+            <div className="flex items-center gap-4 pb-3 border-b border-border/40">
+              <h3 className="text-base font-semibold text-foreground/85">
                 {dateLabel}
-              </h2>
-              <span className="text-xs text-muted-foreground/50">
-                {formatDate(items[0].createdAt)}
-              </span>
-              <span className="text-xs text-muted-foreground/40">
-                {items.length} 条
-              </span>
+              </h3>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="text-muted-foreground/60">
+                  {formatDate(items[0].createdAt)}
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 text-primary/80 font-medium">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                    <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
+                  </svg>
+                  {items.length}
+                </span>
+              </div>
             </div>
             
             {/* 记录列表 */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               {items
                 .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
                 .map((record) => (
