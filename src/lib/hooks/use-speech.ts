@@ -187,15 +187,6 @@ export function useSpeech(options: UseSpeechOptions = {}): UseSpeechReturn {
       return;
     }
     
-    // 如果已经在监听，先停止
-    if (isListening) {
-      try {
-        recognitionRef.current.stop();
-      } catch (err) {
-        console.error('Failed to stop recognition:', err);
-      }
-    }
-    
     try {
       setError(null);
       setTranscript('');
@@ -206,12 +197,17 @@ export function useSpeech(options: UseSpeechOptions = {}): UseSpeechReturn {
       const errorMessage = err instanceof Error ? err.message : String(err);
       
       if (errorMessage.includes('already started')) {
-        // 如果已经启动，尝试重启
+        // 如果已经启动，先停止再重新启动
         try {
           recognitionRef.current.stop();
           setTimeout(() => {
             if (recognitionRef.current) {
-              recognitionRef.current.start();
+              try {
+                recognitionRef.current.start();
+              } catch (restartErr) {
+                console.error('Failed to restart recognition:', restartErr);
+                setError('启动语音识别失败，请重试');
+              }
             }
           }, 100);
         } catch {
@@ -221,7 +217,7 @@ export function useSpeech(options: UseSpeechOptions = {}): UseSpeechReturn {
         setError('启动语音识别失败，请刷新页面重试');
       }
     }
-  }, [isListening]);
+  }, []);
   
   const stopListening = useCallback(() => {
     if (recognitionRef.current && isListening) {
