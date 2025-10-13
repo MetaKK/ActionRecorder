@@ -13,6 +13,13 @@ export function formatTime(date: Date): string {
 }
 
 /**
+ * 格式化为简短日期时间 MM-dd HH:mm
+ */
+export function formatShortDateTime(date: Date): string {
+  return format(date, 'MM-dd HH:mm', { locale: zhCN });
+}
+
+/**
  * 格式化日期为 yyyy-MM-dd
  */
 export function formatDate(date: Date): string {

@@ -11,13 +11,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { PermissionGuide } from '@/components/permission-guide';
 import { useSpeech } from '@/lib/hooks/use-speech';
 import { useRecords } from '@/lib/hooks/use-records';
+import { useLocation } from '@/lib/hooks/use-location';
 import { useIsDesktop } from '@/lib/hooks/use-device-type';
 import { toast } from 'sonner';
+import { MapPin } from 'lucide-react';
 
 export function RecordInput() {
   const [inputText, setInputText] = useState('');
   const [placeholder, setPlaceholder] = useState('');
   const { addRecord } = useRecords();
+  const { location, isLoading: isLocationLoading, isEnabled: isLocationEnabled, toggleLocation } = useLocation();
   
   // 动态 placeholder 文本列表（使用 useMemo 避免每次渲染重新创建）
   const placeholders = useMemo(() => [
@@ -121,7 +124,7 @@ export function RecordInput() {
   }, [isListening, startListening, stopListening]);
   
   // 保存记录
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     // 如果正在录音，先停止录音
     if (isListening) {
       stopListening();
@@ -135,13 +138,24 @@ export function RecordInput() {
     }
     
     try {
-      addRecord(content);
+      // 只有启用位置时才保存位置信息
+      const currentLocation = isLocationEnabled && location ? location : undefined;
+      
+      addRecord(content, currentLocation);
       setInputText('');
-      toast.success('记录已保存');
+      
+      if (currentLocation) {
+        const locationText = currentLocation.city 
+          ? `${currentLocation.city}${currentLocation.district ? `, ${currentLocation.district}` : ''}`
+          : '位置已记录';
+        toast.success(`记录已保存 📍 ${locationText}`);
+      } else {
+        toast.success('记录已保存');
+      }
     } catch {
       toast.error('保存失败，请重试');
     }
-  }, [inputText, addRecord, isListening, stopListening]);
+  }, [inputText, addRecord, isListening, stopListening, isLocationEnabled, location]);
   
   // 处理键盘快捷键
   const handleKeyDown = useCallback(
@@ -200,6 +214,29 @@ export function RecordInput() {
                 ) : (
                   <Mic className="h-5 w-5" />
                 )}
+              </Button>
+              
+              {/* 位置按钮 - 开关 */}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={`h-10 w-10 rounded-full p-0 border transition-all duration-300 md:h-9 md:w-9 ${
+                  isLocationEnabled 
+                    ? 'border-blue-500/80 bg-blue-500/20 text-blue-600 dark:text-blue-400 shadow-lg shadow-blue-500/20' 
+                    : 'border-border/40 bg-background/50 backdrop-blur-sm text-muted-foreground hover:bg-primary/10 hover:border-primary/50 hover:shadow-lg hover:text-primary'
+                } ${
+                  isLocationLoading ? 'animate-pulse' : ''
+                }`}
+                onClick={toggleLocation}
+                disabled={isLocationLoading}
+                title={
+                  isLocationEnabled 
+                    ? (location ? `📍 已启用 - ${location.city || '位置已记录'}${location.district ? `, ${location.district}` : ''}\n精度: ${location.accuracy.toFixed(0)}米${location.altitude ? `\n海拔: ${location.altitude.toFixed(0)}米` : ''}` : '获取位置中...') 
+                    : '点击启用位置记录'
+                }
+              >
+                <MapPin className={`h-5 w-5 ${isLocationEnabled ? 'fill-current' : ''}`} />
               </Button>
             </div>
             

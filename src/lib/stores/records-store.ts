@@ -3,7 +3,7 @@
  */
 
 import { create } from 'zustand';
-import { Record, RecordsStore } from '@/lib/types';
+import { Record, RecordsStore, Location } from '@/lib/types';
 import { saveRecords, loadRecords } from '@/lib/utils/storage';
 import { differenceInDays } from 'date-fns';
 
@@ -13,10 +13,11 @@ export const useRecordsStore = create<RecordsStore>((set, get) => ({
   /**
    * 添加新记录
    */
-  addRecord: (content: string) => {
+  addRecord: (content: string, location?: Location) => {
     const newRecord: Record = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       content: content.trim(),
+      location,  // 添加位置信息
       timestamp: Date.now(),
       createdAt: new Date(),
       updatedAt: new Date(),

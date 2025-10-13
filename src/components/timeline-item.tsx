@@ -5,15 +5,23 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Pencil, Trash2, Check, X } from 'lucide-react';
+import { Pencil, Trash2, Check, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { DeleteConfirmDialog } from '@/components/delete-confirm-dialog';
 import { Record } from '@/lib/types';
-import { formatTime } from '@/lib/utils/date';
+import { formatShortDateTime } from '@/lib/utils/date';
+import { formatLocation } from '@/lib/hooks/use-location';
 import { useRecords } from '@/lib/hooks/use-records';
 import { useIsDesktop } from '@/lib/hooks/use-device-type';
 import { toast } from 'sonner';
+import { MapPin } from 'lucide-react';
 
 interface TimelineItemProps {
   record: Record;
@@ -112,13 +120,6 @@ export function TimelineItem({ record }: TimelineItemProps) {
       }`}>
         <div className="p-4">
         <div className="flex items-center gap-3">
-          {/* 时间标签 */}
-          <div className="flex-shrink-0">
-            <span className="text-xs text-muted-foreground/60 font-mono">
-              {formatTime(record.createdAt)}
-            </span>
-          </div>
-            
           {/* 内容区域 */}
           <div className="flex-1 min-w-0">
             {isEditing ? (
@@ -166,37 +167,73 @@ export function TimelineItem({ record }: TimelineItemProps) {
                 </div>
               </div>
             ) : (
-              <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words text-foreground/85">
-                {record.content}
-              </p>
+              <div className="space-y-2">
+                <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words text-foreground/85">
+                  {record.content}
+                </p>
+                {/* 时间和位置信息同一行 */}
+                <div className="flex items-center gap-3 text-xs text-muted-foreground/60">
+                  {/* 时间 */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono">
+                      {formatShortDateTime(record.createdAt)}
+                    </span>
+                  </div>
+                  
+                  {/* 位置信息 */}
+                  {record.location && (
+                    <>
+                      <span className="text-muted-foreground/30">·</span>
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5 text-blue-500/60 flex-shrink-0" />
+                        <span 
+                          className="font-medium text-blue-600/80 dark:text-blue-400/80"
+                          title={formatLocation(record.location)}
+                        >
+                          {record.location.city || '位置已记录'}
+                          {record.location.district && `, ${record.location.district}`}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
             )}
           </div>
             
-          {/* 操作按钮 - 响应式交互 */}
+          {/* 操作菜单 - 三个点 */}
           {!isEditing && !isDeleting && (
             <div className={`flex-shrink-0 transition-all duration-200 ${
               isMobileDevice ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
             }`}>
-              <div className="flex gap-1">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-9 w-9 rounded-lg hover:bg-primary/10 hover:text-primary active:scale-95 transition-all duration-200"
-                  onClick={() => setIsEditing(true)}
-                  title="编辑"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-9 w-9 rounded-lg text-destructive/70 hover:text-destructive hover:bg-destructive/10 active:scale-95 transition-all duration-200"
-                  onClick={() => setIsDeleting(true)}
-                  title="删除"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 rounded-lg hover:bg-muted active:scale-95 transition-all duration-200"
+                    title="更多操作"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-32">
+                  <DropdownMenuItem
+                    onClick={() => setIsEditing(true)}
+                    className="cursor-pointer"
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    编辑
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setIsDeleting(true)}
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    删除
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
         </div>
