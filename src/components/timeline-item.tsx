@@ -60,82 +60,77 @@ export function TimelineItem({ record }: TimelineItemProps) {
   }, [record.id, deleteRecord]);
   
   return (
-    <Card className="group hover:shadow-lg hover:scale-[1.01] transition-all duration-200 border-border/50">
-      <CardContent className="p-5">
-        <div className="flex gap-4">
-          {/* 时间标签 */}
-          <div className="flex-shrink-0">
-            <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-primary/10 text-primary rounded-lg">
-              {formatTime(record.createdAt)}
-            </span>
-          </div>
+    <div className="group rounded-lg border border-border/30 bg-background hover:bg-accent/30 hover:border-border/50 transition-all duration-200 p-4">
+      <div className="flex gap-3">
+        {/* 时间标签 - Notion 风格精简 */}
+        <div className="flex-shrink-0">
+          <span className="text-xs text-muted-foreground/60 font-mono">
+            {formatTime(record.createdAt)}
+          </span>
+        </div>
           
-          {/* 内容区域 */}
-          <div className="flex-1 min-w-0">
-            {isEditing ? (
-              <div className="space-y-3">
-                <Textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  className="min-h-[100px] text-sm rounded-lg border-2 focus:border-primary"
-                  autoFocus
-                />
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleSave} className="rounded-lg">
-                    <Check className="h-4 w-4 mr-1" />
-                    保存
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={handleCancel} className="rounded-lg">
-                    <X className="h-4 w-4 mr-1" />
-                    取消
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words text-foreground/90">
-                {record.content}
-              </p>
-            )}
-          </div>
-          
-          {/* 操作按钮 */}
-          {!isEditing && (
-            <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-200">
-              <div className="flex gap-1">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-9 w-9 rounded-lg hover:bg-primary/10"
-                  onClick={() => setIsEditing(true)}
-                  title="编辑"
-                >
-                  <Pencil className="h-4 w-4" />
+        {/* 内容区域 */}
+        <div className="flex-1 min-w-0">
+          {isEditing ? (
+            <div className="space-y-2">
+              <Textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="min-h-[80px] text-[15px] rounded-lg border focus:border-foreground/20"
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleSave} className="h-7 text-xs rounded-md">
+                  <Check className="h-3 w-3 mr-1" />
+                  保存
                 </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-9 w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={handleDelete}
-                  title="删除"
-                >
-                  <Trash2 className="h-4 w-4" />
+                <Button size="sm" variant="ghost" onClick={handleCancel} className="h-7 text-xs rounded-md">
+                  <X className="h-3 w-3 mr-1" />
+                  取消
                 </Button>
               </div>
             </div>
+          ) : (
+            <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words text-foreground/80">
+              {record.content}
+            </p>
           )}
         </div>
-        
-        {/* 更新时间提示 */}
-        {record.updatedAt.getTime() !== record.createdAt.getTime() && !isEditing && (
-          <div className="mt-3 pt-3 border-t border-border/50">
-            <span className="inline-flex items-center text-xs text-muted-foreground">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary/50 mr-1.5"></span>
-              已编辑
-            </span>
+          
+        {/* 操作按钮 - Notion 风格更隐蔽 */}
+        {!isEditing && (
+          <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            <div className="flex gap-0.5">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 rounded-md hover:bg-accent"
+                onClick={() => setIsEditing(true)}
+                title="编辑"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 rounded-md text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                onClick={handleDelete}
+                title="删除"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+      
+      {/* 更新时间提示 */}
+      {record.updatedAt.getTime() !== record.createdAt.getTime() && !isEditing && (
+        <div className="mt-2 ml-14">
+          <span className="text-[11px] text-muted-foreground/50">已编辑</span>
+        </div>
+      )}
+    </div>
   );
 }
 

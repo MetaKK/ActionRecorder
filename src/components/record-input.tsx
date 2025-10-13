@@ -95,14 +95,14 @@ export function RecordInput() {
   
   return (
     <div className="w-full">
-      {/* Lovable 风格的输入框容器 */}
+      {/* Notion 风格的极简输入框 */}
       <div className="relative w-full">
         <form 
           onSubmit={(e) => {
             e.preventDefault();
             handleSave();
           }}
-          className="group flex flex-col gap-3 p-4 w-full rounded-[28px] border border-border/50 bg-card text-base shadow-xl transition-all duration-150 ease-in-out focus-within:border-primary/30 hover:border-border focus-within:hover:border-primary/30"
+          className="group flex flex-col gap-3 p-5 w-full rounded-2xl border border-border/40 bg-background hover:bg-accent/5 text-base shadow-sm transition-all duration-200 ease-out focus-within:shadow-md focus-within:border-border"
         >
           {/* Textarea */}
           <div className="relative flex flex-1 items-center">
@@ -111,76 +111,77 @@ export function RecordInput() {
               value={displayText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full resize-none text-base leading-snug bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 border-0 px-2 py-2 min-h-[80px] placeholder:text-muted-foreground/60"
+              className="w-full resize-none text-[15px] leading-normal bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 border-0 px-1 py-0 min-h-[100px] placeholder:text-muted-foreground/40"
               disabled={isListening}
-              style={{ height: '80px' }}
             />
           </div>
           
-          {/* 按钮区域 */}
-          <div className="flex gap-2 flex-wrap items-center">
-            {/* 语音按钮 */}
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className={`h-10 w-10 rounded-full border border-border/50 bg-muted hover:bg-accent hover:border-accent text-muted-foreground hover:text-foreground transition-all duration-150 ${
-                isListening ? 'animate-pulse border-destructive bg-destructive/10' : ''
-              }`}
-              onClick={toggleRecording}
-              disabled={!isSupported}
-              title={!isSupported ? '您的浏览器不支持语音识别' : isListening ? '停止录音' : '开始录音'}
-            >
-              {isListening ? (
-                <MicOff className="h-5 w-5 text-destructive" />
-              ) : (
-                <Mic className="h-5 w-5" />
-              )}
-            </Button>
-            
-            {/* 字数统计 */}
-            <span className="text-xs text-muted-foreground px-2">
-              {inputText.length} 字
-            </span>
-            
-            {/* 录音状态指示 */}
-            {isListening && (
-              <span className="text-xs text-destructive font-medium flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse"></span>
-                录音中
-              </span>
-            )}
-            
-            {/* 右侧按钮组 */}
-            <div className="ml-auto flex items-center gap-2">
-              {/* 发送按钮 - Lovable 风格 */}
+          {/* 底部工具栏 */}
+          <div className="flex gap-2 items-center pt-2 border-t border-border/30">
+            {/* 左侧按钮组 */}
+            <div className="flex gap-1 items-center">
+              {/* 语音按钮 */}
               <Button
-                type="submit"
-                size="icon"
-                disabled={!inputText.trim()}
-                className="h-10 w-10 rounded-full bg-foreground hover:bg-foreground/90 text-background transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={`h-8 px-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all ${
+                  isListening ? 'bg-destructive/10 text-destructive' : ''
+                }`}
+                onClick={toggleRecording}
+                disabled={!isSupported}
+                title={!isSupported ? '浏览器不支持' : isListening ? '停止' : '语音'}
               >
-                <Send className="h-5 w-5" />
+                {isListening ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+                <span className="ml-1.5 text-xs">
+                  {isListening ? '停止' : '语音'}
+                </span>
               </Button>
             </div>
+            
+            {/* 中间状态指示 */}
+            <div className="flex-1 flex items-center gap-3 text-xs text-muted-foreground/60">
+              {isListening && (
+                <span className="flex items-center gap-1.5 text-destructive/80">
+                  <span className="w-1 h-1 rounded-full bg-destructive animate-pulse"></span>
+                  录音中
+                </span>
+              )}
+              <span>{inputText.length} 字</span>
+            </div>
+            
+            {/* 右侧发送按钮 */}
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!inputText.trim()}
+              className="h-8 px-4 rounded-lg bg-foreground hover:bg-foreground/90 text-background text-xs font-medium transition-all disabled:opacity-30"
+            >
+              保存
+            </Button>
           </div>
         </form>
       </div>
       
+      {/* 精简的提示 - 只在有错误或特殊状态时显示 */}
+      {(error || (!isSupported && !isListening)) && (
+        <div className="mt-3">
+          <PermissionGuide 
+            error={error} 
+            isSupported={isSupported} 
+            isListening={isListening}
+          />
+        </div>
+      )}
       
-      {/* 权限引导提示 */}
-      <div className="mt-4">
-        <PermissionGuide 
-          error={error} 
-          isSupported={isSupported} 
-          isListening={isListening}
-        />
-      </div>
-      
-      {/* 提示信息 */}
-      <div className="mt-3 flex items-center justify-center gap-4 text-xs text-muted-foreground">
-        <span>💡 Cmd/Ctrl + Enter 快速保存</span>
-      </div>
+      {/* 快捷键提示 - 更精简 */}
+      <p className="mt-3 text-xs text-muted-foreground/50 text-center">
+        Cmd/Ctrl + Enter 快速保存
+      </p>
     </div>
   );
 }

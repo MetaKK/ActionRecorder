@@ -76,10 +76,10 @@ export function ExportDialog() {
       <DialogTrigger asChild>
         <Button 
           variant="outline" 
-          size="lg" 
-          className="w-full h-12 rounded-xl border-2 hover:border-primary hover:bg-primary/5 transition-all font-medium shadow-sm"
+          size="default"
+          className="w-full h-10 rounded-lg border border-border/40 hover:bg-accent/50 transition-all text-sm font-normal"
         >
-          <Download className="mr-2 h-5 w-5" />
+          <Download className="mr-2 h-4 w-4" />
           导出记录
         </Button>
       </DialogTrigger>
