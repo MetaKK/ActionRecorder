@@ -389,7 +389,10 @@ export class IndexedDBAdapter implements IStorageAdapter {
     const mediaStore = transaction.objectStore(this.STORE_MEDIA);
     
     return new Promise((resolve, reject) => {
+      // 触发清除操作 - 这些请求会在事务中执行
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const clearRecords = recordsStore.clear();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const clearMedia = mediaStore.clear();
       
       transaction.oncomplete = () => {

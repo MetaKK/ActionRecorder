@@ -17,20 +17,6 @@ export function Timeline() {
   const { records } = useRecords();
   
   // 按日期分组
-  const groupedRecords = useMemo(() => {
-    const sorted = [...records].sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-    );
-    return groupByDate(sorted);
-  }, [records]);
-  
-  // 按日期排序（最新的在前）
-  const sortedGroups = useMemo(() => {
-    return Array.from(groupedRecords.entries()).sort(
-      ([dateA], [dateB]) => dateB.localeCompare(dateA)
-    );
-  }, [groupedRecords]);
-  
   // 渐进式加载：初始显示 15 条，每次加载 10 条
   const { visibleCount, sentinelRef, hasMore } = useProgressiveLoading(
     records.length,

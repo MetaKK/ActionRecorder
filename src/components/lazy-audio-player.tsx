@@ -13,14 +13,12 @@ import { cn } from '@/lib/utils';
 interface LazyAudioPlayerProps {
   audioData: string;
   duration?: number;
-  format?: string;
   className?: string;
 }
 
 export function LazyAudioPlayer({
   audioData,
   duration = 0,
-  format = 'audio/webm',
   className,
 }: LazyAudioPlayerProps) {
   const [elementRef, isVisible] = useIntersectionObserver({

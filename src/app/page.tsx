@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, Suspense } from 'react';
+import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Clock, BarChart3 } from 'lucide-react';
 import { TabNav, TabItem } from "@/components/tab-nav";

@@ -3,6 +3,7 @@
  */
 
 import { Record, ExportTimeRange } from '@/lib/types';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { formatDate, formatTime, formatDateTime, groupByDate, getDateLabel } from './date';
 import { formatDuration } from './audio';
 
@@ -65,7 +66,9 @@ function formatLocationSimple(location: Record['location']): string {
 
 /**
  * 格式化地址信息（完整版 - 包含坐标）
+ * 保留用于未来可能的导出选项
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function formatLocationDetailed(location: Record['location']): string {
   if (!location) return '';
   
