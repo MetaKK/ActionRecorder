@@ -52,12 +52,17 @@ export function LazyAudioPlayer({
     if (!audio) return;
 
     const handleLoadedMetadata = () => {
-      setAudioDuration(audio.duration);
+      // 确保 duration 是有效的数字
+      const validDuration = audio.duration && isFinite(audio.duration) ? audio.duration : duration;
+      setAudioDuration(validDuration);
       setIsLoaded(true);
     };
 
     const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
+      // 确保 currentTime 是有效的数字
+      if (audio.currentTime && isFinite(audio.currentTime)) {
+        setCurrentTime(audio.currentTime);
+      }
     };
 
     const handleEnded = () => {
@@ -65,16 +70,24 @@ export function LazyAudioPlayer({
       setCurrentTime(0);
     };
 
+    const handleError = () => {
+      console.error('音频加载失败');
+      setIsLoaded(false);
+      setIsPlaying(false);
+    };
+
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
 
     return () => {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
     };
-  }, [audioSrc]);
+  }, [audioSrc, duration]);
 
   // 播放/暂停
   const togglePlay = async (e: React.MouseEvent) => {
@@ -110,25 +123,38 @@ export function LazyAudioPlayer({
     e.stopPropagation();
     const audio = audioRef.current;
     const progressBar = progressBarRef.current;
-    if (!audio || !progressBar || !audioSrc) return;
+    if (!audio || !progressBar || !audioSrc || !audioDuration || !isFinite(audioDuration)) return;
 
     const rect = progressBar.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
-    const percentage = clickX / rect.width;
+    const percentage = Math.max(0, Math.min(1, clickX / rect.width));
     const newTime = percentage * audioDuration;
 
-    audio.currentTime = newTime;
-    setCurrentTime(newTime);
+    // 确保新时间是有效的
+    if (isFinite(newTime) && newTime >= 0 && newTime <= audioDuration) {
+      audio.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
   };
 
   // 格式化时间
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
+    // 处理无效值（NaN、Infinity、undefined、null）
+    if (typeof seconds !== 'number' || isNaN(seconds) || !isFinite(seconds)) {
+      return '0:00';
+    }
+    
+    // 确保是非负数
+    const validSeconds = Math.max(0, seconds);
+    const mins = Math.floor(validSeconds / 60);
+    const secs = Math.floor(validSeconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const progress = audioDuration > 0 ? (currentTime / audioDuration) * 100 : 0;
+  // 计算进度，确保结果是有效的数字
+  const progress = (audioDuration > 0 && isFinite(audioDuration) && isFinite(currentTime)) 
+    ? Math.min(100, Math.max(0, (currentTime / audioDuration) * 100))
+    : 0;
 
   return (
     <div
