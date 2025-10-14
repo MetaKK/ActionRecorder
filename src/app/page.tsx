@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { Clock, BarChart3 } from 'lucide-react';
 import { TabNav, TabItem } from "@/components/tab-nav";
 import { useRecords } from "@/lib/hooks/use-records";
-import { siteConfig } from "@/config/site";
+import { AppHeader } from "@/components/app-header";
 import { 
   TimelineSkeleton, 
   StatisticsSkeleton, 
@@ -68,17 +68,10 @@ export default function Home() {
       {/* 科技感背景 */}
       <TechBackground />
       
+      {/* Header - Spotify 风格 */}
+      <AppHeader />
+      
       <div className="relative mx-auto max-w-4xl px-6 py-8 sm:px-8 sm:py-12">
-        {/* Header - Notion 风格极简 */}
-        <header className="mb-12">
-          <h1 className="text-[2.5rem] font-semibold tracking-tight text-foreground leading-tight">
-            {siteConfig.name}
-          </h1>
-          <p className="mt-2 text-[15px] text-muted-foreground/80">
-            {siteConfig.description}
-          </p>
-        </header>
-
         {/* 录入区域 - Lovable 风格 */}
         <div className="mb-16">
           <RecordInput />
