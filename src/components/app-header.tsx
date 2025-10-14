@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Menu } from 'lucide-react';
 import { siteConfig } from '@/config/site';
 import { cn } from '@/lib/utils';
@@ -42,7 +43,7 @@ export function AppHeader() {
         className="flex items-center justify-between h-16 px-4 mx-auto max-w-7xl sm:px-6 lg:px-8"
       >
         {/* 左侧 Logo - Apple 风格科技感 */}
-        <a
+        <Link
           href="/"
           className="flex items-center gap-2.5 z-[1052] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
           aria-label={siteConfig.name}
@@ -86,7 +87,7 @@ export function AppHeader() {
               {siteConfig.name}
             </span>
           </div>
-        </a>
+        </Link>
 
         {/* 右侧汉堡菜单 - Apple 风格 */}
         <button

@@ -87,7 +87,7 @@ export interface RecordsStore {
   loadFromStorage: () => void;
 }
 
-export type ExportTimeRange = 'today' | '7days' | '30days' | 'all';
+export type ExportTimeRange = 'today' | '7days' | '30days' | 'all' | string; // 支持特定日期，格式：YYYY-MM-DD
 
 export interface ExportOptions {
   timeRange: ExportTimeRange;

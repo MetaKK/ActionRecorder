@@ -7,6 +7,8 @@ import { TabNav, TabItem } from "@/components/tab-nav";
 import { useRecords } from "@/lib/hooks/use-records";
 import { AppHeader } from "@/components/app-header";
 import { ExportDialog } from "@/components/export-dialog";
+import { EnglishPromptDialog } from "@/components/english-prompt-dialog";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { 
   TimelineSkeleton, 
   StatisticsSkeleton, 
@@ -74,31 +76,49 @@ export default function Home() {
       
       {/* Hero Section - Lovable 风格垂直居中 */}
       <section className="mb-[20px] flex w-full flex-col items-center justify-center py-[20vh] md:mb-0 2xl:py-64">
-        <RecordInput />
+        <ErrorBoundary>
+          <RecordInput />
+        </ErrorBoundary>
       </section>
 
       {/* Tab 导航和内容区域 */}
       <div className="relative mx-auto max-w-4xl px-6 pb-24 sm:px-8">
-        {/* Tab 导航 - Apple 风格融合：Tab + 右侧操作 */}
+        {/* Tab 导航 - Apple 风格 */}
         <TabNav
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          rightAction={activeTab === 'timeline' ? <ExportDialog /> : undefined}
         />
+
+        {/* 工具栏 - Apple 风格：仅在 Timeline 标签显示 */}
+        {activeTab === 'timeline' && (
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{records.length} 条记录</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <EnglishPromptDialog />
+              <ExportDialog />
+            </div>
+          </div>
+        )}
 
         {/* Tab 内容 */}
         <main>
           {activeTab === 'timeline' && (
-            <div className="animate-in fade-in duration-300">
-              <Timeline />
-            </div>
+            <ErrorBoundary>
+              <div className="animate-in fade-in duration-300">
+                <Timeline />
+              </div>
+            </ErrorBoundary>
           )}
           
           {activeTab === 'statistics' && (
-            <div className="animate-in fade-in duration-300">
-              <Statistics />
-            </div>
+            <ErrorBoundary>
+              <div className="animate-in fade-in duration-300">
+                <Statistics />
+              </div>
+            </ErrorBoundary>
           )}
         </main>
       </div>

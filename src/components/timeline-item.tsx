@@ -207,7 +207,6 @@ const TimelineItemComponent = function TimelineItem({ record }: TimelineItemProp
                     <LazyAudioPlayer 
                       audioData={record.audioData} 
                       duration={record.audioDuration || 0}
-                      format={record.audioFormat}
                     />
                   </div>
                 )}

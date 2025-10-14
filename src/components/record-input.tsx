@@ -290,7 +290,14 @@ export function RecordInput() {
             e.preventDefault();
             handleSave();
           }}
-          className="group flex flex-col gap-4 p-5 md:p-6 w-full rounded-[32px] border border-border/40 bg-muted/30 backdrop-blur-xl text-base shadow-xl transition-all duration-200 ease-out focus-within:border-foreground/20 hover:border-foreground/10 focus-within:hover:border-foreground/20"
+          className="group flex flex-col gap-4 p-5 md:p-6 w-full rounded-[32px] border border-border/40 bg-muted/30 text-base shadow-xl transition-all duration-200 ease-out focus-within:border-foreground/20 hover:border-foreground/10 focus-within:hover:border-foreground/20"
+          style={{
+            // 🔧 修复输入法黑框：移除所有GPU加速
+            transform: 'none',
+            filter: 'none',
+            backdropFilter: 'none',
+            willChange: 'auto',
+          }}
         >
           {/* 录音中 - 状态提示 */}
           {isRecordingAudio && (
@@ -360,9 +367,11 @@ export function RecordInput() {
               onPaste={handlePaste}
               onDrop={handleDrop}
               onDragOver={(e) => e.preventDefault()}
-              className="w-full resize-none bg-transparent text-base md:text-lg leading-relaxed placeholder:text-muted-foreground focus-visible:outline-none focus:bg-transparent border-0 p-0 ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 max-h-[max(35svh,5rem)] placeholder-shown:text-ellipsis placeholder-shown:whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex w-full resize-none text-[16px] md:text-lg leading-snug placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 border-0 p-0 ring-0 max-h-[max(35svh,5rem)] placeholder-shown:text-ellipsis placeholder-shown:whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50 bg-transparent focus:bg-transparent flex-1"
               disabled={isListening}
-              style={{ minHeight: '120px', height: '120px' }}
+              style={{ 
+                minHeight: '120px',
+              }}
             />
           </div>
           

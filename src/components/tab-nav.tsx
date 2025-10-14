@@ -21,10 +21,9 @@ interface TabNavProps {
   activeTab: string;
   onTabChange: (tabId: string) => void;
   className?: string;
-  rightAction?: React.ReactNode; // 右侧操作区域（如导出按钮）- Apple 风格
 }
 
-export function TabNav({ tabs, activeTab, onTabChange, className, rightAction }: TabNavProps) {
+export function TabNav({ tabs, activeTab, onTabChange, className }: TabNavProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const [showLeftGradient, setShowLeftGradient] = useState(false);
@@ -94,8 +93,8 @@ export function TabNav({ tabs, activeTab, onTabChange, className, rightAction }:
 
   return (
     <div className={cn("relative mb-8", className)}>
-      {/* Apple 风格：Tab 导航 + 右侧操作，统一的标题栏 */}
-      <div className="relative flex items-center justify-between gap-4">
+      {/* Apple 风格：Tab 导航 */}
+      <div className="relative flex items-center justify-center">
         {/* Tab 滚动容器 */}
         <div className="relative flex flex-1 justify-center">
           <div
@@ -115,8 +114,12 @@ export function TabNav({ tabs, activeTab, onTabChange, className, rightAction }:
               disabled={activeTab === tab.id}
               className={cn(
                 "relative inline-flex h-11 shrink-0 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl border px-5",
-                "transition-all duration-500 ease-out",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50",
+                // Apple 风格：平滑自然的过渡效果，使用贝塞尔曲线
+                "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                // 聚焦状态：参考苹果设计，明显的放大 + 光晕
+                "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-400/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                "focus-visible:scale-110 focus-visible:shadow-2xl focus-visible:shadow-cyan-500/50",
+                "focus-visible:z-10",
                 activeTab === tab.id
                   ? [
                       // 💫 激活状态 - 大气显眼的科技风格
@@ -232,13 +235,6 @@ export function TabNav({ tabs, activeTab, onTabChange, className, rightAction }:
             <ChevronRight className="h-5 w-5 text-cyan-600 dark:text-cyan-400" strokeWidth={2.5} />
           </button>
         </div>
-
-        {/* 右侧操作区域 - Apple 风格：桌面端可见，移动端隐藏避免横向滚动 */}
-        {rightAction && (
-          <div className="flex-shrink-0 hidden md:flex items-center">
-            {rightAction}
-          </div>
-        )}
       </div>
     </div>
   );

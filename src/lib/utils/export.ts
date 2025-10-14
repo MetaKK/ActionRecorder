@@ -39,8 +39,22 @@ export function filterRecordsByTimeRange(
     }
     
     case 'all':
-    default:
       return records;
+    
+    default: {
+      // 支持特定日期，格式：YYYY-MM-DD
+      if (typeof timeRange === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(timeRange)) {
+        const targetDate = new Date(timeRange);
+        const nextDate = new Date(targetDate);
+        nextDate.setDate(targetDate.getDate() + 1);
+        
+        return records.filter(record => {
+          const recordDate = record.createdAt;
+          return recordDate >= targetDate && recordDate < nextDate;
+        });
+      }
+      return records;
+    }
   }
 }
 
