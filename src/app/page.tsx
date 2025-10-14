@@ -68,15 +68,16 @@ export default function Home() {
       {/* 科技感背景 */}
       <TechBackground />
       
-      {/* Header - Spotify 风格 */}
+      {/* Header - Apple 风格 */}
       <AppHeader />
       
-      <div className="relative mx-auto max-w-4xl px-6 py-8 sm:px-8 sm:py-12">
-        {/* 录入区域 - Lovable 风格 */}
-        <div className="mb-16">
-          <RecordInput />
-        </div>
+      {/* Hero Section - Lovable 风格垂直居中 */}
+      <section className="mb-[20px] flex w-full flex-col items-center justify-center py-[20vh] md:mb-0 2xl:py-64">
+        <RecordInput />
+      </section>
 
+      {/* Tab 导航和内容区域 */}
+      <div className="relative mx-auto max-w-4xl px-6 pb-24 sm:px-8">
         {/* Tab 导航 - ElevenLabs 风格 */}
         <TabNav
           tabs={tabs}
@@ -98,9 +99,6 @@ export default function Home() {
             </div>
           )}
         </main>
-        
-        {/* 底部间距 */}
-        <div className="h-24" />
       </div>
     </div>
   );
