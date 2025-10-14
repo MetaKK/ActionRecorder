@@ -1,5 +1,6 @@
 /**
  * 媒体网格预览组件（图片 + 视频）
+ * 性能优化：使用懒加载图片组件
  */
 
 'use client';
@@ -8,6 +9,7 @@ import { useState, useMemo } from 'react';
 import { X, Image as ImageIcon, Video, Play } from 'lucide-react';
 import { MediaData } from '@/lib/types';
 import { ImageLightbox } from '@/components/image-lightbox';
+import { LazyImage, LazyVideoThumbnail } from '@/components/lazy-image';
 import { cn } from '@/lib/utils';
 
 interface ImageGridProps {
@@ -62,13 +64,21 @@ export function ImageGrid({ images, onRemove, readonly = false, className }: Ima
                 style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => openLightbox(index)}
               >
-                {/* 缩略图（图片或视频） */}
-                <img
-                  src={displaySrc}
-                  alt={`${isVideo ? '视频' : '图片'} ${index + 1}`}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  loading="lazy"
-                />
+                {/* 缩略图（图片或视频）- 懒加载 */}
+                {isVideo ? (
+                  <LazyVideoThumbnail
+                    thumbnail={media.thumbnail}
+                    src={media.data}
+                    alt={`视频 ${index + 1}`}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <LazyImage
+                    src={media.data}
+                    alt={`图片 ${index + 1}`}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                )}
 
                 {/* 视频播放图标 */}
                 {isVideo && (
@@ -79,7 +89,7 @@ export function ImageGrid({ images, onRemove, readonly = false, className }: Ima
                   </div>
                 )}
 
-                {/* 删除按钮 */}
+                {/* 删除按钮 - Apple 风格 */}
                 {!readonly && onRemove && (
                   <button
                     onClick={(e) => {
@@ -87,17 +97,26 @@ export function ImageGrid({ images, onRemove, readonly = false, className }: Ima
                       onRemove(media.id);
                     }}
                     className={cn(
-                      "absolute right-2 top-2 z-10",
+                      "absolute right-1.5 top-1.5 z-10",
                       "flex h-6 w-6 items-center justify-center rounded-full",
-                      "bg-black/60 backdrop-blur-sm",
-                      "text-white transition-all duration-200",
-                      "opacity-0 group-hover:opacity-100",
-                      "hover:bg-black/80 hover:scale-110",
-                      "active:scale-95"
+                      // Apple 风格：灰色毛玻璃背景
+                      "bg-white/80 dark:bg-black/60",
+                      "backdrop-blur-md",
+                      "border border-black/10 dark:border-white/20",
+                      // 文字颜色：灰色，hover 时变红
+                      "text-gray-600 dark:text-gray-300",
+                      "shadow-sm",
+                      "transition-all duration-200 ease-out",
+                      // 桌面端：hover 显示，移动端：始终显示
+                      "opacity-80 md:opacity-0 md:group-hover:opacity-100",
+                      // Hover 效果：变红 + 放大
+                      "hover:text-red-500 hover:bg-white dark:hover:bg-black/80",
+                      "hover:scale-110 hover:shadow-md",
+                      "active:scale-90"
                     )}
                     aria-label={`删除${isVideo ? '视频' : '图片'}`}
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3.5 w-3.5" strokeWidth={2.5} />
                   </button>
                 )}
 

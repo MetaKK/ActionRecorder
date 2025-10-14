@@ -1,13 +1,48 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { Clock, BarChart3 } from 'lucide-react';
-import { RecordInput } from "@/components/record-input";
-import { Timeline } from "@/components/timeline";
-import { TechBackground } from "@/components/tech-background";
 import { TabNav, TabItem } from "@/components/tab-nav";
 import { useRecords } from "@/lib/hooks/use-records";
 import { siteConfig } from "@/config/site";
+import { 
+  TimelineSkeleton, 
+  StatisticsSkeleton, 
+  RecordInputSkeleton 
+} from "@/components/ui/skeleton";
+
+// 动态导入重型组件，提高首屏加载速度
+const RecordInput = dynamic(
+  () => import("@/components/record-input").then(mod => ({ default: mod.RecordInput })),
+  { 
+    loading: () => <RecordInputSkeleton />,
+    ssr: false // 输入组件不需要SSR
+  }
+);
+
+const Timeline = dynamic(
+  () => import("@/components/timeline").then(mod => ({ default: mod.Timeline })),
+  { 
+    loading: () => <TimelineSkeleton />,
+    ssr: false
+  }
+);
+
+const Statistics = dynamic(
+  () => import("@/components/statistics").then(mod => ({ default: mod.Statistics })),
+  { 
+    loading: () => <StatisticsSkeleton />,
+    ssr: false
+  }
+);
+
+const TechBackground = dynamic(
+  () => import("@/components/tech-background").then(mod => ({ default: mod.TechBackground })),
+  { 
+    ssr: true // 背景可以SSR
+  }
+);
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('timeline');
@@ -66,17 +101,7 @@ export default function Home() {
           
           {activeTab === 'statistics' && (
             <div className="animate-in fade-in duration-300">
-              <div className="rounded-xl border border-border/30 bg-muted/30 p-8 text-center">
-                <div className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4 flex items-center justify-center">
-                  <BarChart3 className="h-12 w-12" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">
-                  Statistics Coming Soon
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  数据统计功能即将上线
-                </p>
-              </div>
+              <Statistics />
             </div>
           )}
         </main>

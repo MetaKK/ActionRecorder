@@ -1,10 +1,11 @@
 /**
  * 时间线单条记录组件
+ * 性能优化：使用 React.memo 避免不必要的重渲染
  */
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, memo } from 'react';
 import { Pencil, Trash2, Check, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { DeleteConfirmDialog } from '@/components/delete-confirm-dialog';
-import { AudioPlayer } from '@/components/audio-player';
+import { LazyAudioPlayer } from '@/components/lazy-audio-player';
 import { ImageGrid } from '@/components/image-grid';
 import { Record } from '@/lib/types';
 import { formatShortDateTime } from '@/lib/utils/date';
@@ -35,7 +36,7 @@ const isMobile = () => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
 };
 
-export function TimelineItem({ record }: TimelineItemProps) {
+const TimelineItemComponent = function TimelineItem({ record }: TimelineItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(record.content);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -200,13 +201,13 @@ export function TimelineItem({ record }: TimelineItemProps) {
                   </p>
                 )}
                 
-                {/* 音频播放器 */}
+                {/* 音频播放器 - 懒加载 */}
                 {record.hasAudio && record.audioData && (
                   <div className="pt-1">
-                    <AudioPlayer 
+                    <LazyAudioPlayer 
                       audioData={record.audioData} 
                       duration={record.audioDuration || 0}
-                      compact
+                      format={record.audioFormat}
                     />
                   </div>
                 )}
@@ -301,5 +302,17 @@ export function TimelineItem({ record }: TimelineItemProps) {
       </div>
     </>
   );
-}
+};
+
+// 使用 memo 优化性能，仅当 record 变化时才重新渲染
+export const TimelineItem = memo(TimelineItemComponent, (prevProps, nextProps) => {
+  // 自定义比较函数：比较 record 的关键属性
+  return (
+    prevProps.record.id === nextProps.record.id &&
+    prevProps.record.content === nextProps.record.content &&
+    prevProps.record.updatedAt.getTime() === nextProps.record.updatedAt.getTime() &&
+    prevProps.record.hasAudio === nextProps.record.hasAudio &&
+    prevProps.record.hasImages === nextProps.record.hasImages
+  );
+});
 

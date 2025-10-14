@@ -1,14 +1,16 @@
 /**
  * 时间线展示组件
+ * 性能优化：渐进式加载，一次只渲染部分记录
  */
 
 'use client';
 
 import { useMemo } from 'react';
-import { Clock } from 'lucide-react';
+import { Clock, Loader2 } from 'lucide-react';
 import { TimelineItem } from './timeline-item';
 import { ExportDialog } from './export-dialog';
 import { useRecords } from '@/lib/hooks/use-records';
+import { useProgressiveLoading } from '@/lib/hooks/use-intersection-observer';
 import { groupByDate, formatDate, getDateLabel } from '@/lib/utils/date';
 
 export function Timeline() {
@@ -29,11 +31,36 @@ export function Timeline() {
     );
   }, [groupedRecords]);
   
+  // 渐进式加载：初始显示 15 条，每次加载 10 条
+  const { visibleCount, sentinelRef, hasMore } = useProgressiveLoading(
+    records.length,
+    15 // 初始批次大小
+  );
+  
+  // 计算需要显示的记录
+  const visibleRecords = useMemo(() => {
+    const sorted = [...records].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
+    return sorted.slice(0, visibleCount);
+  }, [records, visibleCount]);
+  
+  // 对可见记录进行分组
+  const visibleGroupedRecords = useMemo(() => {
+    return groupByDate(visibleRecords);
+  }, [visibleRecords]);
+  
+  const visibleSortedGroups = useMemo(() => {
+    return Array.from(visibleGroupedRecords.entries()).sort(
+      ([dateA], [dateB]) => dateB.localeCompare(dateA)
+    );
+  }, [visibleGroupedRecords]);
+  
   // 空状态
   if (records.length === 0) {
     return (
       <div className="space-y-6">
-        {/* Timeline 标题栏 - 即使空状态也显示 */}
+        {/* Timeline 标题栏 */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/30">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400/20 to-cyan-400/20">
@@ -67,7 +94,7 @@ export function Timeline() {
   
   return (
     <div className="space-y-6">
-      {/* Timeline 标题栏 - 有数据时显示 */}
+      {/* Timeline 标题栏 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/30">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400/20 to-cyan-400/20">
@@ -85,7 +112,7 @@ export function Timeline() {
 
       {/* 记录内容 */}
       <div className="space-y-8">
-        {sortedGroups.map(([dateKey, items]) => {
+        {visibleSortedGroups.map(([dateKey, items]) => {
           const dateLabel = getDateLabel(items[0].createdAt);
           
           return (
@@ -120,6 +147,27 @@ export function Timeline() {
             </div>
           );
         })}
+        
+        {/* 加载更多触发器（哨兵元素） */}
+        {hasMore && (
+          <div ref={sentinelRef} className="py-8">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground/60">
+                加载更多记录... ({visibleCount} / {records.length})
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* 加载完成提示 */}
+        {!hasMore && records.length > 15 && (
+          <div className="py-6 text-center">
+            <p className="text-sm text-muted-foreground/50">
+              已加载全部 {records.length} 条记录
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

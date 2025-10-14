@@ -12,13 +12,13 @@ const MEDIA_CONFIG = {
   image: {
     maxWidth: 1920,
     maxHeight: 1920,
-    quality: 0.85,
+    quality: 0.75, // 降低质量，提升性能
     acceptTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
     maxSize: 10 * 1024 * 1024, // 10MB
   },
   // 视频配置
   video: {
-    maxSize: 100 * 1024 * 1024, // 100MB
+    maxSize: 50 * 1024 * 1024, // 50MB（降低限制，提升性能）
     acceptTypes: ['video/mp4', 'video/webm', 'video/quicktime'],
     thumbnailTime: 0.5, // 取第0.5秒作为缩略图
   },
