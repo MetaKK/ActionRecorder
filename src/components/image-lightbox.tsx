@@ -250,8 +250,9 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose }: Ima
             您的浏览器不支持视频播放
           </video>
         ) : (
-          /* 图片显示 */
-          <img
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
             src={currentMedia.data}
             alt={`图片 ${currentIndex + 1}`}
             className={cn(
@@ -265,6 +266,7 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose }: Ima
               transformOrigin: 'center',
             }}
           />
+          </>
         )}
       </div>
     </div>

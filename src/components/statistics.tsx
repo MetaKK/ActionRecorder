@@ -6,7 +6,7 @@
 'use client';
 
 import { useStorageStats } from '@/lib/hooks/use-storage-stats';
-import { FileText, Mic, Image as ImageIcon, Video, HardDrive, Activity, TrendingUp } from 'lucide-react';
+import { FileText, Mic, Image as ImageIcon, Video, HardDrive, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Statistics() {
@@ -29,13 +29,7 @@ export function Statistics() {
   }
   
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
-      {/* 标题 */}
-      <div className="flex items-center gap-3">
-        <Activity className="h-6 w-6 text-foreground/70" strokeWidth={2} />
-        <h2 className="text-2xl font-semibold tracking-tight">统计</h2>
-      </div>
-      
+    <div className="w-full max-w-4xl mx-auto p-6 space-y-8">
       {/* 存储空间卡片 */}
       <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-background via-background to-muted/20 p-6 shadow-lg backdrop-blur-sm">
         {/* 装饰性光晕 */}

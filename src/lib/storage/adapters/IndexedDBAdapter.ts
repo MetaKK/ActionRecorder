@@ -21,7 +21,7 @@ export class IndexedDBAdapter implements IStorageAdapter {
   
   private db: IDBDatabase | null = null;
   private readonly dbName = 'life-recorder-db';
-  private readonly version = 1;
+  private readonly version = 2; // 增加版本以添加新索引
   
   // Object Store names
   private readonly STORE_RECORDS = 'records';
@@ -52,15 +52,50 @@ export class IndexedDBAdapter implements IStorageAdapter {
       
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
+        const oldVersion = event.oldVersion;
         
-        console.log('🔄 Upgrading IndexedDB schema...');
+        console.log(`🔄 Upgrading IndexedDB schema from v${oldVersion} to v${this.version}...`);
         
-        // 创建 records 对象存储
+        // 创建 records 对象存储（v1）
         if (!db.objectStoreNames.contains(this.STORE_RECORDS)) {
           const recordStore = db.createObjectStore(this.STORE_RECORDS, { keyPath: 'id' });
+          
+          // 基础索引
           recordStore.createIndex('timestamp', 'timestamp', { unique: false });
           recordStore.createIndex('createdAt', 'createdAt', { unique: false });
-          console.log('✅ Created records object store');
+          
+          // 🚀 v2: 优化索引 - 支持复杂查询
+          recordStore.createIndex('hasAudio', 'hasAudio', { unique: false });
+          recordStore.createIndex('hasImages', 'hasImages', { unique: false });
+          
+          // 复合索引 - 提升排序和筛选性能
+          recordStore.createIndex('createdAt_id', ['createdAt', 'id'], { unique: false });
+          recordStore.createIndex('hasAudio_createdAt', ['hasAudio', 'createdAt'], { unique: false });
+          recordStore.createIndex('hasImages_createdAt', ['hasImages', 'createdAt'], { unique: false });
+          
+          console.log('✅ Created records object store with optimized indexes');
+        } else if (oldVersion < 2) {
+          // 升级现有store到v2
+          const transaction = (event.target as IDBOpenDBRequest).transaction!;
+          const recordStore = transaction.objectStore(this.STORE_RECORDS);
+          
+          // 添加新索引（如果不存在）
+          if (!recordStore.indexNames.contains('hasAudio')) {
+            recordStore.createIndex('hasAudio', 'hasAudio', { unique: false });
+          }
+          if (!recordStore.indexNames.contains('hasImages')) {
+            recordStore.createIndex('hasImages', 'hasImages', { unique: false });
+          }
+          if (!recordStore.indexNames.contains('createdAt_id')) {
+            recordStore.createIndex('createdAt_id', ['createdAt', 'id'], { unique: false });
+          }
+          if (!recordStore.indexNames.contains('hasAudio_createdAt')) {
+            recordStore.createIndex('hasAudio_createdAt', ['hasAudio', 'createdAt'], { unique: false });
+          }
+          if (!recordStore.indexNames.contains('hasImages_createdAt')) {
+            recordStore.createIndex('hasImages_createdAt', ['hasImages', 'createdAt'], { unique: false });
+          }
+          console.log('✅ Upgraded records indexes to v2');
         }
         
         // 创建 media 对象存储
@@ -69,7 +104,10 @@ export class IndexedDBAdapter implements IStorageAdapter {
           mediaStore.createIndex('type', 'type', { unique: false });
           mediaStore.createIndex('recordId', 'recordId', { unique: false });
           mediaStore.createIndex('createdAt', 'createdAt', { unique: false });
-          console.log('✅ Created media object store');
+          
+          // 复合索引
+          mediaStore.createIndex('type_createdAt', ['type', 'createdAt'], { unique: false });
+          console.log('✅ Created media object store with indexes');
         }
       };
     });
@@ -389,7 +427,10 @@ export class IndexedDBAdapter implements IStorageAdapter {
     const mediaStore = transaction.objectStore(this.STORE_MEDIA);
     
     return new Promise((resolve, reject) => {
+      // 触发清除操作 - 这些请求会在事务中执行
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const clearRecords = recordsStore.clear();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const clearMedia = mediaStore.clear();
       
       transaction.oncomplete = () => {

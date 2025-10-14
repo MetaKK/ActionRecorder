@@ -6,7 +6,6 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { getStorage } from '@/lib/storage/simple';
 import { useRecords } from './use-records';
 
 export interface StorageStats {
@@ -192,7 +191,7 @@ export function useStorageStats(): {
     } finally {
       setIsLoading(false);
     }
-  }, [recordsStats]);
+  }, [recordsStats, records]);
   
   // 使用 debounce 优化，避免频繁计算
   useEffect(() => {

@@ -3,6 +3,7 @@
  */
 
 import { Record, ExportTimeRange } from '@/lib/types';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { formatDate, formatTime, formatDateTime, groupByDate, getDateLabel } from './date';
 import { formatDuration } from './audio';
 
@@ -38,8 +39,22 @@ export function filterRecordsByTimeRange(
     }
     
     case 'all':
-    default:
       return records;
+    
+    default: {
+      // 支持特定日期，格式：YYYY-MM-DD
+      if (typeof timeRange === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(timeRange)) {
+        const targetDate = new Date(timeRange);
+        const nextDate = new Date(targetDate);
+        nextDate.setDate(targetDate.getDate() + 1);
+        
+        return records.filter(record => {
+          const recordDate = record.createdAt;
+          return recordDate >= targetDate && recordDate < nextDate;
+        });
+      }
+      return records;
+    }
   }
 }
 
@@ -65,7 +80,9 @@ function formatLocationSimple(location: Record['location']): string {
 
 /**
  * 格式化地址信息（完整版 - 包含坐标）
+ * 保留用于未来可能的导出选项
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function formatLocationDetailed(location: Record['location']): string {
   if (!location) return '';
   

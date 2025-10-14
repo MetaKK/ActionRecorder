@@ -69,18 +69,59 @@ const EXPORT_FORMATS: Array<{
   },
 ];
 
-export function ExportDialog() {
+interface ExportDialogProps {
+  defaultRange?: ExportTimeRange;
+  defaultFormat?: ExportFormat;
+  trigger?: React.ReactNode; // 自定义触发按钮
+}
+
+export function ExportDialog({ 
+  defaultRange = 'all', 
+  defaultFormat = 'text',
+  trigger 
+}: ExportDialogProps = {}) {
   const [open, setOpen] = useState(false);
-  const [selectedRange, setSelectedRange] = useState<ExportTimeRange>('all');
-  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('text');
+  const [selectedRange, setSelectedRange] = useState<ExportTimeRange>(defaultRange);
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>(defaultFormat);
   const [copied, setCopied] = useState(false);
   
   const { records } = useRecords();
+  
+  // 当打开对话框时，重置为默认值
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen) {
+      setSelectedRange(defaultRange);
+      setSelectedFormat(defaultFormat);
+      setCopied(false);
+    }
+    setOpen(newOpen);
+  };
   
   // 生成导出内容
   const exportContent = useMemo(() => {
     return exportRecords(records, selectedRange, selectedFormat);
   }, [records, selectedRange, selectedFormat]);
+  
+  // 判断是否是自定义日期
+  const isCustomDate = (range: ExportTimeRange): boolean => {
+    return typeof range === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(range);
+  };
+  
+  // 获取自定义日期的显示标签
+  const getCustomDateLabel = (dateStr: string): string => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    
+    const dateKey = dateStr;
+    const todayKey = today.toISOString().split('T')[0];
+    const yesterdayKey = yesterday.toISOString().split('T')[0];
+    
+    if (dateKey === todayKey) return '今天';
+    if (dateKey === yesterdayKey) return '昨天';
+    
+    return dateStr;
+  };
   
   // 复制到剪贴板
   const handleCopy = async () => {
@@ -109,25 +150,35 @@ export function ExportDialog() {
   };
   
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="default"
-          className={cn(
-            "group relative w-full h-9 rounded-xl font-medium transition-all duration-300",
-            "border border-cyan-400/30 backdrop-blur-sm",
-            "bg-gradient-to-br from-sky-400/8 via-blue-400/8 to-cyan-400/8",
-            "hover:from-sky-400/20 hover:via-blue-400/20 hover:to-cyan-400/20",
-            "hover:border-cyan-400/50 hover:shadow-lg hover:shadow-cyan-400/20",
-            "hover:scale-[1.02] active:scale-[0.98]",
-            "text-cyan-700 dark:text-cyan-400"
-          )}
-        >
-          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <Download className="mr-2 h-4 w-4" strokeWidth={2.5} />
-          <span className="relative">导出</span>
-        </Button>
+        {trigger || (
+          <button
+            className={cn(
+              // iOS 风格的图标按钮 - 极简设计
+              "group relative flex items-center justify-center",
+              "h-9 w-9 rounded-full",
+              "transition-all duration-200 ease-out",
+              
+              // 背景 - 轻量毛玻璃
+              "bg-black/[0.03] dark:bg-white/[0.06]",
+              "hover:bg-black/[0.06] dark:hover:bg-white/[0.09]",
+              "active:bg-black/[0.08] dark:active:bg-white/[0.12]",
+              
+              // 焦点环
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/10 dark:focus-visible:ring-white/20",
+              
+              // 激活缩放
+              "active:scale-95"
+            )}
+            aria-label="导出记录"
+          >
+            <Download 
+              className="h-[18px] w-[18px] text-foreground/70 transition-transform duration-200 group-hover:scale-105" 
+              strokeWidth={2}
+            />
+          </button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col gap-0 p-0">
         <DialogHeader className="px-6 pt-6 pb-4">
@@ -198,6 +249,24 @@ export function ExportDialog() {
             <div className="flex items-center gap-2 relative z-10">
               <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">时间</label>
               <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+                {/* 自定义日期显示（如果是） */}
+                {isCustomDate(selectedRange) && (
+                  <div
+                    className={cn(
+                      "relative flex items-center justify-center rounded-lg px-3 py-1.5",
+                      "border backdrop-blur-sm shrink-0",
+                      "border-cyan-400/40 bg-gradient-to-br from-sky-400/12 via-blue-400/12 to-cyan-400/12",
+                      "shadow-md shadow-cyan-400/10",
+                      "scale-[1.05]",
+                    )}
+                  >
+                    <span className="text-xs font-semibold text-foreground whitespace-nowrap">
+                      {getCustomDateLabel(selectedRange)}
+                    </span>
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full bg-gradient-to-r from-sky-400 to-cyan-400" />
+                  </div>
+                )}
+                
                 {TIME_RANGES.map((range) => (
                   <button
                     key={range.value}

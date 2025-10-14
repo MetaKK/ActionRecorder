@@ -103,7 +103,7 @@ export class StorageManager {
         if (record) {
           return record;
         }
-      } catch (error) {
+      } catch {
         // 继续尝试下一个适配器
         continue;
       }
@@ -136,7 +136,7 @@ export class StorageManager {
     for (const adapter of this.adapters.values()) {
       try {
         await adapter.deleteRecord(id);
-      } catch (error) {
+      } catch {
         // 可能在某些适配器中不存在，继续
         continue;
       }
@@ -173,7 +173,7 @@ export class StorageManager {
         if (media) {
           return media;
         }
-      } catch (error) {
+      } catch {
         continue;
       }
     }
@@ -192,7 +192,7 @@ export class StorageManager {
       
       try {
         await adapter.deleteMedia(id);
-      } catch (error) {
+      } catch {
         continue;
       }
     }
@@ -354,6 +354,7 @@ export class StorageManager {
   /**
    * 选择媒体的存储适配器
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private selectAdapterForMedia(media: MediaData): IStorageAdapter {
     // 媒体文件优先级：
     // 1. 云端（如果是会员）

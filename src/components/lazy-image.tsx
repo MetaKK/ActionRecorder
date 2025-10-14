@@ -77,8 +77,9 @@ export function LazyImage({
         </div>
       )}
 
-      {/* 实际图片 */}
+      {/* 实际图片 - 使用原生 img 以支持懒加载和 base64 数据 */}
       {imageSrc && !imageError && (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={imageSrc}
           alt={alt}
@@ -117,6 +118,8 @@ interface LazyVideoThumbnailProps {
 
 export function LazyVideoThumbnail({
   thumbnail,
+  // src 参数保留用于未来可能的视频帧提取功能
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   src,
   alt,
   className,

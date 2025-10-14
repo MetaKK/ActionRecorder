@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useMemo, Suspense } from 'react';
+import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Clock, BarChart3 } from 'lucide-react';
 import { TabNav, TabItem } from "@/components/tab-nav";
 import { useRecords } from "@/lib/hooks/use-records";
-import { siteConfig } from "@/config/site";
+import { AppHeader } from "@/components/app-header";
+import { ExportDialog } from "@/components/export-dialog";
+import { EnglishPromptDialog } from "@/components/english-prompt-dialog";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { 
   TimelineSkeleton, 
   StatisticsSkeleton, 
@@ -68,46 +71,56 @@ export default function Home() {
       {/* 科技感背景 */}
       <TechBackground />
       
-      <div className="relative mx-auto max-w-4xl px-6 py-8 sm:px-8 sm:py-12">
-        {/* Header - Notion 风格极简 */}
-        <header className="mb-12">
-          <h1 className="text-[2.5rem] font-semibold tracking-tight text-foreground leading-tight">
-            {siteConfig.name}
-          </h1>
-          <p className="mt-2 text-[15px] text-muted-foreground/80">
-            {siteConfig.description}
-          </p>
-        </header>
-
-        {/* 录入区域 - Lovable 风格 */}
-        <div className="mb-16">
+      {/* Header - Apple 风格 */}
+      <AppHeader />
+      
+      {/* Hero Section - Lovable 风格垂直居中 */}
+      <section className="mb-[20px] flex w-full flex-col items-center justify-center py-[20vh] md:mb-0 2xl:py-64">
+        <ErrorBoundary>
           <RecordInput />
-        </div>
+        </ErrorBoundary>
+      </section>
 
-        {/* Tab 导航 - ElevenLabs 风格 */}
+      {/* Tab 导航和内容区域 */}
+      <div className="relative mx-auto max-w-4xl px-6 pb-24 sm:px-8">
+        {/* Tab 导航 - Apple 风格 */}
         <TabNav
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
 
+        {/* 工具栏 - Apple 风格：仅在 Timeline 标签显示 */}
+        {activeTab === 'timeline' && (
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{records.length} 条记录</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <EnglishPromptDialog />
+              <ExportDialog />
+            </div>
+          </div>
+        )}
+
         {/* Tab 内容 */}
         <main>
           {activeTab === 'timeline' && (
-            <div className="animate-in fade-in duration-300">
-              <Timeline />
-            </div>
+            <ErrorBoundary>
+              <div className="animate-in fade-in duration-300">
+                <Timeline />
+              </div>
+            </ErrorBoundary>
           )}
           
           {activeTab === 'statistics' && (
-            <div className="animate-in fade-in duration-300">
-              <Statistics />
-            </div>
+            <ErrorBoundary>
+              <div className="animate-in fade-in duration-300">
+                <Statistics />
+              </div>
+            </ErrorBoundary>
           )}
         </main>
-        
-        {/* 底部间距 */}
-        <div className="h-24" />
       </div>
     </div>
   );

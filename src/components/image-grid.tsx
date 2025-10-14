@@ -49,7 +49,6 @@ export function ImageGrid({ images, onRemove, readonly = false, className }: Ima
         )}>
           {images.map((media, index) => {
             const isVideo = media.type === 'video';
-            const displaySrc = isVideo ? (media.thumbnail || media.data) : media.data;
             
             return (
               <div
