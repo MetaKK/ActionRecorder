@@ -401,9 +401,17 @@ export function EnglishPromptDialog() {
                     max={currentBook?.lessons || 1}
                     value={lessonStart}
                     onChange={(e) => {
-                      const val = Math.max(1, Math.min(parseInt(e.target.value) || 1, currentBook?.lessons || 1));
-                      setLessonStart(val);
-                      if (val > lessonEnd) setLessonEnd(val);
+                      const inputValue = e.target.value;
+                      if (inputValue === '') {
+                        setLessonStart(1);
+                        return;
+                      }
+                      const val = parseInt(inputValue);
+                      if (!isNaN(val)) {
+                        const clampedVal = Math.max(1, Math.min(val, currentBook?.lessons || 1));
+                        setLessonStart(clampedVal);
+                        if (clampedVal > lessonEnd) setLessonEnd(clampedVal);
+                      }
                     }}
                     className="w-20 px-3 py-2 text-sm rounded-md border border-border bg-background"
                   />
@@ -417,8 +425,16 @@ export function EnglishPromptDialog() {
                     max={currentBook?.lessons || 1}
                     value={lessonEnd}
                     onChange={(e) => {
-                      const val = Math.max(lessonStart, Math.min(parseInt(e.target.value) || lessonStart, currentBook?.lessons || 1));
-                      setLessonEnd(val);
+                      const inputValue = e.target.value;
+                      if (inputValue === '') {
+                        setLessonEnd(lessonStart);
+                        return;
+                      }
+                      const val = parseInt(inputValue);
+                      if (!isNaN(val)) {
+                        const clampedVal = Math.max(lessonStart, Math.min(val, currentBook?.lessons || 1));
+                        setLessonEnd(clampedVal);
+                      }
                     }}
                     className="w-20 px-3 py-2 text-sm rounded-md border border-border bg-background"
                   />
