@@ -6,7 +6,7 @@
 'use client';
 
 import { useStorageStats } from '@/lib/hooks/use-storage-stats';
-import { FileText, Mic, Image as ImageIcon, Video, HardDrive, Activity, TrendingUp } from 'lucide-react';
+import { FileText, Mic, Image as ImageIcon, Video, HardDrive, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Statistics() {
@@ -29,11 +29,15 @@ export function Statistics() {
   }
   
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
-      {/* 标题 */}
-      <div className="flex items-center gap-3">
-        <Activity className="h-6 w-6 text-foreground/70" strokeWidth={2} />
-        <h2 className="text-2xl font-semibold tracking-tight">统计</h2>
+    <div className="w-full max-w-4xl mx-auto p-6 space-y-12">
+      {/* 标题 - 极简 Apple 风格 */}
+      <div>
+        <h1 className="text-[2.5rem] font-bold tracking-tight text-foreground leading-none mb-2">
+          统计
+        </h1>
+        <p className="text-sm text-muted-foreground/50">
+          {stats.totalRecords} 条记录，{stats.usedSpaceFormatted} 已使用
+        </p>
       </div>
       
       {/* 存储空间卡片 */}
