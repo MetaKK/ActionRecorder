@@ -115,18 +115,39 @@ export function ExportDialog() {
           variant="outline" 
           size="default"
           className={cn(
-            "group relative w-full h-9 rounded-xl font-medium transition-all duration-300",
-            "border border-cyan-400/30 backdrop-blur-sm",
-            "bg-gradient-to-br from-sky-400/8 via-blue-400/8 to-cyan-400/8",
-            "hover:from-sky-400/20 hover:via-blue-400/20 hover:to-cyan-400/20",
-            "hover:border-cyan-400/50 hover:shadow-lg hover:shadow-cyan-400/20",
-            "hover:scale-[1.02] active:scale-[0.98]",
-            "text-cyan-700 dark:text-cyan-400"
+            // Apple 风格：简洁、精致、流畅的交互
+            "group relative w-full sm:w-auto min-w-[120px] h-10 rounded-2xl",
+            "font-medium tracking-tight transition-all duration-200 ease-out",
+            
+            // 背景和边框 - 柔和的毛玻璃效果
+            "bg-white/80 dark:bg-gray-900/80",
+            "border border-gray-200/80 dark:border-gray-700/80",
+            "backdrop-blur-xl backdrop-saturate-150",
+            
+            // 阴影 - 柔和精致
+            "shadow-sm shadow-gray-900/5 dark:shadow-black/20",
+            
+            // 悬停状态 - 微妙的变化
+            "hover:bg-white dark:hover:bg-gray-900",
+            "hover:border-gray-300 dark:hover:border-gray-600",
+            "hover:shadow-md hover:shadow-gray-900/8 dark:hover:shadow-black/30",
+            "hover:-translate-y-0.5",
+            
+            // 激活状态
+            "active:translate-y-0 active:scale-[0.98]",
+            
+            // 文字颜色
+            "text-gray-900 dark:text-gray-100"
           )}
         >
-          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <Download className="mr-2 h-4 w-4" strokeWidth={2.5} />
+          {/* 图标 */}
+          <Download className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:scale-105" strokeWidth={2.2} />
+          
+          {/* 文字 */}
           <span className="relative">导出</span>
+          
+          {/* 悬停时的微妙光晕 */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-400/0 via-blue-400/0 to-cyan-400/0 opacity-0 group-hover:from-sky-400/5 group-hover:via-blue-400/5 group-hover:to-cyan-400/5 group-hover:opacity-100 transition-all duration-300" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col gap-0 p-0">

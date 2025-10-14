@@ -45,19 +45,35 @@ export function Timeline() {
   // 空状态
   if (records.length === 0) {
     return (
-      <div className="space-y-6">
-        {/* Timeline 标题栏 */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/30">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400/20 to-cyan-400/20">
-              <Clock className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+      <div className="space-y-8">
+        {/* Timeline 标题栏 - Apple 风格优化 */}
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 pb-6">
+          {/* 左侧标题区 */}
+          <div className="flex items-center gap-4">
+            {/* 图标容器 - 更精致的毛玻璃效果 */}
+            <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-950/40 dark:to-blue-950/40 border border-sky-200/40 dark:border-sky-800/40 shadow-sm">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/60 to-transparent dark:from-white/5 dark:to-transparent" />
+              <Clock className="relative h-5 w-5 text-sky-600 dark:text-sky-400" strokeWidth={2} />
             </div>
-            <div>
-              <h2 className="text-xl font-semibold text-foreground">Timeline</h2>
-              <p className="text-xs text-muted-foreground/70">0 条记录</p>
+            
+            {/* 标题和统计 */}
+            <div className="space-y-1">
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                Timeline
+              </h2>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold tabular-nums tracking-tighter text-foreground">
+                  0
+                </span>
+                <span className="text-sm font-medium text-muted-foreground/60">
+                  条记录
+                </span>
+              </div>
             </div>
           </div>
-          <div className="w-full sm:w-32">
+          
+          {/* 右侧操作区 */}
+          <div className="w-full sm:w-auto">
             <ExportDialog />
           </div>
         </div>
@@ -79,19 +95,35 @@ export function Timeline() {
   }
   
   return (
-    <div className="space-y-6">
-      {/* Timeline 标题栏 */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/30">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400/20 to-cyan-400/20">
-            <Clock className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+    <div className="space-y-8">
+      {/* Timeline 标题栏 - Apple 风格优化 */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 pb-6">
+        {/* 左侧标题区 */}
+        <div className="flex items-center gap-4">
+          {/* 图标容器 - 更精致的毛玻璃效果 */}
+          <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-950/40 dark:to-blue-950/40 border border-sky-200/40 dark:border-sky-800/40 shadow-sm">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/60 to-transparent dark:from-white/5 dark:to-transparent" />
+            <Clock className="relative h-5 w-5 text-sky-600 dark:text-sky-400" strokeWidth={2} />
           </div>
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">Timeline</h2>
-            <p className="text-xs text-muted-foreground/70">{records.length} 条记录</p>
+          
+          {/* 标题和统计 */}
+          <div className="space-y-1">
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+              Timeline
+            </h2>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold tabular-nums tracking-tighter text-foreground">
+                {records.length}
+              </span>
+              <span className="text-sm font-medium text-muted-foreground/60">
+                条记录
+              </span>
+            </div>
           </div>
         </div>
-        <div className="w-full sm:w-32">
+        
+        {/* 右侧操作区 */}
+        <div className="w-full sm:w-auto">
           <ExportDialog />
         </div>
       </div>
