@@ -233,9 +233,9 @@ export function TabNav({ tabs, activeTab, onTabChange, className, rightAction }:
           </button>
         </div>
 
-        {/* 右侧操作区域 - Apple 风格，移动端和桌面端都可见 */}
+        {/* 右侧操作区域 - Apple 风格：桌面端可见，移动端隐藏避免横向滚动 */}
         {rightAction && (
-          <div className="flex-shrink-0 flex items-center">
+          <div className="flex-shrink-0 hidden md:flex items-center">
             {rightAction}
           </div>
         )}

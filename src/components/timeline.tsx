@@ -8,6 +8,7 @@
 import { useMemo } from 'react';
 import { Clock, Loader2 } from 'lucide-react';
 import { TimelineItem } from './timeline-item';
+import { ExportDialog } from './export-dialog';
 import { useRecords } from '@/lib/hooks/use-records';
 import { useProgressiveLoading } from '@/lib/hooks/use-intersection-observer';
 import { groupByDate, formatDate, getDateLabel } from '@/lib/utils/date';
@@ -60,6 +61,10 @@ export function Timeline() {
   
   return (
     <div className="space-y-8">
+      {/* 移动端导出按钮 - 顶部显示，桌面端隐藏 */}
+      <div className="md:hidden flex justify-end">
+        <ExportDialog />
+      </div>
 
       {/* 记录内容 */}
       <div className="space-y-8">
