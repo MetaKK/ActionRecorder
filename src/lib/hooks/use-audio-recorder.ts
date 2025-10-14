@@ -38,6 +38,11 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     try {
       setError(null);
       
+      // ✅ 检查客户端环境和API支持
+      if (typeof window === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('您的浏览器不支持录音功能');
+      }
+      
       // 请求麦克风权限
       const newStream = await navigator.mediaDevices.getUserMedia({ 
         audio: {

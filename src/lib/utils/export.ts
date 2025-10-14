@@ -1,9 +1,15 @@
 /**
- * 导出功能工具函数
+ * 导出功能工具函数 - 多模态内容导出
  */
 
 import { Record, ExportTimeRange } from '@/lib/types';
 import { formatDate, formatTime, formatDateTime, groupByDate, getDateLabel } from './date';
+import { formatDuration } from './audio';
+
+/**
+ * 导出格式类型
+ */
+export type ExportFormat = 'text' | 'markdown' | 'json';
 
 /**
  * 根据时间范围过滤记录
@@ -38,9 +44,9 @@ export function filterRecordsByTimeRange(
 }
 
 /**
- * 格式化地址信息
+ * 格式化地址信息（简洁版）
  */
-function formatLocation(location: Record['location']): string {
+function formatLocationSimple(location: Record['location']): string {
   if (!location) return '';
   
   const parts: string[] = [];
@@ -54,26 +60,97 @@ function formatLocation(location: Record['location']): string {
     parts.push(location.address);
   }
   
-  const addressStr = parts.length > 0 ? parts.join(', ') : '';
-  
-  // 添加经纬度元信息（精确到6位小数）
-  const lat = location.latitude.toFixed(6);
-  const lng = location.longitude.toFixed(6);
-  const coords = `(${lat}, ${lng})`;
-  
-  // 如果有精度信息，也包含进来
-  let accuracyStr = '';
-  if (location.accuracy) {
-    accuracyStr = ` [精度: ${location.accuracy.toFixed(0)}m]`;
-  }
-  
-  return addressStr 
-    ? `\n  📍 ${addressStr} ${coords}${accuracyStr}`
-    : `\n  📍 坐标: ${coords}${accuracyStr}`;
+  return parts.length > 0 ? parts.join(' ') : '未知位置';
 }
 
 /**
- * 格式化记录为 Markdown 格式
+ * 格式化地址信息（完整版 - 包含坐标）
+ */
+function formatLocationDetailed(location: Record['location']): string {
+  if (!location) return '';
+  
+  const addressStr = formatLocationSimple(location);
+  const lat = location.latitude.toFixed(6);
+  const lng = location.longitude.toFixed(6);
+  
+  return `${addressStr} (${lat}, ${lng})`;
+}
+
+/**
+ * 格式化记录为纯文本（AI友好）
+ */
+export function formatRecordsAsText(
+  records: Record[],
+  timeRange: ExportTimeRange
+): string {
+  if (records.length === 0) {
+    return '暂无记录';
+  }
+  
+  const filteredRecords = filterRecordsByTimeRange(records, timeRange);
+  const sortedRecords = [...filteredRecords].sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+  );
+  
+  const grouped = groupByDate(sortedRecords);
+  
+  let output = '';
+  
+  // 按日期分组输出
+  Array.from(grouped.entries())
+    .sort(([dateA], [dateB]) => dateB.localeCompare(dateA))
+    .forEach(([, items]) => {
+      const dateLabel = getDateLabel(items[0].createdAt);
+      output += `${formatDate(items[0].createdAt)} (${dateLabel})\n`;
+      output += '─'.repeat(40) + '\n\n';
+      
+      items
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .forEach(item => {
+          // 时间
+          output += `[${formatTime(item.createdAt)}] `;
+          
+          // 文本内容
+          if (item.content) {
+            output += item.content;
+          }
+          
+          // 多模态标记
+          const tags: string[] = [];
+          
+          if (item.hasAudio && item.audioDuration) {
+            tags.push(`[音频 ${formatDuration(item.audioDuration)}]`);
+          }
+          
+          if (item.hasImages && item.images) {
+            if (item.images.length === 1) {
+              const img = item.images[0];
+              tags.push(`[图片 ${img.width}×${img.height}]`);
+            } else {
+              tags.push(`[${item.images.length}张图片]`);
+            }
+          }
+          
+          if (tags.length > 0) {
+            output += ' ' + tags.join(' ');
+          }
+          
+          output += '\n';
+          
+          // 位置信息
+          if (item.location) {
+            output += `  📍 ${formatLocationSimple(item.location)}\n`;
+          }
+          
+          output += '\n';
+        });
+    });
+  
+  return output.trim();
+}
+
+/**
+ * 格式化记录为 Markdown（文档友好）
  */
 export function formatRecordsAsMarkdown(
   records: Record[],
@@ -92,60 +169,137 @@ export function formatRecordsAsMarkdown(
   
   let markdown = '# 生活记录\n\n';
   
-  // 统计信息
-  let totalWithLocation = 0;
-  let totalWithAudio = 0;
-  
   // 按日期分组输出
   Array.from(grouped.entries())
     .sort(([dateA], [dateB]) => dateB.localeCompare(dateA))
     .forEach(([, items]) => {
       const dateLabel = getDateLabel(items[0].createdAt);
-      markdown += `## ${formatDate(items[0].createdAt)} (${dateLabel})\n\n`;
+      markdown += `## ${formatDate(items[0].createdAt)} · ${dateLabel}\n\n`;
       
       items
         .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
         .forEach(item => {
-          // 基本内容
-          markdown += `- ${formatTime(item.createdAt)} ${item.content}`;
+          // 时间戳
+          markdown += `**${formatTime(item.createdAt)}**`;
           
-          // 添加音频标记
-          if (item.hasAudio && item.audioDuration) {
-            const duration = Math.floor(item.audioDuration);
-            markdown += ` 🎵[${duration}秒]`;
-            totalWithAudio++;
-          }
-          
-          markdown += '\n';
-          
-          // 添加地址信息和经纬度
+          // 位置标记（在同一行）
           if (item.location) {
-            markdown += formatLocation(item.location);
-            markdown += '\n';
-            totalWithLocation++;
+            markdown += ` · 📍 ${formatLocationSimple(item.location)}`;
           }
+          
+          markdown += '\n\n';
+          
+          // 文本内容
+          if (item.content) {
+            markdown += `${item.content}\n\n`;
+          }
+          
+          // 多模态内容标记
+          const attachments: string[] = [];
+          
+          if (item.hasAudio && item.audioDuration) {
+            attachments.push(`🎵 音频 (${formatDuration(item.audioDuration)})`);
+          }
+          
+          if (item.hasImages && item.images) {
+            item.images.forEach((img, idx) => {
+              attachments.push(`📷 图片${item.images!.length > 1 ? idx + 1 : ''} (${img.width}×${img.height})`);
+            });
+          }
+          
+          if (attachments.length > 0) {
+            markdown += attachments.map(a => `> ${a}`).join('\n') + '\n\n';
+          }
+          
+          // 详细位置信息（如果有）
+          if (item.location) {
+            const lat = item.location.latitude.toFixed(6);
+            const lng = item.location.longitude.toFixed(6);
+            markdown += `<sub>坐标: ${lat}, ${lng}</sub>\n\n`;
+          }
+          
+          markdown += '---\n\n';
         });
-      
-      markdown += '\n';
     });
   
-  // 添加元信息
-  markdown += '---\n\n';
-  markdown += `**导出统计**\n\n`;
-  markdown += `- 导出时间：${formatDateTime(new Date())}\n`;
-  markdown += `- 记录条数：${sortedRecords.length}\n`;
-  markdown += `- 包含位置：${totalWithLocation} 条\n`;
-  markdown += `- 包含音频：${totalWithAudio} 条\n`;
-  
-  const timeRangeLabel = {
-    today: '今天',
-    '7days': '最近7天',
-    '30days': '最近30天',
-    all: '全部',
-  };
-  markdown += `- 时间范围：${timeRangeLabel[timeRange]}\n`;
-  
   return markdown;
+}
+
+/**
+ * 格式化记录为 JSON（完整数据备份）
+ */
+export function formatRecordsAsJSON(
+  records: Record[],
+  timeRange: ExportTimeRange
+): string {
+  const filteredRecords = filterRecordsByTimeRange(records, timeRange);
+  const sortedRecords = [...filteredRecords].sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+  );
+  
+  const exportData = {
+    version: '1.0',
+    exportedAt: new Date().toISOString(),
+    timeRange,
+    totalRecords: sortedRecords.length,
+    records: sortedRecords.map(record => ({
+      id: record.id,
+      content: record.content,
+      timestamp: record.timestamp,
+      createdAt: record.createdAt.toISOString(),
+      updatedAt: record.updatedAt.toISOString(),
+      
+      // 位置信息
+      location: record.location ? {
+        latitude: record.location.latitude,
+        longitude: record.location.longitude,
+        accuracy: record.location.accuracy,
+        address: record.location.address,
+        city: record.location.city,
+        district: record.location.district,
+        street: record.location.street,
+      } : undefined,
+      
+      // 音频信息（不包含音频数据，只包含元数据）
+      audio: record.hasAudio ? {
+        duration: record.audioDuration,
+        format: record.audioFormat,
+        hasData: !!record.audioData,
+      } : undefined,
+      
+      // 图片信息（不包含图片数据，只包含元数据）
+      images: record.hasImages && record.images ? record.images.map(img => ({
+        id: img.id,
+        width: img.width,
+        height: img.height,
+        size: img.size,
+        type: img.type,
+        createdAt: img.createdAt,
+      })) : undefined,
+    })),
+  };
+  
+  return JSON.stringify(exportData, null, 2);
+}
+
+/**
+ * 统一导出接口
+ */
+export function exportRecords(
+  records: Record[],
+  timeRange: ExportTimeRange,
+  format: ExportFormat
+): string {
+  switch (format) {
+    case 'text':
+      return formatRecordsAsText(records, timeRange);
+    case 'markdown':
+      return formatRecordsAsMarkdown(records, timeRange);
+    case 'json':
+      return formatRecordsAsJSON(records, timeRange);
+    default:
+      return formatRecordsAsText(records, timeRange);
+  }
 }
 
 /**
@@ -173,10 +327,22 @@ export async function copyToClipboard(text: string): Promise<void> {
 }
 
 /**
- * 下载为文本文件
+ * 下载为文件
  */
-export function downloadAsTextFile(content: string, filename: string): void {
-  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+export function downloadAsFile(
+  content: string,
+  filename: string,
+  format: ExportFormat
+): void {
+  // 根据格式确定 MIME 类型
+  const mimeTypes = {
+    text: 'text/plain',
+    markdown: 'text/markdown',
+    json: 'application/json',
+  };
+  
+  const mimeType = mimeTypes[format] || 'text/plain';
+  const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -185,5 +351,22 @@ export function downloadAsTextFile(content: string, filename: string): void {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+/**
+ * 生成文件名
+ */
+export function generateFilename(format: ExportFormat): string {
+  const now = new Date();
+  const timestamp = now.toISOString().slice(0, 10); // YYYY-MM-DD
+  
+  const extensions = {
+    text: 'txt',
+    markdown: 'md',
+    json: 'json',
+  };
+  
+  const ext = extensions[format] || 'txt';
+  return `life-records-${timestamp}.${ext}`;
 }
 

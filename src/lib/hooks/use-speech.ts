@@ -91,6 +91,12 @@ export function useSpeech(options: UseSpeechOptions = {}): UseSpeechReturn {
   
   // 检查浏览器支持
   useEffect(() => {
+    // ✅ SSR 安全检查：确保在客户端环境
+    if (typeof window === 'undefined') {
+      setIsSupported(false);
+      return;
+    }
+    
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     setIsSupported(!!SpeechRecognition);
     
