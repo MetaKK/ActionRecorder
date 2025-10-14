@@ -55,6 +55,48 @@
       transform: scale(1.05);
     }
   }
+  
+  /* 平滑呼吸动画 - 录音状态 */
+  --animate-breathe: breathe 2s ease-in-out infinite;
+  
+  @keyframes breathe {
+    0%, 100% {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
+  
+  /* 平滑呼吸动画（紫色） - 语音转文字状态 */
+  --animate-breathe-purple: breathe-purple 2s ease-in-out infinite;
+  
+  @keyframes breathe-purple {
+    0%, 100% {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
+  
+  /* 平滑呼吸动画（红色） - 录音状态 */
+  --animate-breathe-red: breathe-red 2s ease-in-out infinite;
+  
+  @keyframes breathe-red {
+    0%, 100% {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
 }
 
 :root {

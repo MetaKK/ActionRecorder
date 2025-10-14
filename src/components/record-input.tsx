@@ -31,7 +31,7 @@ export function RecordInput() {
     startRecording: startAudioRecording, 
     stopRecording: stopAudioRecording,
     clearAudio,
-    audioURL 
+    audioURL
   } = useAudioRecorder();
   
   // 动态 placeholder 文本列表（使用 useMemo 避免每次渲染重新创建）
@@ -240,8 +240,22 @@ export function RecordInput() {
           }}
           className="group relative flex flex-col gap-2 p-4 w-full rounded-[28px] border-border/40 bg-muted/50 backdrop-blur-sm text-base shadow-lg transition-all duration-300 ease-out hover:border-primary/30 hover:shadow-xl focus-within:border-primary/50 focus-within:shadow-[0_0_0_.5px_rgba(var(--primary-rgb),0.1)] focus-within:bg-background/50"
         >
-          {/* 音频预览 */}
-          {audioBlob && audioURL && (
+          {/* 录音中 - 状态提示 */}
+          {isRecordingAudio && (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20">
+              <div className="flex items-center gap-2">
+                <div className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" style={{ animation: 'breathe-red 2s ease-in-out infinite' }}></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </div>
+                <span className="text-xs text-red-600 dark:text-red-400 font-semibold">录音中</span>
+                <span className="text-xs text-muted-foreground font-mono">{formatDuration(audioDuration)}</span>
+              </div>
+            </div>
+          )}
+          
+          {/* 音频预览 - 录音完成后 */}
+          {!isRecordingAudio && audioBlob && audioURL && (
             <div 
               className="space-y-2 p-3 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20"
               onClick={(e) => e.stopPropagation()}
@@ -355,24 +369,14 @@ export function RecordInput() {
               </Button>
             </div>
             
-            {/* 状态指示 */}
+            {/* 状态指示 - 语音转文字中 */}
             {isListening && (
               <div className="flex items-center gap-1.5 px-2">
-                <span className="flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-purple-500 opacity-75"></span>
+                <div className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-75" style={{ animation: 'breathe-purple 2s ease-in-out infinite' }}></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
-                </span>
+                </div>
                 <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">转文字中...</span>
-              </div>
-            )}
-            
-            {isRecordingAudio && (
-              <div className="flex items-center gap-1.5 px-2">
-                <span className="flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-red-500 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                </span>
-                <span className="text-xs text-red-600 dark:text-red-400 font-medium">录音中 {formatDuration(audioDuration)}</span>
               </div>
             )}
             
