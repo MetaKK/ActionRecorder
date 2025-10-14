@@ -4,16 +4,18 @@
 
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import { Trash2, Circle, StopCircle, Mic, MicOff } from 'lucide-react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { Trash2, Circle, StopCircle, Mic, MicOff, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { PermissionGuide } from '@/components/permission-guide';
 import { AudioPlayer } from '@/components/audio-player';
+import { ImageGrid } from '@/components/image-grid';
 import { useSpeech } from '@/lib/hooks/use-speech';
 import { useRecords } from '@/lib/hooks/use-records';
 import { useLocation } from '@/lib/hooks/use-location';
 import { useAudioRecorder } from '@/lib/hooks/use-audio-recorder';
+import { useImageUpload } from '@/lib/hooks/use-image-upload';
 import { useIsDesktop } from '@/lib/hooks/use-device-type';
 import { toast } from 'sonner';
 import { MapPin } from 'lucide-react';
@@ -23,6 +25,7 @@ export function RecordInput() {
   const [inputText, setInputText] = useState('');
   const [placeholder, setPlaceholder] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { addRecord } = useRecords();
   const { location, isLoading: isLocationLoading, isEnabled: isLocationEnabled, toggleLocation } = useLocation();
   const { 
@@ -34,6 +37,19 @@ export function RecordInput() {
     clearAudio,
     audioURL
   } = useAudioRecorder();
+  
+  // 图片上传Hook
+  const {
+    images,
+    isUploading,
+    fileInputRef,
+    removeImage,
+    clearImages,
+    handleFileSelect,
+    handleDrop,
+    handlePaste,
+    triggerFileSelect,
+  } = useImageUpload();
   
   // 动态 placeholder 文本列表（使用 useMemo 避免每次渲染重新创建）
   const placeholders = useMemo(() => [
@@ -163,9 +179,9 @@ export function RecordInput() {
     
     const content = inputText.trim();
     
-    // 至少需要内容或音频之一
-    if (!content && !finalAudioBlob) {
-      toast.error('请输入内容或录制语音');
+    // 至少需要内容、音频或图片之一
+    if (!content && !finalAudioBlob && images.length === 0) {
+      toast.error('请输入内容、录制语音或上传图片');
       return;
     }
     
@@ -190,25 +206,38 @@ export function RecordInput() {
         });
       }
       
+      // 处理图片数据
+      const imageData = images.length > 0 ? images : undefined;
+      if (imageData) {
+        const totalSize = images.reduce((sum, img) => sum + img.size, 0);
+        console.log('📸 保存图片:', {
+          数量: images.length,
+          总大小: `${(totalSize / 1024).toFixed(2)} KB`,
+        });
+      }
+      
       console.log('💾 保存内容:', {
         文本: content || '(无文本)',
         文本长度: content.length,
         有音频: !!audioData,
+        有图片: !!imageData,
+        图片数量: images.length,
         有位置: !!currentLocation,
       });
       
-      addRecord(content, currentLocation, audioData);
+      addRecord(content, currentLocation, audioData, imageData);
       setInputText('');
       clearAudio();
+      clearImages();
       
       // 成功提示
       let message = '记录已保存';
-      if (content && audioData) {
-        message += ' 📝🎤'; // 文本+音频
-      } else if (audioData) {
-        message += ' 🎤'; // 仅音频
-      } else if (content) {
-        message += ' 📝'; // 仅文本
+      const features: string[] = [];
+      if (content) features.push('📝');
+      if (audioData) features.push('🎤');
+      if (imageData) features.push(`📷${images.length}`);
+      if (features.length > 0) {
+        message += ' ' + features.join(' ');
       }
       
       if (currentLocation) {
@@ -222,7 +251,7 @@ export function RecordInput() {
       console.error('保存失败:', error);
       toast.error('保存失败，请重试');
     }
-  }, [inputText, audioBlob, audioDuration, addRecord, isListening, stopListening, isRecordingAudio, stopAudioRecording, clearAudio, isLocationEnabled, location]);
+  }, [inputText, audioBlob, audioDuration, images, addRecord, isListening, stopListening, isRecordingAudio, stopAudioRecording, clearAudio, clearImages, isLocationEnabled, location]);
   
   // 处理键盘快捷键
   const handleKeyDown = useCallback(
@@ -293,15 +322,28 @@ export function RecordInput() {
             </div>
           )}
           
+          {/* 图片预览区域 */}
+          {images.length > 0 && (
+            <ImageGrid
+              images={images}
+              onRemove={removeImage}
+              className="mb-3"
+            />
+          )}
+          
           {/* Textarea */}
           <div className="relative flex flex-1 items-center">
             <Textarea
+              ref={textareaRef}
               placeholder={placeholder}
               value={displayText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
+              onPaste={handlePaste}
+              onDrop={handleDrop}
+              onDragOver={(e) => e.preventDefault()}
               className="flex w-full rounded-md px-3 py-3 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none text-[16px] leading-relaxed placeholder-shown:text-ellipsis placeholder-shown:whitespace-nowrap md:text-base focus-visible:ring-0 focus-visible:ring-offset-0 max-h-[max(40svh,8rem)] bg-transparent focus:bg-transparent flex-1 border-0"
               disabled={isListening}
               style={{ minHeight: '140px', height: '140px' }}
@@ -376,6 +418,42 @@ export function RecordInput() {
               >
                 <MapPin className={`h-5 w-5 ${isLocationEnabled ? 'fill-current' : ''}`} />
               </Button>
+              
+              {/* 图片上传按钮 */}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={`h-10 w-10 rounded-full p-0 border transition-all duration-300 md:h-9 md:w-9 ${
+                  images.length > 0
+                    ? 'border-cyan-500/80 bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 shadow-lg shadow-cyan-500/20' 
+                    : 'border-border/40 bg-background/50 backdrop-blur-sm text-muted-foreground hover:bg-cyan/10 hover:border-cyan-500/50 hover:shadow-lg hover:text-cyan-600'
+                } ${
+                  isUploading ? 'animate-pulse' : ''
+                }`}
+                onClick={triggerFileSelect}
+                disabled={isUploading}
+                title={
+                  isUploading 
+                    ? '处理图片中...' 
+                    : images.length > 0 
+                    ? `📷 已添加 ${images.length} 张图片 - 点击添加更多` 
+                    : '📷 添加图片 (最多9张)'
+                }
+              >
+                <ImageIcon className={`h-5 w-5 ${images.length > 0 ? 'fill-current' : ''}`} />
+              </Button>
+              
+              {/* 隐藏的文件input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+                aria-label="上传图片"
+              />
             </div>
             
             {/* 状态指示 - 语音转文字中 */}
@@ -421,7 +499,7 @@ export function RecordInput() {
         <Button
                 type="submit"
                 size="icon"
-                disabled={!inputText.trim() && !audioBlob}
+                disabled={!inputText.trim() && !audioBlob && images.length === 0}
                 className="gap-2 whitespace-nowrap text-sm font-medium ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 disabled:pointer-events-none relative z-10 flex rounded-full p-0 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-30 items-center justify-center h-10 w-10 md:h-9 md:w-9 bg-foreground hover:bg-foreground/90 hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] text-background"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="100%" height="100%" className="shrink-0 h-5 w-5">

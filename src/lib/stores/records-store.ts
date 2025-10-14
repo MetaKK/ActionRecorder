@@ -3,7 +3,7 @@
  */
 
 import { create } from 'zustand';
-import { Record, RecordsStore, Location } from '@/lib/types';
+import { Record, RecordsStore, Location, ImageData } from '@/lib/types';
 import { saveRecords, loadRecords } from '@/lib/utils/storage';
 import { differenceInDays } from 'date-fns';
 
@@ -13,11 +13,16 @@ export const useRecordsStore = create<RecordsStore>((set, get) => ({
   /**
    * 添加新记录
    */
-  addRecord: (content: string, location?: Location, audio?: {
-    audioData: string;
-    audioDuration: number;
-    audioFormat: string;
-  }) => {
+  addRecord: (
+    content: string, 
+    location?: Location, 
+    audio?: {
+      audioData: string;
+      audioDuration: number;
+      audioFormat: string;
+    },
+    images?: ImageData[]
+  ) => {
     const newRecord: Record = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       content: content.trim(),
@@ -28,6 +33,10 @@ export const useRecordsStore = create<RecordsStore>((set, get) => ({
       audioDuration: audio?.audioDuration,
       audioFormat: audio?.audioFormat,
       hasAudio: !!audio,
+      
+      // 添加图片信息
+      images: images && images.length > 0 ? images : undefined,
+      hasImages: images ? images.length > 0 : false,
       
       timestamp: Date.now(),
       createdAt: new Date(),

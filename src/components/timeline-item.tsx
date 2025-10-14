@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { DeleteConfirmDialog } from '@/components/delete-confirm-dialog';
 import { AudioPlayer } from '@/components/audio-player';
+import { ImageGrid } from '@/components/image-grid';
 import { Record } from '@/lib/types';
 import { formatShortDateTime } from '@/lib/utils/date';
 import { formatLocation } from '@/lib/hooks/use-location';
@@ -206,6 +207,16 @@ export function TimelineItem({ record }: TimelineItemProps) {
                       audioData={record.audioData} 
                       duration={record.audioDuration || 0}
                       compact
+                    />
+                  </div>
+                )}
+                
+                {/* 图片展示 */}
+                {record.hasImages && record.images && record.images.length > 0 && (
+                  <div className="pt-1">
+                    <ImageGrid
+                      images={record.images}
+                      readonly
                     />
                   </div>
                 )}
