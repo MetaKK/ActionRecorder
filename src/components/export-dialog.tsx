@@ -138,19 +138,19 @@ export function ExportDialog() {
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden flex flex-col px-6 pb-6">
-          {/* 顶部选项区 */}
-          <div className="flex items-center gap-4 mb-4">
+          {/* 顶部选项区 - 响应式布局 */}
+          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-4">
             {/* 导出格式选择 */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 relative z-10">
               <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">格式</label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 overflow-x-auto scrollbar-none">
                 {EXPORT_FORMATS.map((format) => (
                   <button
                     key={format.value}
                     onClick={() => setSelectedFormat(format.value)}
                     className={cn(
                       "group relative flex items-center gap-2 rounded-xl px-3 py-2 transition-all duration-300",
-                      "border backdrop-blur-sm",
+                      "border backdrop-blur-sm shrink-0",
                       selectedFormat === format.value
                         ? [
                             "border-white/20 shadow-lg",
@@ -191,20 +191,20 @@ export function ExportDialog() {
               </div>
             </div>
 
-            {/* 分隔线 */}
-            <div className="h-6 w-px bg-border/40" />
+            {/* 分隔线 - 桌面端显示 */}
+            <div className="hidden md:block h-6 w-px bg-border/40" />
             
             {/* 时间范围选择 */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 relative z-10">
               <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">时间</label>
-              <div className="flex gap-1.5">
+              <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
                 {TIME_RANGES.map((range) => (
                   <button
                     key={range.value}
                     onClick={() => setSelectedRange(range.value)}
                     className={cn(
                       "relative flex items-center justify-center rounded-lg px-3 py-1.5 transition-all duration-300",
-                      "border backdrop-blur-sm",
+                      "border backdrop-blur-sm shrink-0",
                       selectedRange === range.value
                         ? [
                             "border-cyan-400/40 bg-gradient-to-br from-sky-400/12 via-blue-400/12 to-cyan-400/12",

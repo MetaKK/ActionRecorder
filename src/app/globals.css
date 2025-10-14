@@ -188,3 +188,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* 隐藏滚动条 - 用于移动端水平滚动 */
+@layer utilities {
+  .scrollbar-none {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+}
