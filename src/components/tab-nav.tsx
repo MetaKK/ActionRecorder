@@ -115,8 +115,8 @@ export function TabNav({ tabs, activeTab, onTabChange, className, rightAction }:
               disabled={activeTab === tab.id}
               className={cn(
                 "relative inline-flex h-11 shrink-0 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl border px-5",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50",
                 "transition-all duration-500 ease-out",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50",
                 activeTab === tab.id
                   ? [
                       // 💫 激活状态 - 大气显眼的科技风格
