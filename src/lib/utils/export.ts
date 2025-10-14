@@ -123,11 +123,21 @@ export function formatRecordsAsText(
           }
           
           if (item.hasImages && item.images) {
+            const imageCount = item.images.filter(m => m.type === 'image').length;
+            const videoCount = item.images.filter(m => m.type === 'video').length;
+            
             if (item.images.length === 1) {
-              const img = item.images[0];
-              tags.push(`[图片 ${img.width}×${img.height}]`);
+              const media = item.images[0];
+              if (media.type === 'video') {
+                tags.push(`[视频 ${media.duration ? formatDuration(media.duration) : ''}]`);
+              } else {
+                tags.push(`[图片 ${media.width}×${media.height}]`);
+              }
             } else {
-              tags.push(`[${item.images.length}张图片]`);
+              const parts: string[] = [];
+              if (imageCount > 0) parts.push(`${imageCount}张图片`);
+              if (videoCount > 0) parts.push(`${videoCount}个视频`);
+              tags.push(`[${parts.join('和')}]`);
             }
           }
           
@@ -202,8 +212,13 @@ export function formatRecordsAsMarkdown(
           }
           
           if (item.hasImages && item.images) {
-            item.images.forEach((img, idx) => {
-              attachments.push(`📷 图片${item.images!.length > 1 ? idx + 1 : ''} (${img.width}×${img.height})`);
+            item.images.forEach((media, idx) => {
+              if (media.type === 'video') {
+                const duration = media.duration ? ` (${formatDuration(media.duration)})` : '';
+                attachments.push(`🎬 视频${item.images!.length > 1 ? idx + 1 : ''}${duration}`);
+              } else {
+                attachments.push(`📷 图片${item.images!.length > 1 ? idx + 1 : ''} (${media.width}×${media.height})`);
+              }
             });
           }
           
@@ -267,14 +282,16 @@ export function formatRecordsAsJSON(
         hasData: !!record.audioData,
       } : undefined,
       
-      // 图片信息（不包含图片数据，只包含元数据）
-      images: record.hasImages && record.images ? record.images.map(img => ({
-        id: img.id,
-        width: img.width,
-        height: img.height,
-        size: img.size,
-        type: img.type,
-        createdAt: img.createdAt,
+      // 媒体信息（图片+视频，不包含实际数据，只包含元数据）
+      images: record.hasImages && record.images ? record.images.map(media => ({
+        id: media.id,
+        type: media.type,           // 'image' | 'video'
+        width: media.width,
+        height: media.height,
+        size: media.size,
+        mimeType: media.mimeType,
+        duration: media.duration,   // 仅视频
+        createdAt: media.createdAt,
       })) : undefined,
     })),
   };

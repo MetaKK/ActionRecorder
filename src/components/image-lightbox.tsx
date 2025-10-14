@@ -1,17 +1,17 @@
 /**
- * 图片灯箱预览组件 - Apple 风格
+ * 媒体灯箱预览组件 - Apple 风格（支持图片 + 视频）
  */
 
 'use client';
 
 import { useEffect, useCallback, useState } from 'react';
-import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
-import { ImageData } from '@/lib/types';
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Video as VideoIcon } from 'lucide-react';
+import { MediaData } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { createPortal } from 'react-dom';
 
 interface ImageLightboxProps {
-  images: ImageData[];
+  images: MediaData[];
   initialIndex?: number;
   isOpen: boolean;
   onClose: () => void;
@@ -23,8 +23,9 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose }: Ima
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
 
-  const currentImage = images[currentIndex];
+  const currentMedia = images[currentIndex];
   const totalImages = images.length;
+  const isVideo = currentMedia?.type === 'video';
 
   // 重置索引当打开时
   useEffect(() => {
@@ -147,11 +148,13 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose }: Ima
         </div>
       )}
 
-      {/* 图片信息 */}
+      {/* 媒体信息 */}
       <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2">
-        <div className="rounded-full bg-white/10 backdrop-blur-md px-4 py-2">
+        <div className="flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md px-4 py-2">
+          {isVideo && <VideoIcon className="h-3 w-3 text-white/80" />}
           <span className="text-xs text-white/80">
-            {currentImage.width} × {currentImage.height}
+            {currentMedia.width} × {currentMedia.height}
+            {isVideo && currentMedia.duration && ` • ${Math.floor(currentMedia.duration)}s`}
           </span>
         </div>
       </div>
@@ -200,26 +203,28 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose }: Ima
         </button>
       )}
 
-      {/* 缩放按钮 */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsZoomed(!isZoomed);
-        }}
-        className={cn(
-          "absolute right-4 bottom-4 z-10",
-          "flex h-10 w-10 items-center justify-center rounded-full",
-          "bg-white/10 backdrop-blur-md",
-          "text-white transition-all duration-200",
-          "hover:bg-white/20 hover:scale-110",
-          "active:scale-95"
-        )}
-        aria-label={isZoomed ? "缩小" : "放大"}
-      >
-        {isZoomed ? <ZoomOut className="h-5 w-5" /> : <ZoomIn className="h-5 w-5" />}
-      </button>
+      {/* 缩放按钮（仅图片） */}
+      {!isVideo && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsZoomed(!isZoomed);
+          }}
+          className={cn(
+            "absolute right-4 bottom-4 z-10",
+            "flex h-10 w-10 items-center justify-center rounded-full",
+            "bg-white/10 backdrop-blur-md",
+            "text-white transition-all duration-200",
+            "hover:bg-white/20 hover:scale-110",
+            "active:scale-95"
+          )}
+          aria-label={isZoomed ? "缩小" : "放大"}
+        >
+          {isZoomed ? <ZoomOut className="h-5 w-5" /> : <ZoomIn className="h-5 w-5" />}
+        </button>
+      )}
 
-      {/* 图片容器 */}
+      {/* 媒体容器（图片或视频） */}
       <div
         className="relative flex h-full w-full items-center justify-center p-4 md:p-12"
         onClick={(e) => e.stopPropagation()}
@@ -227,20 +232,40 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose }: Ima
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <img
-          src={currentImage.data}
-          alt={`图片 ${currentIndex + 1}`}
-          className={cn(
-            "max-h-full max-w-full object-contain",
-            "transition-all duration-500 ease-out",
-            "animate-in zoom-in-95 fade-in duration-300",
-            isZoomed && "scale-150 cursor-move"
-          )}
-          draggable={false}
-          style={{
-            transformOrigin: 'center',
-          }}
-        />
+        {isVideo ? (
+          /* 视频播放器 */
+          <video
+            src={currentMedia.data}
+            controls
+            autoPlay
+            className={cn(
+              "max-h-full max-w-full",
+              "rounded-lg shadow-2xl",
+              "animate-in zoom-in-95 fade-in duration-300"
+            )}
+            style={{
+              maxHeight: 'calc(100vh - 8rem)',
+            }}
+          >
+            您的浏览器不支持视频播放
+          </video>
+        ) : (
+          /* 图片显示 */
+          <img
+            src={currentMedia.data}
+            alt={`图片 ${currentIndex + 1}`}
+            className={cn(
+              "max-h-full max-w-full object-contain",
+              "transition-all duration-500 ease-out",
+              "animate-in zoom-in-95 fade-in duration-300",
+              isZoomed && "scale-150 cursor-move"
+            )}
+            draggable={false}
+            style={{
+              transformOrigin: 'center',
+            }}
+          />
+        )}
       </div>
     </div>
   );

@@ -29,16 +29,25 @@ export interface Location {
   province?: string;          // 省份
 }
 
-// 图片信息
-export interface ImageData {
-  id: string;              // 图片唯一ID
-  data: string;            // Base64 图片数据
+// 媒体文件类型
+export type MediaType = 'image' | 'video';
+
+// 媒体信息（图片 + 视频）
+export interface MediaData {
+  id: string;              // 媒体唯一ID
+  type: MediaType;         // 媒体类型
+  data: string;            // Base64 数据
   width: number;           // 原始宽度
   height: number;          // 原始高度
   size: number;            // 文件大小（字节）
-  type: string;            // MIME类型（image/jpeg等）
+  mimeType: string;        // MIME类型（image/jpeg, video/mp4等）
+  duration?: number;       // 视频时长（秒，仅视频）
+  thumbnail?: string;      // 视频缩略图（Base64，仅视频）
   createdAt: Date;         // 添加时间
 }
+
+// 向后兼容的类型别名
+export type ImageData = MediaData;
 
 export interface Record {
   id: string;
@@ -51,9 +60,9 @@ export interface Record {
   audioFormat?: string;      // 音频格式（audio/webm）
   hasAudio?: boolean;        // 是否包含音频
   
-  // 图片字段
-  images?: ImageData[];      // 图片数组
-  hasImages?: boolean;       // 是否包含图片
+  // 媒体字段（图片 + 视频）
+  images?: MediaData[];      // 媒体数组（向后兼容字段名）
+  hasImages?: boolean;       // 是否包含媒体
   
   timestamp: number;
   createdAt: Date;
@@ -70,7 +79,7 @@ export interface RecordsStore {
       audioDuration: number;
       audioFormat: string;
     },
-    images?: ImageData[]
+    images?: MediaData[]  // 支持图片 + 视频
   ) => void;
   updateRecord: (id: string, content: string) => void;
   deleteRecord: (id: string) => void;

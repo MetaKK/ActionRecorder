@@ -419,7 +419,7 @@ export function RecordInput() {
                 <MapPin className={`h-5 w-5 ${isLocationEnabled ? 'fill-current' : ''}`} />
               </Button>
               
-              {/* 图片上传按钮 */}
+              {/* 媒体上传按钮（图片+视频） */}
               <Button
                 type="button"
                 variant="ghost"
@@ -435,24 +435,24 @@ export function RecordInput() {
                 disabled={isUploading}
                 title={
                   isUploading 
-                    ? '处理图片中...' 
+                    ? '处理中...' 
                     : images.length > 0 
-                    ? `📷 已添加 ${images.length} 张图片 - 点击添加更多` 
-                    : '📷 添加图片 (最多9张)'
+                    ? `📷 已添加 ${images.length} 个文件 - 点击添加更多` 
+                    : '📷🎬 添加图片或视频 (最多9个)'
                 }
               >
                 <ImageIcon className={`h-5 w-5 ${images.length > 0 ? 'fill-current' : ''}`} />
               </Button>
               
-              {/* 隐藏的文件input */}
+              {/* 隐藏的文件input - 支持图片和视频 */}
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,video/*"
                 multiple
                 onChange={handleFileSelect}
                 className="hidden"
-                aria-label="上传图片"
+                aria-label="上传图片或视频"
               />
             </div>
             
