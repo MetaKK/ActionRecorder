@@ -267,30 +267,30 @@ export function RecordInput() {
   );
   
   return (
-    <div className="relative mb-4 flex flex-col items-center px-4 text-center md:mb-6">
+    <div className="relative mb-4 flex flex-col items-center w-full text-center md:mb-6">
       {/* Hero Section - 精确复刻 Lovable.dev */}
       <div className="flex w-full flex-col items-center justify-center gap-2"></div>
       
       {/* 主标题 - 完全对齐 Lovable 的样式 */}
-      <h1 className="mb-2 flex items-center gap-1 text-3xl font-medium leading-none text-foreground sm:text-3xl md:mb-2.5 md:gap-0 md:text-5xl">
+      <h1 className="mb-2 flex items-center gap-1 text-3xl font-medium leading-none text-foreground sm:text-3xl md:mb-2.5 md:gap-0 md:text-5xl px-4">
         <span className="pt-0.5 tracking-tight md:pt-0">
           记录生活
         </span>
       </h1>
       
       {/* 副标题 - 完全对齐 Lovable 的样式 */}
-      <p className="mb-6 max-w-[25ch] text-center text-lg leading-tight text-foreground/65 md:max-w-full md:text-xl">
+      <p className="mb-6 max-w-[25ch] text-center text-lg leading-tight text-foreground/65 md:max-w-full md:text-xl px-4">
         用文字、语音或图片，捕捉每一个值得铭记的瞬间
       </p>
       
-      {/* Lovable 风格大输入框 */}
-      <div className="relative w-full max-w-3xl">
+      {/* Lovable 风格大输入框 - 左右各留 1rem 边距 */}
+      <div className="relative w-full px-4">
         <form 
           onSubmit={(e) => {
             e.preventDefault();
             handleSave();
           }}
-          className="group flex flex-col gap-3 p-4 w-full rounded-[28px] border border-border/40 bg-muted/30 backdrop-blur-xl text-base shadow-xl transition-all duration-200 ease-out focus-within:border-foreground/20 hover:border-foreground/10 focus-within:hover:border-foreground/20"
+          className="group flex flex-col gap-4 p-5 md:p-6 w-full rounded-[32px] border border-border/40 bg-muted/30 backdrop-blur-xl text-base shadow-xl transition-all duration-200 ease-out focus-within:border-foreground/20 hover:border-foreground/10 focus-within:hover:border-foreground/20"
         >
           {/* 录音中 - 状态提示 */}
           {isRecordingAudio && (
@@ -360,21 +360,21 @@ export function RecordInput() {
               onPaste={handlePaste}
               onDrop={handleDrop}
               onDragOver={(e) => e.preventDefault()}
-              className="w-full resize-none bg-transparent text-[16px] leading-snug placeholder:text-muted-foreground focus-visible:outline-none focus:bg-transparent border-0 p-0 ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 max-h-[max(35svh,5rem)] placeholder-shown:text-ellipsis placeholder-shown:whitespace-nowrap md:text-base disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full resize-none bg-transparent text-base md:text-lg leading-relaxed placeholder:text-muted-foreground focus-visible:outline-none focus:bg-transparent border-0 p-0 ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 max-h-[max(35svh,5rem)] placeholder-shown:text-ellipsis placeholder-shown:whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50"
               disabled={isListening}
-              style={{ minHeight: '100px', height: '100px' }}
+              style={{ minHeight: '120px', height: '120px' }}
             />
           </div>
           
           {/* 底部按钮栏 - Lovable 风格 */}
-          <div className="flex gap-1 flex-wrap items-center">
+          <div className="flex gap-1.5 md:gap-2 flex-wrap items-center">
             {/* 左侧按钮组 */}
-            <div className="flex gap-1 items-center">
+            <div className="flex gap-1.5 md:gap-2 items-center">
               {/* 音频录制按钮 */}
               <button
                 type="button"
                 className={cn(
-                  "inline-flex items-center justify-center h-10 w-10 md:h-8 md:w-8 rounded-full p-0",
+                  "inline-flex items-center justify-center h-11 w-11 md:h-10 md:w-10 rounded-full p-0",
                   "border border-input bg-muted transition-all duration-150 ease-in-out",
                   "hover:bg-accent hover:border-accent",
                   "text-muted-foreground hover:text-foreground",
@@ -415,7 +415,7 @@ export function RecordInput() {
               <button
                 type="button"
                 className={cn(
-                  "inline-flex items-center justify-center h-10 w-10 md:h-8 md:w-8 rounded-full p-0",
+                  "inline-flex items-center justify-center h-11 w-11 md:h-10 md:w-10 rounded-full p-0",
                   "border border-input bg-muted transition-all duration-150 ease-in-out",
                   "hover:bg-accent hover:border-accent",
                   "text-muted-foreground hover:text-foreground",
@@ -437,7 +437,7 @@ export function RecordInput() {
               <button
                 type="button"
                 className={cn(
-                  "inline-flex items-center justify-center h-10 w-10 md:h-8 md:w-8 rounded-full p-0",
+                  "inline-flex items-center justify-center h-11 w-11 md:h-10 md:w-10 rounded-full p-0",
                   "border border-input bg-muted transition-all duration-150 ease-in-out",
                   "hover:bg-accent hover:border-accent",
                   "text-muted-foreground hover:text-foreground",
@@ -491,7 +491,7 @@ export function RecordInput() {
               <button
                 type="button"
                 className={cn(
-                  "inline-flex items-center justify-center h-10 w-10 md:h-8 md:w-8 rounded-full p-0",
+                  "inline-flex items-center justify-center h-11 w-11 md:h-10 md:w-10 rounded-full p-0",
                   "border border-input bg-muted transition-all duration-150 ease-in-out",
                   "hover:bg-accent hover:border-accent",
                   "text-muted-foreground hover:text-foreground",
@@ -502,9 +502,9 @@ export function RecordInput() {
                 title={!isSupported ? '浏览器不支持' : isListening ? '停止语音转文本' : '语音转文本'}
               >
                 {isListening ? (
-                  <MicOff className="h-4 w-4" />
+                  <MicOff className="h-5 w-5" />
                 ) : (
-                  <Mic className="h-4 w-4" />
+                  <Mic className="h-5 w-5" />
                 )}
               </button>
         
@@ -513,7 +513,7 @@ export function RecordInput() {
                 type="submit"
                 disabled={!inputText.trim() && !audioBlob && images.length === 0}
                 className={cn(
-                  "inline-flex items-center justify-center h-10 w-10 md:h-8 md:w-8 rounded-full p-0",
+                  "inline-flex items-center justify-center h-11 w-11 md:h-10 md:w-10 rounded-full p-0",
                   "bg-foreground text-background transition-all duration-150 ease-out",
                   "hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
                   "disabled:pointer-events-none disabled:opacity-50"
