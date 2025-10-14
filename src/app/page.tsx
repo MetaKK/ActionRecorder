@@ -6,6 +6,7 @@ import { Clock, BarChart3 } from 'lucide-react';
 import { TabNav, TabItem } from "@/components/tab-nav";
 import { useRecords } from "@/lib/hooks/use-records";
 import { AppHeader } from "@/components/app-header";
+import { ExportDialog } from "@/components/export-dialog";
 import { 
   TimelineSkeleton, 
   StatisticsSkeleton, 
@@ -78,11 +79,12 @@ export default function Home() {
 
       {/* Tab 导航和内容区域 */}
       <div className="relative mx-auto max-w-4xl px-6 pb-24 sm:px-8">
-        {/* Tab 导航 - ElevenLabs 风格 */}
+        {/* Tab 导航 - Apple 风格融合：Tab + 右侧操作 */}
         <TabNav
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          rightAction={activeTab === 'timeline' ? <ExportDialog /> : undefined}
         />
 
         {/* Tab 内容 */}

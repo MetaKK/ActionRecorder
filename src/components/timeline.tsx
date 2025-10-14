@@ -8,7 +8,6 @@
 import { useMemo } from 'react';
 import { Clock, Loader2 } from 'lucide-react';
 import { TimelineItem } from './timeline-item';
-import { ExportDialog } from './export-dialog';
 import { useRecords } from '@/lib/hooks/use-records';
 import { useProgressiveLoading } from '@/lib/hooks/use-intersection-observer';
 import { groupByDate, formatDate, getDateLabel } from '@/lib/utils/date';
@@ -45,56 +44,22 @@ export function Timeline() {
   // 空状态
   if (records.length === 0) {
     return (
-      <div className="space-y-12">
-        {/* Timeline 标题栏 - 极简 Apple 风格 */}
-        <div className="flex items-baseline justify-between gap-4">
-          {/* 左侧：大标题 + 轻量统计 */}
-          <div>
-            <h1 className="text-[2.5rem] font-bold tracking-tight text-foreground leading-none mb-2">
-              Timeline
-            </h1>
-            <p className="text-sm text-muted-foreground/50">
-              0 条记录
-            </p>
-          </div>
-          
-          {/* 右侧：轻量化操作 */}
-          <ExportDialog />
+      <div className="text-center py-16">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400/10 to-cyan-400/10">
+          <Clock className="h-8 w-8 text-muted-foreground/40" />
         </div>
-        
-        {/* 空状态提示 */}
-        <div className="text-center py-16">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400/10 to-cyan-400/10">
-            <Clock className="h-8 w-8 text-muted-foreground/40" />
-          </div>
-          <h3 className="text-base font-medium text-foreground/80 mb-2">
-            还没有记录
-          </h3>
-          <p className="text-sm text-muted-foreground/60">
-            开始记录您的生活吧
-          </p>
-        </div>
+        <h3 className="text-base font-medium text-foreground/80 mb-2">
+          还没有记录
+        </h3>
+        <p className="text-sm text-muted-foreground/60">
+          开始记录您的生活吧
+        </p>
       </div>
     );
   }
   
   return (
-    <div className="space-y-12">
-      {/* Timeline 标题栏 - 极简 Apple 风格 */}
-      <div className="flex items-baseline justify-between gap-4">
-        {/* 左侧：大标题 + 轻量统计 */}
-        <div>
-          <h1 className="text-[2.5rem] font-bold tracking-tight text-foreground leading-none mb-2">
-            Timeline
-          </h1>
-          <p className="text-sm text-muted-foreground/50">
-            {records.length} 条记录
-          </p>
-        </div>
-        
-        {/* 右侧：轻量化操作 */}
-        <ExportDialog />
-      </div>
+    <div className="space-y-8">
 
       {/* 记录内容 */}
       <div className="space-y-8">

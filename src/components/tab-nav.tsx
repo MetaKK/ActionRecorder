@@ -21,9 +21,10 @@ interface TabNavProps {
   activeTab: string;
   onTabChange: (tabId: string) => void;
   className?: string;
+  rightAction?: React.ReactNode; // 右侧操作区域（如导出按钮）- Apple 风格
 }
 
-export function TabNav({ tabs, activeTab, onTabChange, className }: TabNavProps) {
+export function TabNav({ tabs, activeTab, onTabChange, className, rightAction }: TabNavProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const [showLeftGradient, setShowLeftGradient] = useState(false);
@@ -93,14 +94,16 @@ export function TabNav({ tabs, activeTab, onTabChange, className }: TabNavProps)
 
   return (
     <div className={cn("relative mb-8", className)}>
-      <div className="relative flex justify-center">
-        {/* 滚动容器 */}
-        <div
-          ref={scrollContainerRef}
-          onScroll={checkScroll}
-          className="scrollbar-none flex gap-3 overflow-x-auto w-full md:justify-center px-2"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
+      {/* Apple 风格：Tab 导航 + 右侧操作，统一的标题栏 */}
+      <div className="relative flex items-center justify-between gap-4">
+        {/* Tab 滚动容器 */}
+        <div className="relative flex flex-1 justify-center">
+          <div
+            ref={scrollContainerRef}
+            onScroll={checkScroll}
+            className="scrollbar-none flex gap-3 overflow-x-auto w-full md:justify-center px-2"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -166,65 +169,73 @@ export function TabNav({ tabs, activeTab, onTabChange, className }: TabNavProps)
               )}
             </button>
           ))}
-          {/* 占位元素，确保右侧有空间 */}
-          <div className="w-16 shrink-0 md:w-0" />
+            {/* 占位元素，确保右侧有空间 */}
+            <div className="w-16 shrink-0 md:w-0" />
+          </div>
+
+          {/* 左侧渐变遮罩 - 精确匹配 ElevenLabs (w-44 = 176px) */}
+          <div
+            className={cn(
+              "pointer-events-none absolute left-0 top-0 h-full w-44 transition-opacity duration-200",
+              showLeftGradient ? "opacity-100" : "opacity-0"
+            )}
+            style={{
+              background: 'linear-gradient(to right, hsl(var(--background)) 0%, transparent 100%)'
+            }}
+          />
+
+          {/* 右侧渐变遮罩 - 精确匹配 ElevenLabs (w-44 = 176px) */}
+          <div
+            className={cn(
+              "pointer-events-none absolute right-0 top-0 h-full w-44 transition-opacity duration-200",
+              showRightGradient ? "opacity-100" : "opacity-0"
+            )}
+            style={{
+              background: 'linear-gradient(to left, hsl(var(--background)) 0%, transparent 100%)'
+            }}
+          />
+
+          {/* 左侧滚动按钮 - 💫 温暖科技风格 */}
+          <button
+            aria-label="向左滚动"
+            onClick={() => scroll('left')}
+            className={cn(
+              "absolute left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full",
+              "border border-cyan-300/30 bg-background/70 backdrop-blur-md",
+              "shadow-lg shadow-cyan-400/15 transition-all",
+              "hover:border-cyan-400/50 hover:bg-gradient-to-br hover:from-sky-400/15 hover:to-cyan-400/15",
+              "hover:shadow-xl hover:shadow-cyan-400/25 hover:scale-110",
+              "active:scale-95",
+              showLeftButton ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+            )}
+          >
+            <ChevronLeft className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+          </button>
+
+          {/* 右侧滚动按钮 - 💫 温暖科技风格 */}
+          <button
+            aria-label="向右滚动"
+            onClick={() => scroll('right')}
+            className={cn(
+              "absolute right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full",
+              "border border-cyan-300/30 bg-background/70 backdrop-blur-md",
+              "shadow-lg shadow-cyan-400/15 transition-all",
+              "hover:border-cyan-400/50 hover:bg-gradient-to-br hover:from-sky-400/15 hover:to-cyan-400/15",
+              "hover:shadow-xl hover:shadow-cyan-400/25 hover:scale-110",
+              "active:scale-95",
+              showRightButton ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+            )}
+          >
+            <ChevronRight className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+          </button>
         </div>
 
-        {/* 左侧渐变遮罩 - 精确匹配 ElevenLabs (w-44 = 176px) */}
-        <div
-          className={cn(
-            "pointer-events-none absolute left-0 top-0 h-full w-44 transition-opacity duration-200",
-            showLeftGradient ? "opacity-100" : "opacity-0"
-          )}
-          style={{
-            background: 'linear-gradient(to right, hsl(var(--background)) 0%, transparent 100%)'
-          }}
-        />
-
-        {/* 右侧渐变遮罩 - 精确匹配 ElevenLabs (w-44 = 176px) */}
-        <div
-          className={cn(
-            "pointer-events-none absolute right-0 top-0 h-full w-44 transition-opacity duration-200",
-            showRightGradient ? "opacity-100" : "opacity-0"
-          )}
-          style={{
-            background: 'linear-gradient(to left, hsl(var(--background)) 0%, transparent 100%)'
-          }}
-        />
-
-        {/* 左侧滚动按钮 - 💫 温暖科技风格 */}
-        <button
-          aria-label="向左滚动"
-          onClick={() => scroll('left')}
-          className={cn(
-            "absolute left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full",
-            "border border-cyan-300/30 bg-background/70 backdrop-blur-md",
-            "shadow-lg shadow-cyan-400/15 transition-all",
-            "hover:border-cyan-400/50 hover:bg-gradient-to-br hover:from-sky-400/15 hover:to-cyan-400/15",
-            "hover:shadow-xl hover:shadow-cyan-400/25 hover:scale-110",
-            "active:scale-95",
-            showLeftButton ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
-          )}
-        >
-          <ChevronLeft className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-        </button>
-
-        {/* 右侧滚动按钮 - 💫 温暖科技风格 */}
-        <button
-          aria-label="向右滚动"
-          onClick={() => scroll('right')}
-          className={cn(
-            "absolute right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full",
-            "border border-cyan-300/30 bg-background/70 backdrop-blur-md",
-            "shadow-lg shadow-cyan-400/15 transition-all",
-            "hover:border-cyan-400/50 hover:bg-gradient-to-br hover:from-sky-400/15 hover:to-cyan-400/15",
-            "hover:shadow-xl hover:shadow-cyan-400/25 hover:scale-110",
-            "active:scale-95",
-            showRightButton ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
-          )}
-        >
-          <ChevronRight className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-        </button>
+        {/* 右侧操作区域 - Apple 风格，与Tab同行 */}
+        {rightAction && (
+          <div className="flex-shrink-0 hidden md:flex">
+            {rightAction}
+          </div>
+        )}
       </div>
     </div>
   );

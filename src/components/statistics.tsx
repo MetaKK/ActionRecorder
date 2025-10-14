@@ -29,22 +29,7 @@ export function Statistics() {
   }
   
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 space-y-12">
-      {/* 标题 - 极简 Apple 风格，与 Timeline 保持布局一致 */}
-      <div className="flex items-baseline justify-between gap-4">
-        <div>
-          <h1 className="text-[2.5rem] font-bold tracking-tight text-foreground leading-none mb-2">
-            统计
-          </h1>
-          <p className="text-sm text-muted-foreground/50">
-            {stats.totalRecords} 条记录，{stats.usedSpaceFormatted} 已使用
-          </p>
-        </div>
-        
-        {/* 占位元素，保持与 Timeline 的布局一致性 */}
-        <div className="h-9 w-9" aria-hidden="true" />
-      </div>
-      
+    <div className="w-full max-w-4xl mx-auto p-6 space-y-8">
       {/* 存储空间卡片 */}
       <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-background via-background to-muted/20 p-6 shadow-lg backdrop-blur-sm">
         {/* 装饰性光晕 */}
