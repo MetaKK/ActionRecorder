@@ -115,13 +115,15 @@ export function TabNav({ tabs, activeTab, onTabChange, className }: TabNavProps)
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50",
                 activeTab === tab.id
                   ? [
-                      // 科技感蓝色渐变高亮
-                      "border-blue-500/50 bg-gradient-to-br from-blue-500/20 via-cyan-500/15 to-purple-500/20",
-                      "text-blue-600 dark:text-blue-400",
-                      "shadow-lg shadow-blue-500/25",
+                      // ⭐ 实心科技感高亮 - 蓝色渐变背景
+                      "border-blue-500/80 bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500",
+                      "text-white dark:text-white",
+                      "shadow-2xl shadow-blue-500/50",
                       "cursor-default",
-                      // 发光效果
-                      "before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br before:from-blue-500/10 before:to-purple-500/10 before:blur-sm before:-z-10",
+                      // 强烈发光效果
+                      "before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br before:from-blue-400 before:to-cyan-400 before:blur-xl before:opacity-60 before:-z-10",
+                      // 微妙的内发光
+                      "after:absolute after:inset-[1px] after:rounded-[11px] after:bg-gradient-to-br after:from-white/20 after:to-transparent after:pointer-events-none",
                     ]
                   : [
                       "border-border/30 bg-background/50 backdrop-blur-sm text-muted-foreground",
@@ -132,26 +134,26 @@ export function TabNav({ tabs, activeTab, onTabChange, className }: TabNavProps)
             >
               <span
                 className={cn(
-                  "flex h-5 w-5 shrink-0 items-center justify-center transition-all duration-300",
+                  "relative z-10 flex h-5 w-5 shrink-0 items-center justify-center transition-all duration-300",
                   activeTab === tab.id 
-                    ? "opacity-100 scale-110" 
+                    ? "opacity-100 scale-110 drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" 
                     : "opacity-50 group-hover:opacity-70"
                 )}
               >
                 {tab.icon}
               </span>
               <span className={cn(
-                "text-sm font-semibold transition-all duration-300",
-                activeTab === tab.id ? "tracking-wide" : "tracking-normal"
+                "relative z-10 text-sm font-semibold transition-all duration-300",
+                activeTab === tab.id ? "tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" : "tracking-normal"
               )}>
                 {tab.label}
               </span>
               {tab.count !== undefined && tab.count > 0 && (
                 <span
                   className={cn(
-                    "flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold transition-all duration-300",
+                    "relative z-10 flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold transition-all duration-300",
                     activeTab === tab.id
-                      ? "bg-blue-500/30 text-blue-700 dark:text-blue-300 ring-1 ring-blue-500/50"
+                      ? "bg-white/25 text-white backdrop-blur-sm ring-1 ring-white/40 shadow-lg"
                       : "bg-muted/50 text-muted-foreground"
                   )}
                 >
@@ -164,25 +166,25 @@ export function TabNav({ tabs, activeTab, onTabChange, className }: TabNavProps)
           <div className="w-16 shrink-0 md:w-0" />
         </div>
 
-        {/* 左侧渐变遮罩 - 精确匹配 ElevenLabs 宽度和位置 */}
+        {/* 左侧渐变遮罩 - 精确匹配 ElevenLabs (w-44 = 176px) */}
         <div
           className={cn(
-            "pointer-events-none absolute left-0 top-0 h-full w-20 bg-gradient-to-r from-background to-transparent transition-opacity duration-200",
+            "pointer-events-none absolute left-0 top-0 h-full w-44 transition-opacity duration-200",
             showLeftGradient ? "opacity-100" : "opacity-0"
           )}
           style={{
-            background: 'linear-gradient(to right, hsl(var(--background)) 0%, hsl(var(--background) / 0.95) 30%, transparent 100%)'
+            background: 'linear-gradient(to right, hsl(var(--background)) 0%, transparent 100%)'
           }}
         />
 
-        {/* 右侧渐变遮罩 - 精确匹配 ElevenLabs */}
+        {/* 右侧渐变遮罩 - 精确匹配 ElevenLabs (w-44 = 176px) */}
         <div
           className={cn(
-            "pointer-events-none absolute right-0 top-0 h-full w-20 bg-gradient-to-l from-background to-transparent transition-opacity duration-200",
+            "pointer-events-none absolute right-0 top-0 h-full w-44 transition-opacity duration-200",
             showRightGradient ? "opacity-100" : "opacity-0"
           )}
           style={{
-            background: 'linear-gradient(to left, hsl(var(--background)) 0%, hsl(var(--background) / 0.95) 30%, transparent 100%)'
+            background: 'linear-gradient(to left, hsl(var(--background)) 0%, transparent 100%)'
           }}
         />
 
