@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Pencil, Trash2, Check, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -41,6 +41,7 @@ export function TimelineItem({ record }: TimelineItemProps) {
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const { updateRecord, deleteRecord } = useRecords();
   const isDesktop = useIsDesktop();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // 检测移动端
   useEffect(() => {
@@ -53,6 +54,28 @@ export function TimelineItem({ record }: TimelineItemProps) {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  
+  // ⭐ 修复光标位置偏移问题
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      // 使用 requestAnimationFrame 确保 DOM 完全渲染和样式应用完毕后再 focus
+      requestAnimationFrame(() => {
+        if (textareaRef.current) {
+          const textarea = textareaRef.current;
+          
+          // Focus textarea
+          textarea.focus();
+          
+          // 将光标移动到文本末尾
+          const length = textarea.value.length;
+          textarea.setSelectionRange(length, length);
+          
+          // 滚动到光标位置
+          textarea.scrollTop = textarea.scrollHeight;
+        }
+      });
+    }
+  }, [isEditing]);
   
   // 保存编辑
   const handleSave = useCallback(() => {
@@ -127,14 +150,14 @@ export function TimelineItem({ record }: TimelineItemProps) {
               <div className="relative rounded-[28px] border border-border/40 bg-muted/50 backdrop-blur-sm shadow-lg transition-all duration-300 ease-out hover:border-primary/30 hover:shadow-xl focus-within:border-primary/50 focus-within:shadow-[0_0_0_3px_rgba(var(--primary-rgb),0.1)] focus-within:bg-background/50 p-4">
                 {/* Textarea 编辑区 */}
                 <div className="mb-3">
-                  <Textarea
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    className="w-full min-h-[120px] text-[15px] leading-relaxed bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 resize-none placeholder:text-muted-foreground/60"
-                    autoFocus
-                    placeholder="输入你想记录的内容..."
-                  />
+                <Textarea
+                  ref={textareaRef}
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="w-full min-h-[120px] text-[15px] leading-relaxed bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 resize-none placeholder:text-muted-foreground/60"
+                  placeholder="输入你想记录的内容..."
+                />
                 </div>
                 
                 {/* 底部按钮栏 - Lovable 风格 */}
