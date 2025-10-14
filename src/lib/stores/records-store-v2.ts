@@ -1,28 +1,28 @@
 /**
- * Zustand Store - 记录状态管理
- * 使用 IndexedDB 存储
+ * Zustand Store V2 - 使用新的存储架构
+ * 支持 IndexedDB + LocalStorage + 未来云端
  */
 
 import { create } from 'zustand';
-import { Record, RecordsStore, Location, ImageData } from '@/lib/types';
-import { getStorage } from '@/lib/storage/simple';
+import { Record, RecordsStore, Location, MediaData } from '@/lib/types';
+import { getStorageManager } from '@/lib/storage/instance';
 import { differenceInDays } from 'date-fns';
 
-export const useRecordsStore = create<RecordsStore>((set, get) => ({
+export const useRecordsStoreV2 = create<RecordsStore>((set, get) => ({
   records: [],
   
   /**
    * 添加新记录
    */
   addRecord: async (
-    content: string, 
-    location?: Location, 
+    content: string,
+    location?: Location,
     audio?: {
       audioData: string;
       audioDuration: number;
       audioFormat: string;
     },
-    images?: ImageData[]
+    images?: MediaData[]
   ) => {
     const newRecord: Record = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -45,14 +45,25 @@ export const useRecordsStore = create<RecordsStore>((set, get) => ({
     };
     
     try {
-      const storage = await getStorage();
-      await storage.saveRecord(newRecord);
+      // 使用新的存储管理器
+      const manager = await getStorageManager();
       
+      // 保存记录
+      await manager.saveRecord(newRecord);
+      
+      // 保存媒体文件（如果有）
+      if (images && images.length > 0) {
+        for (const media of images) {
+          await manager.saveMedia(media);
+        }
+      }
+      
+      // 更新状态
       set(state => ({
         records: [newRecord, ...state.records],
       }));
       
-      console.log('✅ Record saved:', newRecord.id);
+      console.log('✅ Record saved successfully:', newRecord.id);
     } catch (error) {
       console.error('❌ Failed to save record:', error);
       throw error;
@@ -64,8 +75,12 @@ export const useRecordsStore = create<RecordsStore>((set, get) => ({
    */
   updateRecord: async (id: string, content: string) => {
     try {
-      const storage = await getStorage();
-      await storage.updateRecord(id, { content: content.trim() });
+      const manager = await getStorageManager();
+      
+      await manager.updateRecord(id, {
+        content: content.trim(),
+        updatedAt: new Date(),
+      });
       
       set(state => ({
         records: state.records.map(record =>
@@ -87,8 +102,23 @@ export const useRecordsStore = create<RecordsStore>((set, get) => ({
    */
   deleteRecord: async (id: string) => {
     try {
-      const storage = await getStorage();
-      await storage.deleteRecord(id);
+      const manager = await getStorageManager();
+      
+      // 获取记录以释放媒体资源
+      const recordToDelete = get().records.find(r => r.id === id);
+      
+      if (recordToDelete?.images) {
+        for (const media of recordToDelete.images) {
+          await manager.deleteMedia(media.id);
+          // 如果有 Blob URL，释放它
+          if (media.data.startsWith('blob:')) {
+            URL.revokeObjectURL(media.data);
+          }
+        }
+      }
+      
+      // 删除记录
+      await manager.deleteRecord(id);
       
       set(state => ({
         records: state.records.filter(record => record.id !== id),
@@ -123,12 +153,14 @@ export const useRecordsStore = create<RecordsStore>((set, get) => ({
    */
   loadFromStorage: async () => {
     try {
-      const storage = await getStorage();
-      const records = await storage.getAllRecords();
+      const manager = await getStorageManager();
+      const records = await manager.getAllRecords();
+      
       set({ records });
-      console.log(`✅ Loaded ${records.length} records`);
+      
+      console.log(`✅ Loaded ${records.length} records from storage`);
     } catch (error) {
-      console.error('❌ Failed to load records:', error);
+      console.error('❌ Failed to load from storage:', error);
       set({ records: [] });
     }
   },
@@ -136,6 +168,6 @@ export const useRecordsStore = create<RecordsStore>((set, get) => ({
 
 // 自动加载数据
 if (typeof window !== 'undefined') {
-  useRecordsStore.getState().loadFromStorage();
+  useRecordsStoreV2.getState().loadFromStorage();
 }
 
