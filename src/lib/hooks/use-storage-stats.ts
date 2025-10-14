@@ -61,7 +61,7 @@ export function useStorageStats(): {
   const { records } = useRecords();
   const [stats, setStats] = useState<StorageStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const debounceTimer = useRef<NodeJS.Timeout>();
+  const debounceTimer = useRef<NodeJS.Timeout | undefined>(undefined);
   
   // 使用 useMemo 缓存计算结果
   const recordsStats = useMemo(() => {

@@ -22,9 +22,6 @@ const nextConfig: NextConfig = {
   // React严格模式
   reactStrictMode: true,
   
-  // SWC压缩
-  swcMinify: true,
-  
   // 实验性功能
   experimental: {
     // 优化包导入
