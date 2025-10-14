@@ -113,10 +113,10 @@ export function ExportDialog() {
         <Button 
           variant="outline" 
           size="default"
-          className="w-full h-10 rounded-lg border border-border/40 hover:bg-accent/50 transition-all text-sm font-normal"
+          className="w-full h-9 rounded-xl border border-cyan-300/30 bg-gradient-to-br from-sky-400/5 to-cyan-400/5 hover:from-sky-400/15 hover:to-cyan-400/15 hover:border-cyan-400/50 hover:shadow-md hover:shadow-cyan-400/10 transition-all text-sm font-medium text-cyan-700 dark:text-cyan-400"
         >
           <Download className="mr-2 h-4 w-4" />
-          导出记录
+          导出
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
@@ -129,12 +129,12 @@ export function ExportDialog() {
         
         <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
           {/* 存储信息 */}
-          <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20">
+          <Card className="bg-gradient-to-r from-sky-400/10 to-cyan-400/10 border-cyan-400/25">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <HardDrive className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">存储使用情况</span>
+                  <HardDrive className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                  <span className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">存储使用情况</span>
                 </div>
                 <Button
                   variant="outline"
