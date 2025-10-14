@@ -215,7 +215,7 @@ function StatCard({ icon: Icon, label, value, total, gradient, iconGradient, ico
             <Icon className={cn(
               "h-4 w-4 bg-gradient-to-br bg-clip-text text-transparent",
               iconGradient
-            )} strokeWidth={2.5} />
+            )} />
           </div>
           <span className="text-xs font-medium text-muted-foreground">{label}</span>
         </div>

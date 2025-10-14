@@ -114,7 +114,8 @@ export async function processImageFile(file: File): Promise<ImageData> {
       width: recompressed.width,
       height: recompressed.height,
       size: recompressed.size,
-      type: 'image/jpeg',
+      type: 'image' as const,
+      mimeType: 'image/jpeg',
       createdAt: new Date(),
     };
   }
@@ -125,7 +126,8 @@ export async function processImageFile(file: File): Promise<ImageData> {
     width: compressed.width,
     height: compressed.height,
     size: compressed.size,
-    type: 'image/jpeg',
+    type: 'image' as const,
+    mimeType: 'image/jpeg',
     createdAt: new Date(),
   };
 }

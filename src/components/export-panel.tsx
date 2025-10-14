@@ -13,7 +13,7 @@ import { ExportTimeRange } from '@/lib/types';
 import {
   formatRecordsAsMarkdown,
   copyToClipboard,
-  downloadAsTextFile,
+  downloadAsFile,
 } from '@/lib/utils/export';
 import { formatDate } from '@/lib/utils/date';
 import { getStorageInfo, cleanupOldRecords } from '@/lib/utils/storage';
@@ -68,7 +68,7 @@ export function ExportPanel() {
   const handleDownload = () => {
     try {
       const filename = `生活记录_${formatDate(new Date())}.md`;
-      downloadAsTextFile(exportContent, filename);
+      downloadAsFile(exportContent, filename, 'markdown');
       toast.success('下载成功');
     } catch {
       toast.error('下载失败，请重试');

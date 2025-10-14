@@ -15,7 +15,7 @@ interface UseIntersectionObserverOptions {
 
 export function useIntersectionObserver(
   options: UseIntersectionObserverOptions = {}
-): [RefObject<HTMLDivElement>, boolean] {
+): [RefObject<HTMLDivElement | null>, boolean] {
   const {
     threshold = 0,
     root = null,
