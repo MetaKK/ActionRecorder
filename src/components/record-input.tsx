@@ -20,6 +20,7 @@ import { useIsDesktop } from '@/lib/hooks/use-device-type';
 import { toast } from 'sonner';
 import { MapPin } from 'lucide-react';
 import { blobToBase64, formatDuration } from '@/lib/utils/audio';
+import { cn } from '@/lib/utils';
 
 export function RecordInput() {
   const [inputText, setInputText] = useState('');
@@ -266,15 +267,28 @@ export function RecordInput() {
   );
   
   return (
-    <div className="w-full max-w-3xl mx-auto">
-      {/* Lovable.dev 风格输入框 */}
-      <div className="relative w-full">
+    <div className="relative w-full flex flex-col items-center px-4 text-center mb-12">
+      {/* Hero Section - Lovable 风格 */}
+      <div className="flex w-full flex-col items-center justify-center gap-6 mb-6">
+        {/* 主标题 */}
+        <h1 className="text-4xl font-bold leading-none text-foreground tracking-tight md:text-5xl lg:text-6xl">
+          记录生活
+        </h1>
+        
+        {/* 副标题 */}
+        <p className="max-w-2xl text-center text-lg leading-tight text-foreground/60 md:text-xl">
+          用文字、语音或图片，捕捉每一个值得铭记的瞬间
+        </p>
+      </div>
+      
+      {/* Lovable 风格大输入框 */}
+      <div className="relative w-full max-w-3xl">
         <form 
           onSubmit={(e) => {
             e.preventDefault();
             handleSave();
           }}
-          className="group relative flex flex-col gap-2 p-4 w-full rounded-[28px] border-border/40 bg-muted/50 backdrop-blur-sm text-base shadow-lg transition-all duration-300 ease-out hover:border-primary/30 hover:shadow-xl focus-within:border-primary/50 focus-within:shadow-[0_0_0_.5px_rgba(var(--primary-rgb),0.1)] focus-within:bg-background/50"
+          className="group flex flex-col gap-3 p-4 w-full rounded-[28px] border border-border/40 bg-muted/30 backdrop-blur-xl text-base shadow-xl transition-all duration-200 ease-out focus-within:border-foreground/20 hover:border-foreground/10 focus-within:hover:border-foreground/20"
         >
           {/* 录音中 - 状态提示 */}
           {isRecordingAudio && (
@@ -331,7 +345,7 @@ export function RecordInput() {
             />
           )}
           
-          {/* Textarea */}
+          {/* Textarea - Lovable 风格 */}
           <div className="relative flex flex-1 items-center">
             <Textarea
               ref={textareaRef}
@@ -344,28 +358,27 @@ export function RecordInput() {
               onPaste={handlePaste}
               onDrop={handleDrop}
               onDragOver={(e) => e.preventDefault()}
-              className="flex w-full rounded-md px-3 py-3 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none text-[16px] leading-relaxed placeholder-shown:text-ellipsis placeholder-shown:whitespace-nowrap md:text-base focus-visible:ring-0 focus-visible:ring-offset-0 max-h-[max(40svh,8rem)] bg-transparent focus:bg-transparent flex-1 border-0"
+              className="w-full resize-none bg-transparent text-[16px] leading-snug placeholder:text-muted-foreground focus-visible:outline-none focus:bg-transparent border-0 p-0 ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 max-h-[max(35svh,5rem)] placeholder-shown:text-ellipsis placeholder-shown:whitespace-nowrap md:text-base disabled:cursor-not-allowed disabled:opacity-50"
               disabled={isListening}
-              style={{ minHeight: '140px', height: '140px' }}
+              style={{ minHeight: '100px', height: '100px' }}
             />
           </div>
           
-          {/* 底部按钮栏 */}
-          <div className="flex gap-1.5 flex-wrap items-center pt-1">
+          {/* 底部按钮栏 - Lovable 风格 */}
+          <div className="flex gap-1 flex-wrap items-center">
             {/* 左侧按钮组 */}
-            <div className="flex gap-1.5 items-center">
+            <div className="flex gap-1 items-center">
               {/* 音频录制按钮 */}
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                size="icon"
-                className={`h-10 w-10 rounded-full p-0 border transition-all duration-300 md:h-9 md:w-9 ${
-                  isRecordingAudio 
-                    ? 'border-red-500/80 bg-red-500/20 text-red-600 dark:text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse' 
-                    : audioBlob
-                    ? 'border-green-500/80 bg-green-500/20 text-green-600 dark:text-green-400 shadow-lg shadow-green-500/20'
-                    : 'border-border/40 bg-background/50 backdrop-blur-sm text-muted-foreground hover:bg-red/10 hover:border-red-500/50 hover:shadow-lg hover:text-red-600'
-                }`}
+                className={cn(
+                  "inline-flex items-center justify-center h-10 w-10 md:h-8 md:w-8 rounded-full p-0",
+                  "border border-input bg-muted transition-all duration-150 ease-in-out",
+                  "hover:bg-accent hover:border-accent",
+                  "text-muted-foreground hover:text-foreground",
+                  isRecordingAudio && "border-red-500/50 bg-red-500/10 text-red-600 dark:text-red-400 animate-pulse",
+                  audioBlob && !isRecordingAudio && "border-green-500/50 bg-green-500/10 text-green-600 dark:text-green-400"
+                )}
                 onClick={async () => {
                   if (isRecordingAudio) {
                     await stopAudioRecording();
@@ -394,20 +407,19 @@ export function RecordInput() {
                 ) : (
                   <Circle className="h-5 w-5" />
                 )}
-              </Button>
+              </button>
               
-              {/* 位置按钮 - 开关 */}
-              <Button
+              {/* 位置按钮 */}
+              <button
                 type="button"
-                variant="ghost"
-                size="icon"
-                className={`h-10 w-10 rounded-full p-0 border transition-all duration-300 md:h-9 md:w-9 ${
-                  isLocationEnabled 
-                    ? 'border-blue-500/80 bg-blue-500/20 text-blue-600 dark:text-blue-400 shadow-lg shadow-blue-500/20' 
-                    : 'border-border/40 bg-background/50 backdrop-blur-sm text-muted-foreground hover:bg-primary/10 hover:border-primary/50 hover:shadow-lg hover:text-primary'
-                } ${
-                  isLocationLoading ? 'animate-pulse' : ''
-                }`}
+                className={cn(
+                  "inline-flex items-center justify-center h-10 w-10 md:h-8 md:w-8 rounded-full p-0",
+                  "border border-input bg-muted transition-all duration-150 ease-in-out",
+                  "hover:bg-accent hover:border-accent",
+                  "text-muted-foreground hover:text-foreground",
+                  isLocationEnabled && "border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400",
+                  isLocationLoading && "animate-pulse"
+                )}
                 onClick={toggleLocation}
                 disabled={isLocationLoading}
                 title={
@@ -416,21 +428,20 @@ export function RecordInput() {
                     : '点击启用位置记录'
                 }
               >
-                <MapPin className={`h-5 w-5 ${isLocationEnabled ? 'fill-current' : ''}`} />
-              </Button>
+                <MapPin className={cn("h-4 w-4", isLocationEnabled && "fill-current")} />
+              </button>
               
-              {/* 媒体上传按钮（图片+视频） */}
-              <Button
+              {/* 媒体上传按钮 */}
+              <button
                 type="button"
-                variant="ghost"
-                size="icon"
-                className={`h-10 w-10 rounded-full p-0 border transition-all duration-300 md:h-9 md:w-9 ${
-                  images.length > 0
-                    ? 'border-cyan-500/80 bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 shadow-lg shadow-cyan-500/20' 
-                    : 'border-border/40 bg-background/50 backdrop-blur-sm text-muted-foreground hover:bg-cyan/10 hover:border-cyan-500/50 hover:shadow-lg hover:text-cyan-600'
-                } ${
-                  isUploading ? 'animate-pulse' : ''
-                }`}
+                className={cn(
+                  "inline-flex items-center justify-center h-10 w-10 md:h-8 md:w-8 rounded-full p-0",
+                  "border border-input bg-muted transition-all duration-150 ease-in-out",
+                  "hover:bg-accent hover:border-accent",
+                  "text-muted-foreground hover:text-foreground",
+                  images.length > 0 && "border-cyan-500/50 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
+                  isUploading && "animate-pulse"
+                )}
                 onClick={triggerFileSelect}
                 disabled={isUploading}
                 title={
@@ -441,8 +452,8 @@ export function RecordInput() {
                     : '📷🎬 添加图片或视频 (最多9个)'
                 }
               >
-                <ImageIcon className={`h-5 w-5 ${images.length > 0 ? 'fill-current' : ''}`} />
-              </Button>
+                <ImageIcon className={cn("h-4 w-4", images.length > 0 && "fill-current")} />
+              </button>
               
               {/* 隐藏的文件input - 支持图片和视频 */}
               <input
@@ -474,38 +485,42 @@ export function RecordInput() {
                 {inputText.length} 字
               </span>
               
-              {/* 语音转文本按钮 - 话筒 */}
-        <Button
+              {/* 语音转文本按钮 */}
+              <button
                 type="button"
-                variant="ghost"
-                size="icon"
-                className={`h-10 w-10 rounded-full p-0 border transition-all duration-300 md:h-9 md:w-9 ${
-                  isListening 
-                    ? 'border-purple-500/80 bg-purple-500/20 text-purple-600 dark:text-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.4)] animate-pulse' 
-                    : 'border-border/40 bg-background/50 backdrop-blur-sm text-muted-foreground hover:bg-purple/10 hover:border-purple-500/50 hover:shadow-lg hover:text-purple-600'
-          }`}
-          onClick={toggleRecording}
-          disabled={!isSupported}
-                title={!isSupported ? '浏览器不支持' : isListening ? '停止语音转文本 (转为可编辑文字)' : '语音转文本 (实时识别)'}
-        >
-          {isListening ? (
-                  <MicOff className="h-5 w-5" />
-          ) : (
-                  <Mic className="h-5 w-5" />
-          )}
-        </Button>
+                className={cn(
+                  "inline-flex items-center justify-center h-10 w-10 md:h-8 md:w-8 rounded-full p-0",
+                  "border border-input bg-muted transition-all duration-150 ease-in-out",
+                  "hover:bg-accent hover:border-accent",
+                  "text-muted-foreground hover:text-foreground",
+                  isListening && "border-purple-500/50 bg-purple-500/10 text-purple-600 dark:text-purple-400 animate-pulse"
+                )}
+                onClick={toggleRecording}
+                disabled={!isSupported}
+                title={!isSupported ? '浏览器不支持' : isListening ? '停止语音转文本' : '语音转文本'}
+              >
+                {isListening ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </button>
         
-              {/* 发送按钮 - 圆形黑色 */}
-        <Button
+              {/* 发送按钮 */}
+              <button
                 type="submit"
-                size="icon"
                 disabled={!inputText.trim() && !audioBlob && images.length === 0}
-                className="gap-2 whitespace-nowrap text-sm font-medium ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 disabled:pointer-events-none relative z-10 flex rounded-full p-0 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-30 items-center justify-center h-10 w-10 md:h-9 md:w-9 bg-foreground hover:bg-foreground/90 hover:scale-105 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] text-background"
+                className={cn(
+                  "inline-flex items-center justify-center h-10 w-10 md:h-8 md:w-8 rounded-full p-0",
+                  "bg-foreground text-background transition-all duration-150 ease-out",
+                  "hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                  "disabled:pointer-events-none disabled:opacity-50"
+                )}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="100%" height="100%" className="shrink-0 h-5 w-5">
                   <path fill="currentColor" d="M11 19V7.415l-3.293 3.293a1 1 0 1 1-1.414-1.414l5-5 .074-.067a1 1 0 0 1 1.34.067l5 5a1 1 0 1 1-1.414 1.414L13 7.415V19a1 1 0 1 1-2 0"></path>
                 </svg>
-        </Button>
+              </button>
             </div>
           </div>
         </form>
