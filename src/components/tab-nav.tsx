@@ -112,23 +112,25 @@ export function TabNav({ tabs, activeTab, onTabChange, className }: TabNavProps)
               disabled={activeTab === tab.id}
               className={cn(
                 "relative inline-flex h-11 shrink-0 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl border px-5 transition-all duration-300",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50",
                 activeTab === tab.id
                   ? [
-                      // ⭐ 天空蓝渐变 - 明亮清新科技感
-                      "border-sky-400/70 bg-gradient-to-br from-sky-400 via-blue-400 to-cyan-400",
+                      // 💫 温暖科技风格 - 轻盈明亮，与背景和谐
+                      "border-cyan-300/40 bg-gradient-to-br from-sky-400 via-blue-400 to-cyan-400",
                       "text-white dark:text-white",
-                      "shadow-2xl shadow-sky-400/40",
+                      "shadow-lg shadow-cyan-400/20",
                       "cursor-default",
-                      // 明亮发光效果
-                      "before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br before:from-sky-300 before:to-cyan-300 before:blur-xl before:opacity-50 before:-z-10",
-                      // 玻璃质感内发光
-                      "after:absolute after:inset-[1px] after:rounded-[11px] after:bg-gradient-to-br after:from-white/25 after:to-transparent after:pointer-events-none",
+                      // 简洁的光晕效果
+                      "before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br before:from-sky-300/40 before:to-cyan-300/40 before:blur-xl before:opacity-60 before:-z-10",
+                      // 轻盈的顶部高光
+                      "after:absolute after:inset-[1px] after:rounded-[11px] after:bg-gradient-to-br after:from-white/20 after:to-transparent after:pointer-events-none",
                     ]
                   : [
-                      "border-border/30 bg-background/50 backdrop-blur-sm text-muted-foreground",
-                      "hover:border-sky-400/40 hover:bg-sky-400/5 hover:text-sky-600 dark:hover:text-sky-400",
-                      "hover:shadow-md hover:shadow-sky-400/10",
+                      // 💫 未激活状态 - 轻盈简洁
+                      "border-border/25 bg-background/40 backdrop-blur-sm text-muted-foreground",
+                      "hover:border-cyan-400/35 hover:bg-gradient-to-br hover:from-sky-400/10 hover:to-cyan-400/10",
+                      "hover:text-cyan-600 dark:hover:text-cyan-400",
+                      "hover:shadow-md hover:shadow-cyan-400/8",
                     ]
               )}
             >
@@ -136,15 +138,17 @@ export function TabNav({ tabs, activeTab, onTabChange, className }: TabNavProps)
                 className={cn(
                   "relative z-10 flex h-5 w-5 shrink-0 items-center justify-center transition-all duration-300",
                   activeTab === tab.id 
-                    ? "opacity-100 scale-110 drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" 
-                    : "opacity-50 group-hover:opacity-70"
+                    ? "opacity-100 scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" 
+                    : "opacity-50 group-hover:opacity-75"
                 )}
               >
                 {tab.icon}
               </span>
               <span className={cn(
                 "relative z-10 text-sm font-semibold transition-all duration-300",
-                activeTab === tab.id ? "tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" : "tracking-normal"
+                activeTab === tab.id 
+                  ? "tracking-wide drop-shadow-[0_1px_3px_rgba(0,0,0,0.1)]" 
+                  : "tracking-normal"
               )}>
                 {tab.label}
               </span>
@@ -153,7 +157,7 @@ export function TabNav({ tabs, activeTab, onTabChange, className }: TabNavProps)
                   className={cn(
                     "relative z-10 flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold transition-all duration-300",
                     activeTab === tab.id
-                      ? "bg-white/25 text-white backdrop-blur-sm ring-1 ring-white/40 shadow-lg"
+                      ? "bg-white/25 text-white ring-1 ring-white/40 shadow-lg shadow-white/20"
                       : "bg-muted/50 text-muted-foreground"
                   )}
                 >
@@ -188,32 +192,38 @@ export function TabNav({ tabs, activeTab, onTabChange, className }: TabNavProps)
           }}
         />
 
-        {/* 左侧滚动按钮 - 天空蓝主题 */}
+        {/* 左侧滚动按钮 - 💫 温暖科技风格 */}
         <button
           aria-label="向左滚动"
           onClick={() => scroll('left')}
           className={cn(
-            "absolute left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-sky-400/30 bg-background/95 backdrop-blur-md shadow-lg shadow-sky-400/20 transition-all",
-            "hover:border-sky-400/50 hover:bg-sky-400/10 hover:shadow-xl hover:shadow-sky-400/30 hover:scale-110",
+            "absolute left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full",
+            "border border-cyan-300/30 bg-background/70 backdrop-blur-md",
+            "shadow-lg shadow-cyan-400/15 transition-all",
+            "hover:border-cyan-400/50 hover:bg-gradient-to-br hover:from-sky-400/15 hover:to-cyan-400/15",
+            "hover:shadow-xl hover:shadow-cyan-400/25 hover:scale-110",
             "active:scale-95",
             showLeftButton ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
           )}
         >
-          <ChevronLeft className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+          <ChevronLeft className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
         </button>
 
-        {/* 右侧滚动按钮 - 天空蓝主题 */}
+        {/* 右侧滚动按钮 - 💫 温暖科技风格 */}
         <button
           aria-label="向右滚动"
           onClick={() => scroll('right')}
           className={cn(
-            "absolute right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-sky-400/30 bg-background/95 backdrop-blur-md shadow-lg shadow-sky-400/20 transition-all",
-            "hover:border-sky-400/50 hover:bg-sky-400/10 hover:shadow-xl hover:shadow-sky-400/30 hover:scale-110",
+            "absolute right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full",
+            "border border-cyan-300/30 bg-background/70 backdrop-blur-md",
+            "shadow-lg shadow-cyan-400/15 transition-all",
+            "hover:border-cyan-400/50 hover:bg-gradient-to-br hover:from-sky-400/15 hover:to-cyan-400/15",
+            "hover:shadow-xl hover:shadow-cyan-400/25 hover:scale-110",
             "active:scale-95",
             showRightButton ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
           )}
         >
-          <ChevronRight className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+          <ChevronRight className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
         </button>
       </div>
     </div>
