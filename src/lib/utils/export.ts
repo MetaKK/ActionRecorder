@@ -38,6 +38,41 @@ export function filterRecordsByTimeRange(
 }
 
 /**
+ * 格式化地址信息
+ */
+function formatLocation(location: Record['location']): string {
+  if (!location) return '';
+  
+  const parts: string[] = [];
+  
+  // 构建地址字符串
+  if (location.city || location.district || location.street) {
+    if (location.city) parts.push(location.city);
+    if (location.district) parts.push(location.district);
+    if (location.street) parts.push(location.street);
+  } else if (location.address) {
+    parts.push(location.address);
+  }
+  
+  const addressStr = parts.length > 0 ? parts.join(', ') : '';
+  
+  // 添加经纬度元信息（精确到6位小数）
+  const lat = location.latitude.toFixed(6);
+  const lng = location.longitude.toFixed(6);
+  const coords = `(${lat}, ${lng})`;
+  
+  // 如果有精度信息，也包含进来
+  let accuracyStr = '';
+  if (location.accuracy) {
+    accuracyStr = ` [精度: ${location.accuracy.toFixed(0)}m]`;
+  }
+  
+  return addressStr 
+    ? `\n  📍 ${addressStr} ${coords}${accuracyStr}`
+    : `\n  📍 坐标: ${coords}${accuracyStr}`;
+}
+
+/**
  * 格式化记录为 Markdown 格式
  */
 export function formatRecordsAsMarkdown(
@@ -57,6 +92,10 @@ export function formatRecordsAsMarkdown(
   
   let markdown = '# 生活记录\n\n';
   
+  // 统计信息
+  let totalWithLocation = 0;
+  let totalWithAudio = 0;
+  
   // 按日期分组输出
   Array.from(grouped.entries())
     .sort(([dateA], [dateB]) => dateB.localeCompare(dateA))
@@ -67,7 +106,24 @@ export function formatRecordsAsMarkdown(
       items
         .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
         .forEach(item => {
-          markdown += `- ${formatTime(item.createdAt)} ${item.content}\n`;
+          // 基本内容
+          markdown += `- ${formatTime(item.createdAt)} ${item.content}`;
+          
+          // 添加音频标记
+          if (item.hasAudio && item.audioDuration) {
+            const duration = Math.floor(item.audioDuration);
+            markdown += ` 🎵[${duration}秒]`;
+            totalWithAudio++;
+          }
+          
+          markdown += '\n';
+          
+          // 添加地址信息和经纬度
+          if (item.location) {
+            markdown += formatLocation(item.location);
+            markdown += '\n';
+            totalWithLocation++;
+          }
         });
       
       markdown += '\n';
@@ -75,8 +131,11 @@ export function formatRecordsAsMarkdown(
   
   // 添加元信息
   markdown += '---\n\n';
-  markdown += `导出时间：${formatDateTime(new Date())}\n`;
-  markdown += `记录条数：${sortedRecords.length}\n`;
+  markdown += `**导出统计**\n\n`;
+  markdown += `- 导出时间：${formatDateTime(new Date())}\n`;
+  markdown += `- 记录条数：${sortedRecords.length}\n`;
+  markdown += `- 包含位置：${totalWithLocation} 条\n`;
+  markdown += `- 包含音频：${totalWithAudio} 条\n`;
   
   const timeRangeLabel = {
     today: '今天',
@@ -84,7 +143,7 @@ export function formatRecordsAsMarkdown(
     '30days': '最近30天',
     all: '全部',
   };
-  markdown += `时间范围：${timeRangeLabel[timeRange]}\n`;
+  markdown += `- 时间范围：${timeRangeLabel[timeRange]}\n`;
   
   return markdown;
 }

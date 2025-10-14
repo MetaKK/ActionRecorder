@@ -4,8 +4,8 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Download, Copy, Check } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Download, Copy, Check, HardDrive } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,7 @@ import {
   downloadAsTextFile,
 } from '@/lib/utils/export';
 import { formatDate } from '@/lib/utils/date';
+import { getStorageInfo, cleanupOldRecords } from '@/lib/utils/storage';
 import { toast } from 'sonner';
 
 const TIME_RANGES: Array<{ value: ExportTimeRange; label: string }> = [
@@ -37,8 +38,22 @@ export function ExportDialog() {
   const [open, setOpen] = useState(false);
   const [selectedRange, setSelectedRange] = useState<ExportTimeRange>('all');
   const [copied, setCopied] = useState(false);
+  const [storageInfo, setStorageInfo] = useState({
+    totalRecords: 0,
+    totalSize: 0,
+    audioRecords: 0,
+    audioSize: 0,
+  });
   
   const { records } = useRecords();
+  
+  // 更新存储信息
+  useEffect(() => {
+    if (open) {
+      const info = getStorageInfo();
+      setStorageInfo(info);
+    }
+  }, [open, records]);
   
   // 生成导出内容
   const exportContent = useMemo(() => {
@@ -71,6 +86,27 @@ export function ExportDialog() {
     }
   };
   
+  // 清理旧记录
+  const handleCleanup = () => {
+    const result = cleanupOldRecords(30);
+    if (result.deleted > 0) {
+      const freedMB = (result.freedSize / 1024 / 1024).toFixed(2);
+      toast.success(`已清理 ${result.deleted} 条旧记录，释放 ${freedMB} MB 空间`);
+      // 更新存储信息
+      const info = getStorageInfo();
+      setStorageInfo(info);
+    } else {
+      toast.info('没有需要清理的记录');
+    }
+  };
+  
+  // 格式化存储大小
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+  };
+  
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -92,6 +128,44 @@ export function ExportDialog() {
         </DialogHeader>
         
         <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
+          {/* 存储信息 */}
+          <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <HardDrive className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">存储使用情况</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCleanup}
+                  className="h-7 text-xs"
+                >
+                  清理30天前
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">总记录数</div>
+                  <div className="font-mono font-semibold">{storageInfo.totalRecords} 条</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">总大小</div>
+                  <div className="font-mono font-semibold">{formatSize(storageInfo.totalSize)}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">音频记录</div>
+                  <div className="font-mono font-semibold">{storageInfo.audioRecords} 条</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-muted-foreground">音频大小</div>
+                  <div className="font-mono font-semibold">{formatSize(storageInfo.audioSize)}</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
           {/* 时间范围选择 */}
           <div className="space-y-2">
             <label className="text-sm font-medium">时间范围</label>

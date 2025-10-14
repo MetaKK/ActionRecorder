@@ -61,8 +61,39 @@ export const useRecordsStore = create<RecordsStore>((set, get) => ({
    */
   deleteRecord: (id: string) => {
     set(state => {
+      // 找到要删除的记录
+      const recordToDelete = state.records.find(record => record.id === id);
+      
+      // ⭐ 关键优化：释放音频数据占用的内存
+      if (recordToDelete?.audioData) {
+        try {
+          // 如果 audioData 是 blob URL，需要 revoke
+          if (recordToDelete.audioData.startsWith('blob:')) {
+            URL.revokeObjectURL(recordToDelete.audioData);
+            console.log('🗑️ 释放 blob URL:', recordToDelete.audioData);
+          }
+          
+          // 计算释放的内存大小（base64 数据）
+          const audioSize = recordToDelete.audioData.length;
+          const sizeInKB = (audioSize / 1024).toFixed(2);
+          console.log(`🗑️ 删除音频数据: ${sizeInKB} KB`);
+        } catch (err) {
+          console.warn('释放音频资源失败:', err);
+        }
+      }
+      
+      // 过滤掉要删除的记录
       const newRecords = state.records.filter(record => record.id !== id);
+      
+      // 保存到 localStorage（会自动序列化，删除的记录不会被保存）
       saveRecords(newRecords);
+      
+      // 计算节省的存储空间
+      const oldSize = JSON.stringify(state.records).length;
+      const newSize = JSON.stringify(newRecords).length;
+      const savedKB = ((oldSize - newSize) / 1024).toFixed(2);
+      console.log(`✅ 已释放存储空间: ${savedKB} KB`);
+      
       return { records: newRecords };
     });
   },
