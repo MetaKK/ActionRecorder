@@ -111,44 +111,31 @@ export function ExportDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="default"
+        <button
           className={cn(
-            // Apple 风格：简洁、精致、流畅的交互
-            "group relative w-full sm:w-auto min-w-[120px] h-10 rounded-2xl",
-            "font-medium tracking-tight transition-all duration-200 ease-out",
+            // iOS 风格的图标按钮 - 极简设计
+            "group relative flex items-center justify-center",
+            "h-9 w-9 rounded-full",
+            "transition-all duration-200 ease-out",
             
-            // 背景和边框 - 柔和的毛玻璃效果
-            "bg-white/80 dark:bg-gray-900/80",
-            "border border-gray-200/80 dark:border-gray-700/80",
-            "backdrop-blur-xl backdrop-saturate-150",
+            // 背景 - 轻量毛玻璃
+            "bg-black/[0.03] dark:bg-white/[0.06]",
+            "hover:bg-black/[0.06] dark:hover:bg-white/[0.09]",
+            "active:bg-black/[0.08] dark:active:bg-white/[0.12]",
             
-            // 阴影 - 柔和精致
-            "shadow-sm shadow-gray-900/5 dark:shadow-black/20",
+            // 焦点环
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/10 dark:focus-visible:ring-white/20",
             
-            // 悬停状态 - 微妙的变化
-            "hover:bg-white dark:hover:bg-gray-900",
-            "hover:border-gray-300 dark:hover:border-gray-600",
-            "hover:shadow-md hover:shadow-gray-900/8 dark:hover:shadow-black/30",
-            "hover:-translate-y-0.5",
-            
-            // 激活状态
-            "active:translate-y-0 active:scale-[0.98]",
-            
-            // 文字颜色
-            "text-gray-900 dark:text-gray-100"
+            // 激活缩放
+            "active:scale-95"
           )}
+          aria-label="导出记录"
         >
-          {/* 图标 */}
-          <Download className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:scale-105" strokeWidth={2.2} />
-          
-          {/* 文字 */}
-          <span className="relative">导出</span>
-          
-          {/* 悬停时的微妙光晕 */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-400/0 via-blue-400/0 to-cyan-400/0 opacity-0 group-hover:from-sky-400/5 group-hover:via-blue-400/5 group-hover:to-cyan-400/5 group-hover:opacity-100 transition-all duration-300" />
-        </Button>
+          <Download 
+            className="h-[18px] w-[18px] text-foreground/70 transition-transform duration-200 group-hover:scale-105" 
+            strokeWidth={2}
+          />
+        </button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col gap-0 p-0">
         <DialogHeader className="px-6 pt-6 pb-4">

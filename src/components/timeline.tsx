@@ -45,37 +45,21 @@ export function Timeline() {
   // 空状态
   if (records.length === 0) {
     return (
-      <div className="space-y-8">
-        {/* Timeline 标题栏 - Apple 风格优化 */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 pb-6">
-          {/* 左侧标题区 */}
-          <div className="flex items-center gap-4">
-            {/* 图标容器 - 更精致的毛玻璃效果 */}
-            <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-950/40 dark:to-blue-950/40 border border-sky-200/40 dark:border-sky-800/40 shadow-sm">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/60 to-transparent dark:from-white/5 dark:to-transparent" />
-              <Clock className="relative h-5 w-5 text-sky-600 dark:text-sky-400" strokeWidth={2} />
-            </div>
-            
-            {/* 标题和统计 */}
-            <div className="space-y-1">
-              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                Timeline
-              </h2>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold tabular-nums tracking-tighter text-foreground">
-                  0
-                </span>
-                <span className="text-sm font-medium text-muted-foreground/60">
-                  条记录
-                </span>
-              </div>
-            </div>
+      <div className="space-y-12">
+        {/* Timeline 标题栏 - 极简 Apple 风格 */}
+        <div className="flex items-baseline justify-between gap-4">
+          {/* 左侧：大标题 + 轻量统计 */}
+          <div>
+            <h1 className="text-[2.5rem] font-bold tracking-tight text-foreground leading-none mb-2">
+              Timeline
+            </h1>
+            <p className="text-sm text-muted-foreground/50">
+              0 条记录
+            </p>
           </div>
           
-          {/* 右侧操作区 */}
-          <div className="w-full sm:w-auto">
-            <ExportDialog />
-          </div>
+          {/* 右侧：轻量化操作 */}
+          <ExportDialog />
         </div>
         
         {/* 空状态提示 */}
@@ -95,37 +79,21 @@ export function Timeline() {
   }
   
   return (
-    <div className="space-y-8">
-      {/* Timeline 标题栏 - Apple 风格优化 */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 pb-6">
-        {/* 左侧标题区 */}
-        <div className="flex items-center gap-4">
-          {/* 图标容器 - 更精致的毛玻璃效果 */}
-          <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-950/40 dark:to-blue-950/40 border border-sky-200/40 dark:border-sky-800/40 shadow-sm">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/60 to-transparent dark:from-white/5 dark:to-transparent" />
-            <Clock className="relative h-5 w-5 text-sky-600 dark:text-sky-400" strokeWidth={2} />
-          </div>
-          
-          {/* 标题和统计 */}
-          <div className="space-y-1">
-            <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-              Timeline
-            </h2>
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold tabular-nums tracking-tighter text-foreground">
-                {records.length}
-              </span>
-              <span className="text-sm font-medium text-muted-foreground/60">
-                条记录
-              </span>
-            </div>
-          </div>
+    <div className="space-y-12">
+      {/* Timeline 标题栏 - 极简 Apple 风格 */}
+      <div className="flex items-baseline justify-between gap-4">
+        {/* 左侧：大标题 + 轻量统计 */}
+        <div>
+          <h1 className="text-[2.5rem] font-bold tracking-tight text-foreground leading-none mb-2">
+            Timeline
+          </h1>
+          <p className="text-sm text-muted-foreground/50">
+            {records.length} 条记录
+          </p>
         </div>
         
-        {/* 右侧操作区 */}
-        <div className="w-full sm:w-auto">
-          <ExportDialog />
-        </div>
+        {/* 右侧：轻量化操作 */}
+        <ExportDialog />
       </div>
 
       {/* 记录内容 */}
