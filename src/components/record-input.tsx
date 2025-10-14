@@ -22,6 +22,7 @@ import { blobToBase64, formatDuration } from '@/lib/utils/audio';
 export function RecordInput() {
   const [inputText, setInputText] = useState('');
   const [placeholder, setPlaceholder] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
   const { addRecord } = useRecords();
   const { location, isLoading: isLocationLoading, isEnabled: isLocationEnabled, toggleLocation } = useLocation();
   const { 
@@ -80,8 +81,14 @@ export function RecordInput() {
   // 显示临时识别结果（实时反馈）
   const displayText = inputText + interimTranscript;
   
-  // 动态 placeholder 效果 - 打字机动画
+  // 动态 placeholder 效果 - 打字机动画（仅在未聚焦时运行）
   useEffect(() => {
+    // ⭐ 如果聚焦，清空 placeholder 并停止动画
+    if (isFocused) {
+      setPlaceholder('');
+      return;
+    }
+    
     let currentIndex = 0;
     let charIndex = 0;
     let isDeleting = false;
@@ -124,7 +131,7 @@ export function RecordInput() {
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [placeholders]);
+  }, [placeholders, isFocused]); // ⭐ 添加 isFocused 依赖
   
   // 切换录音状态
   const toggleRecording = useCallback(() => {
@@ -293,6 +300,8 @@ export function RecordInput() {
               value={displayText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
               className="flex w-full rounded-md px-3 py-3 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none text-[16px] leading-relaxed placeholder-shown:text-ellipsis placeholder-shown:whitespace-nowrap md:text-base focus-visible:ring-0 focus-visible:ring-offset-0 max-h-[max(40svh,8rem)] bg-transparent focus:bg-transparent flex-1 border-0"
               disabled={isListening}
               style={{ minHeight: '140px', height: '140px' }}
