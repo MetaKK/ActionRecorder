@@ -244,9 +244,9 @@ export function RecordInput() {
           {isRecordingAudio && (
             <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20">
               <div className="flex items-center gap-2">
-                <div className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" style={{ animation: 'breathe-red 2s ease-in-out infinite' }}></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                <div className="relative flex h-3 w-3 items-center justify-center">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-red-500" style={{ animation: 'breathe-red 3s cubic-bezier(0.4, 0, 0.2, 1) infinite' }}></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
                 </div>
                 <span className="text-xs text-red-600 dark:text-red-400 font-semibold">录音中</span>
                 <span className="text-xs text-muted-foreground font-mono">{formatDuration(audioDuration)}</span>
@@ -372,9 +372,9 @@ export function RecordInput() {
             {/* 状态指示 - 语音转文字中 */}
             {isListening && (
               <div className="flex items-center gap-1.5 px-2">
-                <div className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-75" style={{ animation: 'breathe-purple 2s ease-in-out infinite' }}></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+                <div className="relative flex h-3 w-3 items-center justify-center">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-purple-500" style={{ animation: 'breathe-purple 3s cubic-bezier(0.4, 0, 0.2, 1) infinite' }}></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
                 </div>
                 <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">转文字中...</span>
               </div>
@@ -388,7 +388,7 @@ export function RecordInput() {
               </span>
               
               {/* 语音转文本按钮 - 话筒 */}
-              <Button
+        <Button
                 type="button"
                 variant="ghost"
                 size="icon"
@@ -396,20 +396,20 @@ export function RecordInput() {
                   isListening 
                     ? 'border-purple-500/80 bg-purple-500/20 text-purple-600 dark:text-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.4)] animate-pulse' 
                     : 'border-border/40 bg-background/50 backdrop-blur-sm text-muted-foreground hover:bg-purple/10 hover:border-purple-500/50 hover:shadow-lg hover:text-purple-600'
-                }`}
-                onClick={toggleRecording}
-                disabled={!isSupported}
+          }`}
+          onClick={toggleRecording}
+          disabled={!isSupported}
                 title={!isSupported ? '浏览器不支持' : isListening ? '停止语音转文本 (转为可编辑文字)' : '语音转文本 (实时识别)'}
-              >
-                {isListening ? (
+        >
+          {isListening ? (
                   <MicOff className="h-5 w-5" />
-                ) : (
+          ) : (
                   <Mic className="h-5 w-5" />
-                )}
-              </Button>
-              
+          )}
+        </Button>
+        
               {/* 发送按钮 - 圆形黑色 */}
-              <Button
+        <Button
                 type="submit"
                 size="icon"
                 disabled={!inputText.trim() && !audioBlob}
@@ -418,7 +418,7 @@ export function RecordInput() {
                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="100%" height="100%" className="shrink-0 h-5 w-5">
                   <path fill="currentColor" d="M11 19V7.415l-3.293 3.293a1 1 0 1 1-1.414-1.414l5-5 .074-.067a1 1 0 0 1 1.34.067l5 5a1 1 0 1 1-1.414 1.414L13 7.415V19a1 1 0 1 1-2 0"></path>
                 </svg>
-              </Button>
+        </Button>
             </div>
           </div>
         </form>

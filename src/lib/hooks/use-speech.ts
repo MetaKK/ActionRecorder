@@ -187,36 +187,42 @@ export function useSpeech(options: UseSpeechOptions = {}): UseSpeechReturn {
       return;
     }
     
-    try {
-      setError(null);
-      setTranscript('');
-      setInterimTranscript('');
-      recognitionRef.current.start();
-    } catch (err) {
-      console.error('Failed to start recognition:', err);
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      
-      if (errorMessage.includes('already started')) {
-        // 如果已经启动，先停止再重新启动
-        try {
-          recognitionRef.current.stop();
-          setTimeout(() => {
-            if (recognitionRef.current) {
-              try {
-                recognitionRef.current.start();
-              } catch (restartErr) {
-                console.error('Failed to restart recognition:', restartErr);
-                setError('启动语音识别失败，请重试');
+    // ⭐ 关键修复：延迟启动，确保麦克风已完全释放
+    const tryStart = (attempt = 1) => {
+      try {
+        setError(null);
+        setTranscript('');
+        setInterimTranscript('');
+        recognitionRef.current?.start();
+        console.log('✅ 语音识别已启动');
+      } catch (err) {
+        console.error('Failed to start recognition:', err);
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        
+        if (errorMessage.includes('already started')) {
+          // 如果已经启动，先停止再重新启动
+          try {
+            recognitionRef.current?.stop();
+            setTimeout(() => {
+              if (recognitionRef.current) {
+                tryStart(attempt + 1);
               }
-            }
-          }, 100);
-        } catch {
-          setError('启动语音识别失败，请重试');
+            }, 200);
+          } catch {
+            setError('启动语音识别失败，请重试');
+          }
+        } else if (attempt < 3) {
+          // ⭐ 重试机制：如果失败，等待后重试（最多3次）
+          console.log(`⏳ 第 ${attempt} 次尝试失败，等待麦克风释放...`);
+          setTimeout(() => tryStart(attempt + 1), 300 * attempt);
+        } else {
+          setError('启动语音识别失败，请确保麦克风未被占用');
         }
-      } else {
-        setError('启动语音识别失败，请刷新页面重试');
       }
-    }
+    };
+    
+    // 初次启动前先等待一小段时间，确保麦克风完全释放
+    setTimeout(() => tryStart(), 100);
   }, []);
   
   const stopListening = useCallback(() => {

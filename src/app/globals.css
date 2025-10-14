@@ -56,45 +56,55 @@
     }
   }
   
-  /* 平滑呼吸动画 - 录音状态 */
-  --animate-breathe: breathe 2s ease-in-out infinite;
+  /* 优化的呼吸动画 - 更平滑自然 */
+  --animate-breathe-red: breathe-red 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  --animate-breathe-purple: breathe-purple 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   
-  @keyframes breathe {
-    0%, 100% {
-      opacity: 0.6;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 1;
-      transform: scale(1.2);
-    }
-  }
-  
-  /* 平滑呼吸动画（紫色） - 语音转文字状态 */
-  --animate-breathe-purple: breathe-purple 2s ease-in-out infinite;
-  
-  @keyframes breathe-purple {
-    0%, 100% {
-      opacity: 0.6;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 1;
-      transform: scale(1.2);
-    }
-  }
-  
-  /* 平滑呼吸动画（红色） - 录音状态 */
-  --animate-breathe-red: breathe-red 2s ease-in-out infinite;
-  
+  /* 红色呼吸动画 - 录音状态 */
   @keyframes breathe-red {
     0%, 100% {
-      opacity: 0.6;
+      opacity: 0.4;
       transform: scale(1);
+      filter: blur(0px);
+    }
+    25% {
+      opacity: 0.7;
+      transform: scale(1.1);
+      filter: blur(0.5px);
     }
     50% {
       opacity: 1;
-      transform: scale(1.2);
+      transform: scale(1.3);
+      filter: blur(1px);
+    }
+    75% {
+      opacity: 0.7;
+      transform: scale(1.1);
+      filter: blur(0.5px);
+    }
+  }
+  
+  /* 紫色呼吸动画 - 语音转文字状态 */
+  @keyframes breathe-purple {
+    0%, 100% {
+      opacity: 0.4;
+      transform: scale(1);
+      filter: blur(0px);
+    }
+    25% {
+      opacity: 0.7;
+      transform: scale(1.1);
+      filter: blur(0.5px);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.3);
+      filter: blur(1px);
+    }
+    75% {
+      opacity: 0.7;
+      transform: scale(1.1);
+      filter: blur(0.5px);
     }
   }
 }
