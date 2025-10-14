@@ -274,7 +274,7 @@ export function RecordInput() {
       {/* 主标题 - 完全对齐 Lovable 的样式 */}
       <h1 className="mb-2 flex items-center gap-1 text-3xl font-medium leading-none text-foreground sm:text-3xl md:mb-2.5 md:gap-0 md:text-5xl px-4">
         <span className="pt-0.5 tracking-tight md:pt-0">
-          记录生活
+          记录一些可爱的日常
         </span>
       </h1>
       
