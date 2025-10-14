@@ -267,19 +267,21 @@ export function RecordInput() {
   );
   
   return (
-    <div className="relative w-full flex flex-col items-center px-4 text-center mb-12">
-      {/* Hero Section - Lovable 风格 */}
-      <div className="flex w-full flex-col items-center justify-center gap-6 mb-6">
-        {/* 主标题 */}
-        <h1 className="text-4xl font-bold leading-none text-foreground tracking-tight md:text-5xl lg:text-6xl">
+    <div className="relative mb-4 flex flex-col items-center px-4 text-center md:mb-6">
+      {/* Hero Section - 精确复刻 Lovable.dev */}
+      <div className="flex w-full flex-col items-center justify-center gap-2"></div>
+      
+      {/* 主标题 - 完全对齐 Lovable 的样式 */}
+      <h1 className="mb-2 flex items-center gap-1 text-3xl font-medium leading-none text-foreground sm:text-3xl md:mb-2.5 md:gap-0 md:text-5xl">
+        <span className="pt-0.5 tracking-tight md:pt-0">
           记录生活
-        </h1>
-        
-        {/* 副标题 */}
-        <p className="max-w-2xl text-center text-lg leading-tight text-foreground/60 md:text-xl">
-          用文字、语音或图片，捕捉每一个值得铭记的瞬间
-        </p>
-      </div>
+        </span>
+      </h1>
+      
+      {/* 副标题 - 完全对齐 Lovable 的样式 */}
+      <p className="mb-6 max-w-[25ch] text-center text-lg leading-tight text-foreground/65 md:max-w-full md:text-xl">
+        用文字、语音或图片，捕捉每一个值得铭记的瞬间
+      </p>
       
       {/* Lovable 风格大输入框 */}
       <div className="relative w-full max-w-3xl">
