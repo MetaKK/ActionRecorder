@@ -375,21 +375,22 @@ export function EnglishPromptDialog() {
                     )}
                   </button>
                 ))}
-                
-                {/* 新增教材按钮 */}
-                <button
-                  onClick={() => setIsAddingBook(!isAddingBook)}
-                  className={cn(
-                    "relative flex items-center justify-center rounded-lg px-3 py-1.5 transition-all duration-300",
-                    "border backdrop-blur-sm shrink-0",
-                    "border-dashed border-border/40 bg-background/30",
-                    "hover:border-cyan-300/40 hover:bg-gradient-to-br hover:from-cyan-400/5 hover:to-cyan-400/5",
-                    "hover:scale-[1.02]"
-                  )}
-                >
-                  <Plus className="h-3 w-3 text-muted-foreground" />
-                </button>
               </div>
+              
+              {/* 新增教材按钮 - 移到外部，始终可见 */}
+              <button
+                onClick={() => setIsAddingBook(!isAddingBook)}
+                className={cn(
+                  "relative flex items-center justify-center rounded-lg px-2 py-1.5 transition-all duration-300",
+                  "border backdrop-blur-sm shrink-0",
+                  "border-dashed border-border/40 bg-background/30",
+                  "hover:border-cyan-300/40 hover:bg-gradient-to-br hover:from-cyan-400/5 hover:to-cyan-400/5",
+                  "hover:scale-[1.02]"
+                )}
+                title="添加自定义教材"
+              >
+                <Plus className="h-3 w-3 text-muted-foreground" />
+              </button>
             </div>
 
             {/* 分隔线 - 桌面端显示 */}
@@ -475,21 +476,22 @@ export function EnglishPromptDialog() {
                     )}
                   </button>
                 ))}
-                
-                {/* 新增模板按钮 */}
-                <button
-                  onClick={() => setIsAddingPrompt(!isAddingPrompt)}
-                  className={cn(
-                    "relative flex items-center justify-center rounded-lg px-3 py-1.5 transition-all duration-300",
-                    "border backdrop-blur-sm shrink-0",
-                    "border-dashed border-border/40 bg-background/30",
-                    "hover:border-cyan-300/40 hover:bg-gradient-to-br hover:from-cyan-400/5 hover:to-cyan-400/5",
-                    "hover:scale-[1.02]"
-                  )}
-                >
-                  <Plus className="h-3 w-3 text-muted-foreground" />
-                </button>
               </div>
+              
+              {/* 新增模板按钮 - 移到外部，始终可见 */}
+              <button
+                onClick={() => setIsAddingPrompt(!isAddingPrompt)}
+                className={cn(
+                  "relative flex items-center justify-center rounded-lg px-2 py-1.5 transition-all duration-300",
+                  "border backdrop-blur-sm shrink-0",
+                  "border-dashed border-border/40 bg-background/30",
+                  "hover:border-cyan-300/40 hover:bg-gradient-to-br hover:from-cyan-400/5 hover:to-cyan-400/5",
+                  "hover:scale-[1.02]"
+                )}
+                title="添加自定义Prompt模板"
+              >
+                <Plus className="h-3 w-3 text-muted-foreground" />
+              </button>
             </div>
           </div>
           
