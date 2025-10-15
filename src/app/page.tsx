@@ -9,6 +9,7 @@ import { AppHeader } from "@/components/app-header";
 import { ExportDialog } from "@/components/export-dialog";
 import { EnglishPromptDialog } from "@/components/english-prompt-dialog";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { AIChatButton } from "@/components/ai/ai-chat-button";
 import { 
   TimelineSkeleton, 
   StatisticsSkeleton, 
@@ -134,6 +135,9 @@ export default function Home() {
           )}
         </main>
       </div>
+      
+      {/* AI Chat Button - 右下角固定按钮 */}
+      <AIChatButton />
     </div>
   );
 }

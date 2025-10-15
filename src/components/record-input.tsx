@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { PermissionGuide } from '@/components/permission-guide';
 import { AudioPlayer } from '@/components/audio-player';
 import { ImageGrid } from '@/components/image-grid';
-import { useSpeech } from '@/lib/hooks/use-speech';
+import { useVoiceRecorder } from '@/lib/hooks/use-voice-recorder';
 import { useRecords } from '@/lib/hooks/use-records';
 import { useLocation } from '@/lib/hooks/use-location';
 import { useAudioRecorder } from '@/lib/hooks/use-audio-recorder';
@@ -74,38 +74,33 @@ export function RecordInput() {
   ], []);
   
   const {
-    isListening,
-    transcript,
-    interimTranscript,
+    isRecording,
     isSupported,
-    startListening,
-    stopListening,
-    resetTranscript,
+    startRecording,
+    stopRecording,
     error,
-  } = useSpeech({
-    lang: 'zh-CN',
-    continuous: true,  // 改为 true，持续识别直到用户手动停止
-    interimResults: true,
+  } = useVoiceRecorder({
+    language: 'zh-CN',
+    onResult: (text) => {
+      setInputText(prev => {
+        // 避免重复添加
+        if (prev.endsWith(text)) {
+          return prev;
+        }
+        return prev + text;
+      });
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
   });
   
   const isDesktop = useIsDesktop();
   
-  // 同步最终识别结果到输入框
-  useEffect(() => {
-    if (transcript) {
-      setInputText(prev => {
-        // 避免重复添加
-        if (prev.endsWith(transcript)) {
-          return prev;
-        }
-        return prev + transcript;
-      });
-      resetTranscript();
-    }
-  }, [transcript, resetTranscript]);
+  // 语音识别结果已通过onResult回调处理
   
-  // 显示临时识别结果（实时反馈）
-  const displayText = inputText + interimTranscript;
+  // 显示输入文本
+  const displayText = inputText;
   
   // 动态 placeholder 效果 - 打字机动画（仅在未聚焦时运行）
   useEffect(() => {
@@ -161,18 +156,18 @@ export function RecordInput() {
   
   // 切换录音状态
   const toggleRecording = useCallback(() => {
-    if (isListening) {
-      stopListening();
+    if (isRecording) {
+      stopRecording();
     } else {
-      startListening();
+      startRecording();
     }
-  }, [isListening, startListening, stopListening]);
+  }, [isRecording, startRecording, stopRecording]);
   
   // 保存记录
   const handleSave = useCallback(async () => {
     // 如果正在语音转文字，先停止
-    if (isListening) {
-      stopListening();
+    if (isRecording) {
+      stopRecording();
     }
     
     // 如果正在录制音频，先停止并获取 Blob
@@ -261,7 +256,7 @@ export function RecordInput() {
       console.error('保存失败:', error);
       toast.error('保存失败，请重试');
     }
-  }, [inputText, audioBlob, audioDuration, images, addRecord, isListening, stopListening, isRecordingAudio, stopAudioRecording, clearAudio, clearImages, isLocationEnabled, location]);
+  }, [inputText, audioBlob, audioDuration, images, addRecord, isRecording, stopRecording, isRecordingAudio, stopAudioRecording, clearAudio, clearImages, isLocationEnabled, location]);
   
   // 处理键盘快捷键
   const handleKeyDown = useCallback(
@@ -377,7 +372,7 @@ export function RecordInput() {
               onDrop={handleDrop}
               onDragOver={(e) => e.preventDefault()}
               className="flex w-full resize-none text-[16px] md:text-lg leading-snug placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 border-0 p-0 ring-0 max-h-[max(35svh,5rem)] placeholder-shown:text-ellipsis placeholder-shown:whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50 bg-transparent focus:bg-transparent flex-1"
-              disabled={isListening}
+              disabled={isRecording}
               style={{ 
                 minHeight: '120px',
               }}
@@ -488,7 +483,7 @@ export function RecordInput() {
             </div>
             
             {/* 状态指示 - 语音转文字中 */}
-            {isListening && (
+            {isRecording && (
               <div className="flex items-center gap-1.5 px-2">
                 <div className="relative flex h-3 w-3 items-center justify-center">
                   <span className="absolute inline-flex h-full w-full rounded-full bg-purple-500" style={{ animation: 'breathe-purple 3s cubic-bezier(0.4, 0, 0.2, 1) infinite' }}></span>
@@ -513,13 +508,13 @@ export function RecordInput() {
                   "border border-input bg-muted transition-all duration-150 ease-in-out",
                   "hover:bg-accent hover:border-accent",
                   "text-muted-foreground hover:text-foreground",
-                  isListening && "border-purple-500/50 bg-purple-500/10 text-purple-600 dark:text-purple-400 animate-pulse"
+                  isRecording && "border-purple-500/50 bg-purple-500/10 text-purple-600 dark:text-purple-400 animate-pulse"
                 )}
                 onClick={toggleRecording}
                 disabled={!isSupported}
-                title={!isSupported ? '浏览器不支持' : isListening ? '停止语音转文本' : '语音转文本'}
+                title={!isSupported ? '浏览器不支持' : isRecording ? '停止语音转文本' : '语音转文本'}
               >
-                {isListening ? (
+                {isRecording ? (
                   <MicOff className="h-5 w-5" />
                 ) : (
                   <Mic className="h-5 w-5" />
@@ -547,12 +542,12 @@ export function RecordInput() {
       </div>
       
       {/* 精简的提示 - 只在有错误时显示 */}
-      {(error || (!isSupported && !isListening)) && (
+      {(error || (!isSupported && !isRecording)) && (
         <div className="mt-3">
           <PermissionGuide 
             error={error} 
             isSupported={isSupported} 
-            isListening={isListening}
+            isListening={isRecording}
           />
         </div>
       )}
