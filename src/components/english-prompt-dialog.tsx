@@ -165,8 +165,6 @@ export function EnglishPromptDialog() {
   const [selectedBook, setSelectedBook] = useState<string>('nce1');
   const [lessonStart, setLessonStart] = useState<number>(1);
   const [lessonEnd, setLessonEnd] = useState<number>(1);
-  const [lessonStartInput, setLessonStartInput] = useState<string>('1');
-  const [lessonEndInput, setLessonEndInput] = useState<string>('1');
   const [selectedTemplate, setSelectedTemplate] = useState<string>('template1');
   const [customBooks, setCustomBooks] = useState<CustomBook[]>([]);
   const [isAddingBook, setIsAddingBook] = useState(false);
@@ -263,11 +261,9 @@ export function EnglishPromptDialog() {
       const maxLessons = currentBook.lessons;
       if (lessonStart > maxLessons) {
         setLessonStart(1);
-        setLessonStartInput('1');
       }
       if (lessonEnd > maxLessons) {
         setLessonEnd(maxLessons);
-        setLessonEndInput(maxLessons.toString());
       }
     }
   }, [currentBook, lessonStart, lessonEnd]);
@@ -427,64 +423,7 @@ export function EnglishPromptDialog() {
     toast.success('自定义Prompt已删除');
   };
   
-  // 处理课程开始输入
-  const handleLessonStartChange = (value: string) => {
-    setLessonStartInput(value);
-    
-    // 允许空值，不立即验证
-    if (value === '') {
-      return;
-    }
-    
-    const num = parseInt(value);
-    if (!isNaN(num) && num > 0) {
-      const maxLessons = currentBook?.lessons || 1;
-      const clampedValue = Math.min(num, maxLessons);
-      setLessonStart(clampedValue);
-      
-      // 如果开始课程大于结束课程，自动调整结束课程
-      if (clampedValue > lessonEnd) {
-        setLessonEnd(clampedValue);
-        setLessonEndInput(clampedValue.toString());
-      }
-    }
-  };
-  
-  // 处理课程结束输入
-  const handleLessonEndChange = (value: string) => {
-    setLessonEndInput(value);
-    
-    // 允许空值，不立即验证
-    if (value === '') {
-      return;
-    }
-    
-    const num = parseInt(value);
-    if (!isNaN(num) && num > 0) {
-      const maxLessons = currentBook?.lessons || 1;
-      const clampedValue = Math.min(num, maxLessons);
-      setLessonEnd(clampedValue);
-    }
-  };
-  
-  // 处理输入框失焦时的验证
-  const handleLessonStartBlur = () => {
-    if (lessonStartInput === '' || lessonStartInput === '0') {
-      setLessonStartInput('1');
-      setLessonStart(1);
-      if (lessonEnd < 1) {
-        setLessonEnd(1);
-        setLessonEndInput('1');
-      }
-    }
-  };
-  
-  const handleLessonEndBlur = () => {
-    if (lessonEndInput === '' || lessonEndInput === '0') {
-      setLessonEndInput(lessonStart.toString());
-      setLessonEnd(lessonStart);
-    }
-  };
+  // 处理课程范围选择（现在使用select，不需要复杂的输入验证）
   
   // 检查滚动状态
   const checkScrollStatus = (container: HTMLDivElement, setCanScrollLeft: (value: boolean) => void, setCanScrollRight: (value: boolean) => void) => {
@@ -720,74 +659,117 @@ export function EnglishPromptDialog() {
               </div>
             </div>
             
-            {/* 课程范围选择 */}
-            <div className="space-y-3">
-              <div className="text-sm font-medium text-foreground">选择课程范围</div>
-              <div 
-                className="flex items-center gap-4 overflow-x-auto pb-2" 
-                style={{ 
-                  scrollbarWidth: 'none', 
-                  msOverflowStyle: 'none'
-                }}
-              >
-                {/* 开始课程 */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">从</span>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={lessonStartInput}
-                      onChange={(e) => handleLessonStartChange(e.target.value)}
-                      onBlur={handleLessonStartBlur}
-                      onFocus={(e) => e.target.select()}
-                      className={cn(
-                        "w-16 h-10 px-3 text-sm rounded-xl border transition-all duration-200",
-                        "bg-background/60 border-border/40 backdrop-blur-sm",
-                        "hover:border-cyan-300/60 focus:border-cyan-400/80",
-                        "focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:shadow-lg focus:shadow-cyan-400/10",
-                        "text-center font-medium",
-                        "placeholder:text-muted-foreground/50"
-                      )}
-                      placeholder="1"
-                    />
-                  </div>
-                  <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">课</span>
-                </div>
-                
-                {/* 分隔符 */}
-                <div className="flex items-center">
-                  <div className="w-8 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-                </div>
-                
-                {/* 结束课程 */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">到</span>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={lessonEndInput}
-                      onChange={(e) => handleLessonEndChange(e.target.value)}
-                      onBlur={handleLessonEndBlur}
-                      onFocus={(e) => e.target.select()}
-                      className={cn(
-                        "w-16 h-10 px-3 text-sm rounded-xl border transition-all duration-200",
-                        "bg-background/60 border-border/40 backdrop-blur-sm",
-                        "hover:border-cyan-300/60 focus:border-cyan-400/80",
-                        "focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:shadow-lg focus:shadow-cyan-400/10",
-                        "text-center font-medium",
-                        "placeholder:text-muted-foreground/50"
-                      )}
-                      placeholder="1"
-                    />
-                  </div>
-                  <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">课</span>
-                </div>
-              </div>
-            </div>
+             {/* 课程范围选择 - Apple风格Select */}
+             <div className="space-y-4">
+               <div className="flex items-center justify-between">
+                 <div className="text-sm font-semibold text-foreground">课程范围</div>
+                 <div className="text-xs text-muted-foreground">
+                   共 {currentBook?.lessons || 0} 课
+                 </div>
+               </div>
+               
+               {/* Apple风格的范围选择器 */}
+               <div className="bg-muted/10 rounded-2xl p-6 border border-border/20">
+                 <div className="flex items-center justify-center gap-8">
+                   {/* 起始课程选择器 */}
+                   <div className="flex flex-col items-center space-y-3">
+                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                       起始课程
+                     </label>
+                     <div className="relative">
+                       <select
+                         value={lessonStart}
+                         onChange={(e) => {
+                           const value = parseInt(e.target.value);
+                           setLessonStart(value);
+                           // 如果开始课程大于结束课程，自动调整结束课程
+                           if (value > lessonEnd) {
+                             setLessonEnd(value);
+                           }
+                         }}
+                         className={cn(
+                           "w-24 h-12 px-4 text-lg font-bold text-center rounded-xl border-2 transition-all duration-300",
+                           "bg-background border-border/20 appearance-none cursor-pointer",
+                           "hover:border-primary/30 hover:shadow-md",
+                           "focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 focus:shadow-lg focus:shadow-primary/5",
+                           "text-foreground"
+                         )}
+                       >
+                         {Array.from({ length: currentBook?.lessons || 1 }, (_, i) => i + 1).map(num => (
+                           <option key={num} value={num} className="text-center">
+                             {num}
+                           </option>
+                         ))}
+                       </select>
+                       {/* 自定义下拉箭头 */}
+                       <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                         <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                         </svg>
+                       </div>
+                       {/* Apple风格的焦点指示器 */}
+                       <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-primary/60 rounded-full opacity-0 transition-opacity duration-300 focus-within:opacity-100" />
+                     </div>
+                   </div>
+                   
+                   {/* 优雅的连接线 */}
+                   <div className="flex items-center">
+                     <div className="w-20 h-0.5 bg-gradient-to-r from-border/40 via-border/60 to-border/40 rounded-full" />
+                   </div>
+                   
+                   {/* 结束课程选择器 */}
+                   <div className="flex flex-col items-center space-y-3">
+                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                       结束课程
+                     </label>
+                     <div className="relative">
+                       <select
+                         value={lessonEnd}
+                         onChange={(e) => {
+                           const value = parseInt(e.target.value);
+                           setLessonEnd(value);
+                           // 如果结束课程小于开始课程，自动调整开始课程
+                           if (value < lessonStart) {
+                             setLessonStart(value);
+                           }
+                         }}
+                         className={cn(
+                           "w-24 h-12 px-4 text-lg font-bold text-center rounded-xl border-2 transition-all duration-300",
+                           "bg-background border-border/20 appearance-none cursor-pointer",
+                           "hover:border-primary/30 hover:shadow-md",
+                           "focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 focus:shadow-lg focus:shadow-primary/5",
+                           "text-foreground"
+                         )}
+                       >
+                         {Array.from({ length: currentBook?.lessons || 1 }, (_, i) => i + 1).map(num => (
+                           <option key={num} value={num} className="text-center">
+                             {num}
+                           </option>
+                         ))}
+                       </select>
+                       {/* 自定义下拉箭头 */}
+                       <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                         <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                         </svg>
+                       </div>
+                       {/* Apple风格的焦点指示器 */}
+                       <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-primary/60 rounded-full opacity-0 transition-opacity duration-300 focus-within:opacity-100" />
+                     </div>
+                   </div>
+                 </div>
+                 
+                 {/* 范围状态指示器 */}
+                 <div className="mt-6 text-center">
+                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-full border border-primary/10">
+                     <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                     <span className="text-sm font-semibold text-primary">
+                       选择第 {lessonStart} - {lessonEnd} 课
+                     </span>
+                   </div>
+                 </div>
+               </div>
+             </div>
             
             {/* Prompt模板选择 */}
             <div className="space-y-3">
