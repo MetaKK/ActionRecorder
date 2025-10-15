@@ -179,6 +179,10 @@ export function EnglishPromptDialog() {
   const [newPromptTemplate, setNewPromptTemplate] = useState('');
   const [copied, setCopied] = useState(false);
   
+  // 高亮状态管理
+  const [highlightedBookId, setHighlightedBookId] = useState<string | null>(null);
+  const [highlightedTemplateId, setHighlightedTemplateId] = useState<string | null>(null);
+  
   // 滚动相关状态
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true); // 默认显示右箭头
@@ -243,9 +247,9 @@ export function EnglishPromptDialog() {
     return records.filter(record => record.createdAt >= today);
   }, [records]);
   
-  // 合并教材列表
+  // 合并教材列表（自定义教材在前）
   const allBooks = useMemo(() => {
-    return [...NCE_BOOKS, ...customBooks];
+    return [...customBooks, ...NCE_BOOKS];
   }, [customBooks]);
   
   // 当前选中的教材
@@ -268,9 +272,9 @@ export function EnglishPromptDialog() {
     }
   }, [currentBook, lessonStart, lessonEnd]);
   
-  // 合并模板列表
+  // 合并模板列表（自定义Prompt在前）
   const allTemplates = useMemo(() => {
-    return [...PROMPT_TEMPLATES, ...customPrompts];
+    return [...customPrompts, ...PROMPT_TEMPLATES];
   }, [customPrompts]);
   
   // 当前选中的模板
@@ -362,8 +366,14 @@ export function EnglishPromptDialog() {
       lessons,
     };
     
-    setCustomBooks(prev => [...prev, newBook]);
+    // 添加到数组开头
+    setCustomBooks(prev => [newBook, ...prev]);
     setSelectedBook(newBook.id);
+    
+    // 设置高亮效果
+    setHighlightedBookId(newBook.id);
+    setTimeout(() => setHighlightedBookId(null), 3000); // 3秒后取消高亮
+    
     setNewBookName('');
     setNewBookLessons('');
     setIsAddingBook(false);
@@ -393,8 +403,14 @@ export function EnglishPromptDialog() {
       template: newPromptTemplate.trim(),
     };
     
-    setCustomPrompts(prev => [...prev, newPrompt]);
+    // 添加到数组开头
+    setCustomPrompts(prev => [newPrompt, ...prev]);
     setSelectedTemplate(newPrompt.id);
+    
+    // 设置高亮效果
+    setHighlightedTemplateId(newPrompt.id);
+    setTimeout(() => setHighlightedTemplateId(null), 3000); // 3秒后取消高亮
+    
     setNewPromptName('');
     setNewPromptDescription('');
     setNewPromptTemplate('');
@@ -665,7 +681,9 @@ export function EnglishPromptDialog() {
                           "hover:scale-[1.02] active:scale-[0.98]",
                           selectedBook === book.id
                             ? "border-cyan-400/50 bg-gradient-to-br from-sky-400/15 to-cyan-400/15 text-foreground shadow-lg shadow-cyan-400/10"
-                            : "border-border/40 bg-background/60 text-foreground/80 hover:border-cyan-300/50 hover:bg-cyan-400/5"
+                            : "border-border/40 bg-background/60 text-foreground/80 hover:border-cyan-300/50 hover:bg-cyan-400/5",
+                          // 高亮效果
+                          highlightedBookId === book.id && "animate-pulse border-emerald-400/60 bg-gradient-to-br from-emerald-400/20 to-green-400/20 shadow-lg shadow-emerald-400/20"
                         )}
                       >
                         <div className="flex items-center gap-2">
@@ -876,7 +894,9 @@ export function EnglishPromptDialog() {
                           "hover:scale-[1.02] active:scale-[0.98]",
                           selectedTemplate === template.id
                             ? "border-cyan-400/50 bg-gradient-to-br from-sky-400/15 to-cyan-400/15 text-foreground shadow-lg shadow-cyan-400/10"
-                            : "border-border/40 bg-background/60 text-foreground/80 hover:border-cyan-300/50 hover:bg-cyan-400/5"
+                            : "border-border/40 bg-background/60 text-foreground/80 hover:border-cyan-300/50 hover:bg-cyan-400/5",
+                          // 高亮效果
+                          highlightedTemplateId === template.id && "animate-pulse border-emerald-400/60 bg-gradient-to-br from-emerald-400/20 to-green-400/20 shadow-lg shadow-emerald-400/20"
                         )}
                       >
                         <div className="font-medium text-sm mb-1.5 group-hover:text-foreground transition-colors">{template.name}</div>
