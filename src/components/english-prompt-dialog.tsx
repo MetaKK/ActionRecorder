@@ -930,6 +930,7 @@ export function EnglishPromptDialog() {
                 )}
               </div>
             </div>
+          </div>
           
           {/* Prompt预览 */}
           <div className="flex-1 overflow-hidden flex flex-col min-h-0">
