@@ -193,7 +193,7 @@ export function ExportDialog({
           <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-4">
             {/* 导出格式选择 */}
             <div className="flex items-center gap-2 relative z-10">
-              <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">格式</label>
+              <label className="text-m font-medium text-muted-foreground whitespace-nowrap">格式</label>
               <div className="flex gap-2 overflow-x-auto scrollbar-none">
                 {EXPORT_FORMATS.map((format) => (
                   <button
@@ -247,8 +247,8 @@ export function ExportDialog({
             
             {/* 时间范围选择 */}
             <div className="flex items-center gap-2 relative z-10">
-              <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">时间</label>
-              <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+              <label className="text-m font-medium text-muted-foreground whitespace-nowrap">时间</label>
+              <div className="flex gap-1.5 overflow-x-auto scrollbar-none p-1">
                 {/* 自定义日期显示（如果是） */}
                 {isCustomDate(selectedRange) && (
                   <div

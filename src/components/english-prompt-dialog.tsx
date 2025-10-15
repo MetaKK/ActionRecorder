@@ -5,8 +5,8 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { BookOpen, Copy, Check, GraduationCap, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Copy, Check, GraduationCap } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -22,19 +22,19 @@ import { formatDate, formatTime } from '@/lib/utils/date';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
-// 新概念英语教材配置
+// 新概念英语教材配置 - 精简版
 const NCE_BOOKS = [
-  { id: 'nce1', name: '新概念英语 第1册', lessons: 144 },
-  { id: 'nce2', name: '新概念英语 第2册', lessons: 96 },
-  { id: 'nce3', name: '新概念英语 第3册', lessons: 60 },
-  { id: 'nce4', name: '新概念英语 第4册', lessons: 48 },
+  { id: 'nce1', name: '新概念1', lessons: 144 },
+  { id: 'nce2', name: '新概念2', lessons: 96 },
+  { id: 'nce3', name: '新概念3', lessons: 60 },
+  { id: 'nce4', name: '新概念4', lessons: 48 },
 ];
 
-// Prompt模板
+// Prompt模板 - 精简版
 const PROMPT_TEMPLATES = [
   {
     id: 'template1',
-    name: '场景对话式（推荐）',
+    name: '场景对话式',
     description: '黄金对话 + 语调标注 + 文化差异',
     template: `【学习者信息】
 - 年龄：35岁
@@ -147,18 +147,6 @@ B: [句子] ↗↘ (标注语调和重音)
   },
 ];
 
-interface CustomBook {
-  id: string;
-  name: string;
-  lessons: number;
-}
-
-interface CustomPrompt {
-  id: string;
-  name: string;
-  description: string;
-  template: string;
-}
 
 export function EnglishPromptDialog() {
   const [open, setOpen] = useState(false);
@@ -166,75 +154,9 @@ export function EnglishPromptDialog() {
   const [lessonStart, setLessonStart] = useState<number>(1);
   const [lessonEnd, setLessonEnd] = useState<number>(1);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('template1');
-  const [customBooks, setCustomBooks] = useState<CustomBook[]>([]);
-  const [isAddingBook, setIsAddingBook] = useState(false);
-  const [newBookName, setNewBookName] = useState('');
-  const [newBookLessons, setNewBookLessons] = useState('');
-  const [customPrompts, setCustomPrompts] = useState<CustomPrompt[]>([]);
-  const [isAddingPrompt, setIsAddingPrompt] = useState(false);
-  const [newPromptName, setNewPromptName] = useState('');
-  const [newPromptTemplate, setNewPromptTemplate] = useState('');
   const [copied, setCopied] = useState(false);
   
-  // 高亮状态管理
-  const [highlightedBookId, setHighlightedBookId] = useState<string | null>(null);
-  const [highlightedTemplateId, setHighlightedTemplateId] = useState<string | null>(null);
-  
-  // 滚动相关状态
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true); // 默认显示右箭头
-  const [canScrollLeftTemplate, setCanScrollLeftTemplate] = useState(false);
-  const [canScrollRightTemplate, setCanScrollRightTemplate] = useState(true); // 默认显示右箭头
-  
-  // 滚动容器引用
-  const booksScrollRef = useRef<HTMLDivElement>(null);
-  const templatesScrollRef = useRef<HTMLDivElement>(null);
-  
   const { records } = useRecords();
-  
-  // 从本地存储加载自定义教材
-  useEffect(() => {
-    const savedBooks = localStorage.getItem('custom-books');
-    if (savedBooks) {
-      try {
-        const books = JSON.parse(savedBooks);
-        setCustomBooks(books);
-      } catch (error) {
-        console.error('Failed to load custom books:', error);
-      }
-    }
-  }, []);
-  
-  // 从本地存储加载自定义Prompt
-  useEffect(() => {
-    const savedPrompts = localStorage.getItem('custom-prompts');
-    if (savedPrompts) {
-      try {
-        const prompts = JSON.parse(savedPrompts);
-        setCustomPrompts(prompts);
-      } catch (error) {
-        console.error('Failed to load custom prompts:', error);
-      }
-    }
-  }, []);
-  
-  // 保存自定义教材到本地存储
-  useEffect(() => {
-    if (customBooks.length > 0) {
-      localStorage.setItem('custom-books', JSON.stringify(customBooks));
-    } else {
-      localStorage.removeItem('custom-books');
-    }
-  }, [customBooks]);
-  
-  // 保存自定义Prompt到本地存储
-  useEffect(() => {
-    if (customPrompts.length > 0) {
-      localStorage.setItem('custom-prompts', JSON.stringify(customPrompts));
-    } else {
-      localStorage.removeItem('custom-prompts');
-    }
-  }, [customPrompts]);
   
   
   // 获取今天的记录
@@ -244,15 +166,10 @@ export function EnglishPromptDialog() {
     return records.filter(record => record.createdAt >= today);
   }, [records]);
   
-  // 合并教材列表（自定义教材在前）
-  const allBooks = useMemo(() => {
-    return [...customBooks, ...NCE_BOOKS];
-  }, [customBooks]);
-  
   // 当前选中的教材
   const currentBook = useMemo(() => {
-    return allBooks.find(book => book.id === selectedBook);
-  }, [allBooks, selectedBook]);
+    return NCE_BOOKS.find(book => book.id === selectedBook);
+  }, [selectedBook]);
   
   // 当教材改变时，重置课程范围
   useEffect(() => {
@@ -267,48 +184,10 @@ export function EnglishPromptDialog() {
     }
   }, [currentBook, lessonStart, lessonEnd]);
   
-  // 合并模板列表（自定义Prompt在前）
-  const allTemplates = useMemo(() => {
-    return [...customPrompts, ...PROMPT_TEMPLATES];
-  }, [customPrompts]);
-  
   // 当前选中的模板
   const currentTemplate = useMemo(() => {
-    return allTemplates.find(t => t.id === selectedTemplate);
-  }, [allTemplates, selectedTemplate]);
-  
-  // 初始化滚动状态检测
-  useEffect(() => {
-    const checkInitialScrollStatus = () => {
-      if (booksScrollRef.current) {
-        checkScrollStatus(booksScrollRef.current, setCanScrollLeft, setCanScrollRight);
-      }
-      if (templatesScrollRef.current) {
-        checkScrollStatus(templatesScrollRef.current, setCanScrollLeftTemplate, setCanScrollRightTemplate);
-      }
-    };
-    
-    // 延迟检测，确保DOM已渲染
-    const timer = setTimeout(checkInitialScrollStatus, 100);
-    return () => clearTimeout(timer);
-  }, [allBooks, allTemplates]);
-  
-  // 动态调整右箭头显示（当只有一个选项时隐藏）
-  useEffect(() => {
-    // 教材选择：只有一个教材时隐藏右箭头
-    if (allBooks.length <= 1) {
-      setCanScrollRight(false);
-    } else {
-      setCanScrollRight(true);
-    }
-    
-    // 模板选择：只有一个模板时隐藏右箭头
-    if (allTemplates.length <= 1) {
-      setCanScrollRightTemplate(false);
-    } else {
-      setCanScrollRightTemplate(true);
-    }
-  }, [allBooks.length, allTemplates.length]);
+    return PROMPT_TEMPLATES.find(t => t.id === selectedTemplate);
+  }, [selectedTemplate]);
   
   // 生成活动列表文本
   const activitiesText = useMemo(() => {
@@ -342,135 +221,6 @@ export function EnglishPromptDialog() {
       .replace('{course}', courseInfo);
   }, [currentTemplate, currentBook, lessonStart, lessonEnd, activitiesText]);
   
-  // 添加自定义教材
-  const handleAddCustomBook = () => {
-    if (!newBookName.trim() || !newBookLessons.trim()) {
-      toast.error('请填写教材名称和课程数量');
-      return;
-    }
-    
-    const lessons = parseInt(newBookLessons);
-    if (isNaN(lessons) || lessons < 1) {
-      toast.error('课程数量必须是正整数');
-      return;
-    }
-    
-    const newBook: CustomBook = {
-      id: `custom-${Date.now()}`,
-      name: newBookName.trim(),
-      lessons,
-    };
-    
-    // 添加到数组开头
-    setCustomBooks(prev => [newBook, ...prev]);
-    setSelectedBook(newBook.id);
-    
-    // 设置高亮效果
-    setHighlightedBookId(newBook.id);
-    setTimeout(() => setHighlightedBookId(null), 3000); // 3秒后取消高亮
-    
-    setNewBookName('');
-    setNewBookLessons('');
-    setIsAddingBook(false);
-    toast.success('教材已添加');
-  };
-  
-  // 删除自定义教材
-  const handleRemoveCustomBook = (bookId: string) => {
-    setCustomBooks(prev => prev.filter(book => book.id !== bookId));
-    if (selectedBook === bookId) {
-      setSelectedBook('nce1');
-    }
-    toast.success('教材已删除');
-  };
-  
-  // 添加自定义Prompt
-  const handleAddCustomPrompt = () => {
-    if (!newPromptName.trim() || !newPromptTemplate.trim()) {
-      toast.error('请填写Prompt名称和内容');
-      return;
-    }
-    
-    const newPrompt: CustomPrompt = {
-      id: `custom-prompt-${Date.now()}`,
-      name: newPromptName.trim(),
-      description: '自定义学习Prompt',
-      template: newPromptTemplate.trim(),
-    };
-    
-    // 添加到数组开头
-    setCustomPrompts(prev => [newPrompt, ...prev]);
-    setSelectedTemplate(newPrompt.id);
-    
-    // 设置高亮效果
-    setHighlightedTemplateId(newPrompt.id);
-    setTimeout(() => setHighlightedTemplateId(null), 3000); // 3秒后取消高亮
-    
-    setNewPromptName('');
-    setNewPromptTemplate('');
-    setIsAddingPrompt(false);
-    toast.success('自定义Prompt已添加');
-  };
-  
-  // 删除自定义Prompt
-  const handleRemoveCustomPrompt = (promptId: string) => {
-    setCustomPrompts(prev => prev.filter(prompt => prompt.id !== promptId));
-    if (selectedTemplate === promptId) {
-      setSelectedTemplate('template1');
-    }
-    toast.success('自定义Prompt已删除');
-  };
-  
-  // 处理课程范围选择（现在使用select，不需要复杂的输入验证）
-  
-  // 检查滚动状态
-  const checkScrollStatus = (container: HTMLDivElement, setCanScrollLeft: (value: boolean) => void, setCanScrollRight: (value: boolean) => void) => {
-    const { scrollLeft, scrollWidth, clientWidth } = container;
-    setCanScrollLeft(scrollLeft > 0);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
-  };
-
-  // 滚动到指定位置（居中）
-  const scrollToCenter = (container: HTMLDivElement, targetElement: HTMLElement) => {
-    const containerRect = container.getBoundingClientRect();
-    const targetRect = targetElement.getBoundingClientRect();
-    const scrollLeft = container.scrollLeft + (targetRect.left - containerRect.left) - (containerRect.width / 2) + (targetRect.width / 2);
-    
-    container.scrollTo({
-      left: scrollLeft,
-      behavior: 'smooth'
-    });
-  };
-
-  // 滚动处理函数
-  const handleBooksScroll = () => {
-    if (booksScrollRef.current) {
-      checkScrollStatus(booksScrollRef.current, setCanScrollLeft, setCanScrollRight);
-    }
-  };
-
-  const handleTemplatesScroll = () => {
-    if (templatesScrollRef.current) {
-      checkScrollStatus(templatesScrollRef.current, setCanScrollLeftTemplate, setCanScrollRightTemplate);
-    }
-  };
-
-  // 手动滚动函数
-  const scrollBooks = (direction: 'left' | 'right') => {
-    if (booksScrollRef.current) {
-      const scrollAmount = 200;
-      const newScrollLeft = booksScrollRef.current.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount);
-      booksScrollRef.current.scrollTo({ left: newScrollLeft, behavior: 'smooth' });
-    }
-  };
-
-  const scrollTemplates = (direction: 'left' | 'right') => {
-    if (templatesScrollRef.current) {
-      const scrollAmount = 200;
-      const newScrollLeft = templatesScrollRef.current.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount);
-      templatesScrollRef.current.scrollTo({ left: newScrollLeft, behavior: 'smooth' });
-    }
-  };
 
   // 复制Prompt
   const handleCopy = async () => {
@@ -509,392 +259,146 @@ export function EnglishPromptDialog() {
           />
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col gap-0 p-0">
+      <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col gap-0 p-0">
         <DialogHeader className="px-6 pt-6 pb-4">
-          <DialogTitle className="text-xl flex items-center gap-2">
-            <GraduationCap className="h-5 w-5" />
-            英文学习 Prompt 生成器
-          </DialogTitle>
+          <DialogTitle className="text-xl">英文学习 Prompt 生成器</DialogTitle>
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden flex flex-col px-6 pb-6">
-          {/* 配置区域 */}
-          <div className="space-y-6 mb-6">
+          {/* 顶部选项区 - 参考导出模态窗布局 */}
+          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-4">
             {/* 教材选择 */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-m font-medium text-foreground">选择教材</label>
-                <button
-                  onClick={() => setIsAddingBook(!isAddingBook)}
-                  className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 transition-colors"
-                >
-                  <Plus className="h-3 w-3" />
-                  添加自定义教材
-                </button>
-              </div>
-              
-              {/* 添加自定义教材表单 */}
-              {isAddingBook && (
-                <div className="p-4 rounded-xl border border-border/40 bg-muted/20 space-y-3 shadow-sm">
-                  <input
-                    type="text"
-                    placeholder="教材名称（如：剑桥英语）"
-                    value={newBookName}
-                    onChange={(e) => setNewBookName(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
-                  />
-                  <input
-                    type="number"
-                    placeholder="课程数量"
-                    value={newBookLessons}
-                    onChange={(e) => setNewBookLessons(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleAddCustomBook}
-                      className="px-4 py-2 text-xs rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition-colors font-medium"
-                    >
-                      确认添加
-                    </button>
-                    <button
-                      onClick={() => setIsAddingBook(false)}
-                      className="px-4 py-2 text-xs rounded-lg border border-border hover:bg-muted transition-colors font-medium"
-                    >
-                      取消
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              {/* 水平滚动教材选择 */}
-              <div className="relative">
-                {/* 左滚动按钮 */}
-                {canScrollLeft && (
+            <div className="flex items-center gap-2 relative z-10">
+              <label className="text-m font-medium text-muted-foreground whitespace-nowrap">教材</label>
+              <div className="flex gap-1.5 overflow-x-auto scrollbar-none p-1">
+                {NCE_BOOKS.map((book) => (
                   <button
-                    onClick={() => scrollBooks('left')}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
+                    key={book.id}
+                    onClick={() => setSelectedBook(book.id)}
+                    className={cn(
+                      "relative flex items-center justify-center rounded-lg px-3 py-1.5 transition-all duration-300",
+                      "border backdrop-blur-sm shrink-0",
+                      selectedBook === book.id
+                        ? [
+                            "border-cyan-400/40 bg-gradient-to-br from-sky-400/12 via-blue-400/12 to-cyan-400/12",
+                            "shadow-md shadow-cyan-400/10",
+                            "scale-[1.05]",
+                          ]
+                        : [
+                            "border-border/30 bg-background/50",
+                            "hover:border-cyan-300/40 hover:bg-gradient-to-br hover:from-sky-400/5 hover:to-cyan-400/5",
+                            "hover:scale-[1.02]",
+                          ]
+                    )}
                   >
-                    <ChevronLeft className="h-4 w-4 text-foreground/80" />
+                    <span className={cn(
+                      "text-xs font-semibold transition-colors whitespace-nowrap",
+                      selectedBook === book.id 
+                        ? "text-foreground" 
+                        : "text-foreground/70"
+                    )}>
+                      {book.name}
+                    </span>
+                    
+                    {/* 选中下划线 */}
+                    {selectedBook === book.id && (
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full bg-gradient-to-r from-sky-400 to-cyan-400" />
+                    )}
                   </button>
-                )}
-                
-                {/* 右滚动按钮 */}
-                {canScrollRight && (
-                  <button
-                    onClick={() => scrollBooks('right')}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
-                  >
-                    <ChevronRight className="h-4 w-4 text-foreground/80" />
-                  </button>
-                )}
-                
-                <div 
-                  ref={booksScrollRef}
-                  onScroll={handleBooksScroll}
-                  className="flex gap-3 overflow-x-auto scroll-smooth p-1" 
-                  style={{ 
-                    scrollbarWidth: 'none', 
-                    msOverflowStyle: 'none'
-                  }}
-                >
-                  {allBooks.map((book) => (
-                    <div key={book.id} className="relative flex-shrink-0">
-                      <button
-                        onClick={() => {
-                          setSelectedBook(book.id);
-                          // 选中后居中滚动
-                          setTimeout(() => {
-                            const button = document.querySelector(`[data-book-id="${book.id}"]`) as HTMLElement;
-                            if (button && booksScrollRef.current) {
-                              scrollToCenter(booksScrollRef.current, button);
-                            }
-                          }, 100);
-                        }}
-                        data-book-id={book.id}
-                        className={cn(
-                          "relative px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300",
-                          "border backdrop-blur-sm",
-                          "hover:scale-[1.02] active:scale-[0.98]",
-                          selectedBook === book.id
-                            ? "border-cyan-400/50 bg-gradient-to-br from-sky-400/15 to-cyan-400/15 text-foreground shadow-lg shadow-cyan-400/10"
-                            : "border-border/40 bg-background/60 text-foreground/80 hover:border-cyan-300/50 hover:bg-cyan-400/5",
-                          // 高亮效果
-                          highlightedBookId === book.id && "animate-pulse border-emerald-400/60 bg-gradient-to-br from-emerald-400/20 to-green-400/20 shadow-lg shadow-emerald-400/20"
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <BookOpen className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                          <span className="whitespace-nowrap">{book.name}</span>
-                        </div>
-                        {selectedBook === book.id && (
-                          <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-cyan-400/5 to-sky-400/5 pointer-events-none" />
-                        )}
-                      </button>
-                      {/* 删除按钮（仅自定义教材） */}
-                      {book.id.startsWith('custom-') && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveCustomBook(book.id);
-                          }}
-                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500/90 hover:bg-red-500 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 shadow-lg"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                
-                {/* 滚动指示器 */}
-                {canScrollLeft && (
-                  <div className="absolute left-0 top-0 w-6 bg-gradient-to-r from-background via-background/60 to-transparent pointer-events-none" />
-                )}
-                {canScrollRight && (
-                  <div className="absolute right-0 top-0 w-6 bg-gradient-to-l from-background via-background/60 to-transparent pointer-events-none" />
-                )}
+                ))}
               </div>
             </div>
+
+            {/* 分隔线 - 桌面端显示 */}
+            <div className="hidden md:block h-6 w-px bg-border/40" />
             
-             {/* 课程范围选择 - Apple风格Select */}
-             <div className="space-y-4">
-               <div className="flex items-center justify-between">
-                 <div className="text-m font-semibold text-foreground">课程范围</div>
-                 <div className="text-xs text-muted-foreground">
-                   共 {currentBook?.lessons || 0} 课
-                 </div>
-               </div>
-               
-               {/* Apple风格的范围选择器 - 一行布局 */}
-               <div className="bg-muted/5 rounded-xl p-2 border border-border/10">
-                 <div className="flex items-center justify-center gap-4">
-                   {/* 起始课程选择器 */}
-                   <div className="flex items-center gap-3">
-                     <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                       从第
-                     </label>
-                     <div className="relative">
-                       <select
-                         value={lessonStart}
-                         onChange={(e) => {
-                           const value = parseInt(e.target.value);
-                           setLessonStart(value);
-                           // 如果开始课程大于结束课程，自动调整结束课程
-                           if (value > lessonEnd) {
-                             setLessonEnd(value);
-                           }
-                         }}
-                         className={cn(
-                           "w-16 h-9 px-3 text-sm font-semibold text-center rounded-lg border transition-all duration-200",
-                           "bg-background/80 border-border/30 appearance-none cursor-pointer",
-                           "hover:border-primary/40 hover:bg-background hover:shadow-sm",
-                           "focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-md",
-                           "text-foreground"
-                         )}
-                       >
-                         {Array.from({ length: currentBook?.lessons || 1 }, (_, i) => i + 1).map(num => (
-                           <option key={num} value={num} className="text-center">
-                             {num}
-                           </option>
-                         ))}
-                       </select>
-                       {/* 精致的下拉箭头 */}
-                       <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-                         <svg className="w-3 h-3 text-muted-foreground/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                         </svg>
-                       </div>
-                     </div>
-                     <span className="text-sm text-muted-foreground">课</span>
-                   </div>
-                   
-                   {/* 优雅的分隔符 */}
-                   <div className="flex items-center">
-                     <div className="w-6 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
-                   </div>
-                   
-                   {/* 结束课程选择器 */}
-                   <div className="flex items-center gap-3">
-                     <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                       到第
-                     </label>
-                     <div className="relative">
-                       <select
-                         value={lessonEnd}
-                         onChange={(e) => {
-                           const value = parseInt(e.target.value);
-                           setLessonEnd(value);
-                           // 如果结束课程小于开始课程，自动调整开始课程
-                           if (value < lessonStart) {
-                             setLessonStart(value);
-                           }
-                         }}
-                         className={cn(
-                           "w-16 h-9 px-3 text-sm font-semibold text-center rounded-lg border transition-all duration-200",
-                           "bg-background/80 border-border/30 appearance-none cursor-pointer",
-                           "hover:border-primary/40 hover:bg-background hover:shadow-sm",
-                           "focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-md",
-                           "text-foreground"
-                         )}
-                       >
-                         {Array.from({ length: currentBook?.lessons || 1 }, (_, i) => i + 1).map(num => (
-                           <option key={num} value={num} className="text-center">
-                             {num}
-                           </option>
-                         ))}
-                       </select>
-                       {/* 精致的下拉箭头 */}
-                       <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-                         <svg className="w-3 h-3 text-muted-foreground/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                         </svg>
-                       </div>
-                     </div>
-                     <span className="text-sm text-muted-foreground">课</span>
-                   </div>
-                 </div>
-               </div>
-             </div>
+            {/* 课程范围选择 */}
+            <div className="flex items-center gap-2 relative z-10">
+              <label className="text-m font-medium text-muted-foreground whitespace-nowrap">范围</label>
+              <div className="flex items-center gap-2">
+                <select
+                  value={lessonStart}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    setLessonStart(value);
+                    if (value > lessonEnd) {
+                      setLessonEnd(value);
+                    }
+                  }}
+                  className="w-12 h-7 px-2 text-xs font-semibold text-center rounded border border-border/30 bg-background/80 appearance-none cursor-pointer focus:border-cyan-400/40 focus:outline-none"
+                >
+                  {Array.from({ length: currentBook?.lessons || 1 }, (_, i) => i + 1).map(num => (
+                    <option key={num} value={num}>{num}</option>
+                  ))}
+                </select>
+                <span className="text-xs text-muted-foreground">-</span>
+                <select
+                  value={lessonEnd}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    setLessonEnd(value);
+                    if (value < lessonStart) {
+                      setLessonStart(value);
+                    }
+                  }}
+                  className="w-12 h-7 px-2 text-xs font-semibold text-center rounded border border-border/30 bg-background/80 appearance-none cursor-pointer focus:border-cyan-400/40 focus:outline-none"
+                >
+                  {Array.from({ length: currentBook?.lessons || 1 }, (_, i) => i + 1).map(num => (
+                    <option key={num} value={num}>{num}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* 分隔线 - 桌面端显示 */}
+            <div className="hidden md:block h-6 w-px bg-border/40" />
             
             {/* Prompt模板选择 */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-m font-medium text-foreground">选择Prompt模板</label>
-                <button
-                  onClick={() => setIsAddingPrompt(!isAddingPrompt)}
-                  className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 transition-colors"
-                >
-                  <Plus className="h-3 w-3" />
-                  添加自定义Prompt
-                </button>
-              </div>
-              
-              {/* 添加自定义Prompt表单 - 精简版 */}
-              {isAddingPrompt && (
-                <div className="p-3 rounded-lg border border-border/30 bg-muted/10 space-y-3 shadow-sm">
-                  <input
-                    type="text"
-                    placeholder="Prompt名称（如：商务英语对话）"
-                    value={newPromptName}
-                    onChange={(e) => setNewPromptName(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
-                  />
-                  <textarea
-                    placeholder="请输入你的自定义Prompt模板，可以使用 {date}、{activities}、{course} 等变量..."
-                    value={newPromptTemplate}
-                    onChange={(e) => setNewPromptTemplate(e.target.value)}
-                    rows={4}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleAddCustomPrompt}
-                      className="px-3 py-1.5 text-xs rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition-colors font-medium"
-                    >
-                      确认添加
-                    </button>
-                    <button
-                      onClick={() => setIsAddingPrompt(false)}
-                      className="px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-muted transition-colors font-medium"
-                    >
-                      取消
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              {/* 水平滚动模板选择 */}
-              <div className="relative">
-                {/* 左滚动按钮 */}
-                {canScrollLeftTemplate && (
+            <div className="flex items-center gap-2 relative z-10">
+              <label className="text-m font-medium text-muted-foreground whitespace-nowrap">模板</label>
+              <div className="flex gap-1.5 overflow-x-auto scrollbar-none p-1">
+                {PROMPT_TEMPLATES.map((template) => (
                   <button
-                    onClick={() => scrollTemplates('left')}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
+                    key={template.id}
+                    onClick={() => setSelectedTemplate(template.id)}
+                    className={cn(
+                      "relative flex items-center justify-center rounded-lg px-3 py-1.5 transition-all duration-300",
+                      "border backdrop-blur-sm shrink-0",
+                      selectedTemplate === template.id
+                        ? [
+                            "border-cyan-400/40 bg-gradient-to-br from-sky-400/12 via-blue-400/12 to-cyan-400/12",
+                            "shadow-md shadow-cyan-400/10",
+                            "scale-[1.05]",
+                          ]
+                        : [
+                            "border-border/30 bg-background/50",
+                            "hover:border-cyan-300/40 hover:bg-gradient-to-br hover:from-sky-400/5 hover:to-cyan-400/5",
+                            "hover:scale-[1.02]",
+                          ]
+                    )}
                   >
-                    <ChevronLeft className="h-4 w-4 text-foreground/80" />
+                    <span className={cn(
+                      "text-xs font-semibold transition-colors whitespace-nowrap",
+                      selectedTemplate === template.id 
+                        ? "text-foreground" 
+                        : "text-foreground/70"
+                    )}>
+                      {template.name}
+                    </span>
+                    
+                    {/* 选中下划线 */}
+                    {selectedTemplate === template.id && (
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full bg-gradient-to-r from-sky-400 to-cyan-400" />
+                    )}
                   </button>
-                )}
-                
-                {/* 右滚动按钮 */}
-                {canScrollRightTemplate && (
-                  <button
-                    onClick={() => scrollTemplates('right')}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
-                  >
-                    <ChevronRight className="h-4 w-4 text-foreground/80" />
-                  </button>
-                )}
-                
-                <div 
-                  ref={templatesScrollRef}
-                  onScroll={handleTemplatesScroll}
-                  className="flex gap-3 overflow-x-auto scroll-smooth p-1" 
-                  style={{ 
-                    scrollbarWidth: 'none', 
-                    msOverflowStyle: 'none'
-                  }}
-                >
-                  {allTemplates.map((template) => (
-                    <div key={template.id} className="relative flex-shrink-0 w-48">
-                      <button
-                        onClick={() => {
-                          setSelectedTemplate(template.id);
-                          // 选中后居中滚动
-                          setTimeout(() => {
-                            const button = document.querySelector(`[data-template-id="${template.id}"]`) as HTMLElement;
-                            if (button && templatesScrollRef.current) {
-                              scrollToCenter(templatesScrollRef.current, button);
-                            }
-                          }, 100);
-                        }}
-                        data-template-id={template.id}
-                        className={cn(
-                          "group w-full p-3 rounded-lg text-center transition-all duration-300",
-                          "border backdrop-blur-sm",
-                          "hover:scale-[1.02] active:scale-[0.98]",
-                          selectedTemplate === template.id
-                            ? "border-cyan-400/50 bg-gradient-to-br from-sky-400/15 to-cyan-400/15 text-foreground shadow-lg shadow-cyan-400/10"
-                            : "border-border/40 bg-background/60 text-foreground/80 hover:border-cyan-300/50 hover:bg-cyan-400/5",
-                          // 高亮效果
-                          highlightedTemplateId === template.id && "animate-pulse border-emerald-400/60 bg-gradient-to-br from-emerald-400/20 to-green-400/20 shadow-lg shadow-emerald-400/20"
-                        )}
-                      >
-                        <div className="font-medium text-sm group-hover:text-foreground transition-colors">{template.name}</div>
-                        {selectedTemplate === template.id && (
-                          <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-cyan-400/5 to-sky-400/5 pointer-events-none" />
-                        )}
-                      </button>
-                      {/* 删除按钮（仅自定义Prompt） */}
-                      {template.id.startsWith('custom-prompt-') && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveCustomPrompt(template.id);
-                          }}
-                          className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-red-500/90 hover:bg-red-500 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 shadow-lg"
-                        >
-                          <X className="h-2.5 w-2.5" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                
-                {/* 滚动指示器 */}
-                {canScrollLeftTemplate && (
-                  <div className="absolute left-0 top-0 w-6 bg-gradient-to-r from-background via-background/60 to-transparent pointer-events-none" />
-                )}
-                {canScrollRightTemplate && (
-                  <div className="absolute right-0 top-0 w-6 bg-gradient-to-l from-background via-background/60 to-transparent pointer-events-none" />
-                )}
+                ))}
               </div>
             </div>
           </div>
           
-          {/* Prompt预览 */}
+          {/* Prompt预览 - 参考导出模态窗布局 */}
           <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-2.5">
               <div className="flex items-center gap-2">
                 <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-sky-400 to-cyan-500 animate-pulse" />
                 <span className="text-xs font-medium text-muted-foreground">
