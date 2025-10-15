@@ -655,7 +655,7 @@ export function EnglishPromptDialog() {
                 <div 
                   ref={booksScrollRef}
                   onScroll={handleBooksScroll}
-                  className="flex gap-3 overflow-x-auto scroll-smooth" 
+                  className="flex gap-3 overflow-x-auto scroll-smooth p-1" 
                   style={{ 
                     scrollbarWidth: 'none', 
                     msOverflowStyle: 'none'
@@ -712,10 +712,10 @@ export function EnglishPromptDialog() {
                 
                 {/* 滚动指示器 */}
                 {canScrollLeft && (
-                  <div className="absolute left-0 top-0 bottom-2 w-6 bg-gradient-to-r from-background via-background/60 to-transparent pointer-events-none" />
+                  <div className="absolute left-0 top-0 w-6 bg-gradient-to-r from-background via-background/60 to-transparent pointer-events-none" />
                 )}
                 {canScrollRight && (
-                  <div className="absolute right-0 top-0 bottom-2 w-6 bg-gradient-to-l from-background via-background/60 to-transparent pointer-events-none" />
+                  <div className="absolute right-0 top-0 w-6 bg-gradient-to-l from-background via-background/60 to-transparent pointer-events-none" />
                 )}
               </div>
             </div>
@@ -868,7 +868,7 @@ export function EnglishPromptDialog() {
                 <div 
                   ref={templatesScrollRef}
                   onScroll={handleTemplatesScroll}
-                  className="flex gap-3 overflow-x-auto scroll-smooth" 
+                  className="flex gap-3 overflow-x-auto scroll-smooth p-1" 
                   style={{ 
                     scrollbarWidth: 'none', 
                     msOverflowStyle: 'none'
@@ -923,10 +923,10 @@ export function EnglishPromptDialog() {
                 
                 {/* 滚动指示器 */}
                 {canScrollLeftTemplate && (
-                  <div className="absolute left-0 top-0 bottom-2 w-6 bg-gradient-to-r from-background via-background/60 to-transparent pointer-events-none" />
+                  <div className="absolute left-0 top-0 w-6 bg-gradient-to-r from-background via-background/60 to-transparent pointer-events-none" />
                 )}
                 {canScrollRightTemplate && (
-                  <div className="absolute right-0 top-0 bottom-2 w-6 bg-gradient-to-l from-background via-background/60 to-transparent pointer-events-none" />
+                  <div className="absolute right-0 top-0 w-6 bg-gradient-to-l from-background via-background/60 to-transparent pointer-events-none" />
                 )}
               </div>
             </div>
