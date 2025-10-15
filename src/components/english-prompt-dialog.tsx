@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { BookOpen, Copy, Check, GraduationCap, Plus, X } from 'lucide-react';
 import {
   Dialog,
@@ -154,6 +154,13 @@ interface CustomBook {
   lessons: number;
 }
 
+interface CustomPrompt {
+  id: string;
+  name: string;
+  description: string;
+  template: string;
+}
+
 export function EnglishPromptDialog() {
   const [open, setOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState<string>('nce1');
@@ -164,9 +171,58 @@ export function EnglishPromptDialog() {
   const [isAddingBook, setIsAddingBook] = useState(false);
   const [newBookName, setNewBookName] = useState('');
   const [newBookLessons, setNewBookLessons] = useState('');
+  const [customPrompts, setCustomPrompts] = useState<CustomPrompt[]>([]);
+  const [isAddingPrompt, setIsAddingPrompt] = useState(false);
+  const [newPromptName, setNewPromptName] = useState('');
+  const [newPromptDescription, setNewPromptDescription] = useState('');
+  const [newPromptTemplate, setNewPromptTemplate] = useState('');
   const [copied, setCopied] = useState(false);
   
   const { records } = useRecords();
+  
+  // 从本地存储加载自定义教材
+  useEffect(() => {
+    const savedBooks = localStorage.getItem('custom-books');
+    if (savedBooks) {
+      try {
+        const books = JSON.parse(savedBooks);
+        setCustomBooks(books);
+      } catch (error) {
+        console.error('Failed to load custom books:', error);
+      }
+    }
+  }, []);
+  
+  // 从本地存储加载自定义Prompt
+  useEffect(() => {
+    const savedPrompts = localStorage.getItem('custom-prompts');
+    if (savedPrompts) {
+      try {
+        const prompts = JSON.parse(savedPrompts);
+        setCustomPrompts(prompts);
+      } catch (error) {
+        console.error('Failed to load custom prompts:', error);
+      }
+    }
+  }, []);
+  
+  // 保存自定义教材到本地存储
+  useEffect(() => {
+    if (customBooks.length > 0) {
+      localStorage.setItem('custom-books', JSON.stringify(customBooks));
+    } else {
+      localStorage.removeItem('custom-books');
+    }
+  }, [customBooks]);
+  
+  // 保存自定义Prompt到本地存储
+  useEffect(() => {
+    if (customPrompts.length > 0) {
+      localStorage.setItem('custom-prompts', JSON.stringify(customPrompts));
+    } else {
+      localStorage.removeItem('custom-prompts');
+    }
+  }, [customPrompts]);
   
   // 获取今天的记录
   const todayRecords = useMemo(() => {
@@ -185,10 +241,15 @@ export function EnglishPromptDialog() {
     return allBooks.find(book => book.id === selectedBook);
   }, [allBooks, selectedBook]);
   
+  // 合并模板列表
+  const allTemplates = useMemo(() => {
+    return [...PROMPT_TEMPLATES, ...customPrompts];
+  }, [customPrompts]);
+  
   // 当前选中的模板
   const currentTemplate = useMemo(() => {
-    return PROMPT_TEMPLATES.find(t => t.id === selectedTemplate);
-  }, [selectedTemplate]);
+    return allTemplates.find(t => t.id === selectedTemplate);
+  }, [allTemplates, selectedTemplate]);
   
   // 生成活动列表文本
   const activitiesText = useMemo(() => {
@@ -256,6 +317,38 @@ export function EnglishPromptDialog() {
       setSelectedBook('nce1');
     }
     toast.success('教材已删除');
+  };
+  
+  // 添加自定义Prompt
+  const handleAddCustomPrompt = () => {
+    if (!newPromptName.trim() || !newPromptTemplate.trim()) {
+      toast.error('请填写Prompt名称和内容');
+      return;
+    }
+    
+    const newPrompt: CustomPrompt = {
+      id: `custom-prompt-${Date.now()}`,
+      name: newPromptName.trim(),
+      description: newPromptDescription.trim() || '自定义学习Prompt',
+      template: newPromptTemplate.trim(),
+    };
+    
+    setCustomPrompts(prev => [...prev, newPrompt]);
+    setSelectedTemplate(newPrompt.id);
+    setNewPromptName('');
+    setNewPromptDescription('');
+    setNewPromptTemplate('');
+    setIsAddingPrompt(false);
+    toast.success('自定义Prompt已添加');
+  };
+  
+  // 删除自定义Prompt
+  const handleRemoveCustomPrompt = (promptId: string) => {
+    setCustomPrompts(prev => prev.filter(prompt => prompt.id !== promptId));
+    if (selectedTemplate === promptId) {
+      setSelectedTemplate('template1');
+    }
+    toast.success('自定义Prompt已删除');
   };
   
   // 复制Prompt
@@ -379,7 +472,7 @@ export function EnglishPromptDialog() {
                           e.stopPropagation();
                           handleRemoveCustomBook(book.id);
                         }}
-                        className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white hover:bg-red-600 flex items-center justify-center"
+                        className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -448,23 +541,87 @@ export function EnglishPromptDialog() {
             
             {/* Prompt模板选择 */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">选择Prompt模板</label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground">选择Prompt模板</label>
+                <button
+                  onClick={() => setIsAddingPrompt(!isAddingPrompt)}
+                  className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1"
+                >
+                  <Plus className="h-3 w-3" />
+                  添加自定义Prompt
+                </button>
+              </div>
+              
+              {/* 添加自定义Prompt表单 */}
+              {isAddingPrompt && (
+                <div className="p-4 rounded-lg border border-border/40 bg-muted/20 space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Prompt名称（如：商务英语对话）"
+                    value={newPromptName}
+                    onChange={(e) => setNewPromptName(e.target.value)}
+                    className="w-full px-3 py-2 text-sm rounded-md border border-border bg-background"
+                  />
+                  <input
+                    type="text"
+                    placeholder="描述（可选）"
+                    value={newPromptDescription}
+                    onChange={(e) => setNewPromptDescription(e.target.value)}
+                    className="w-full px-3 py-2 text-sm rounded-md border border-border bg-background"
+                  />
+                  <textarea
+                    placeholder="请输入你的自定义Prompt模板，可以使用 {date}、{activities}、{course} 等变量..."
+                    value={newPromptTemplate}
+                    onChange={(e) => setNewPromptTemplate(e.target.value)}
+                    rows={6}
+                    className="w-full px-3 py-2 text-sm rounded-md border border-border bg-background resize-none"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleAddCustomPrompt}
+                      className="px-3 py-1.5 text-xs rounded-md bg-cyan-500 text-white hover:bg-cyan-600"
+                    >
+                      确认添加
+                    </button>
+                    <button
+                      onClick={() => setIsAddingPrompt(false)}
+                      className="px-3 py-1.5 text-xs rounded-md border border-border hover:bg-muted"
+                    >
+                      取消
+                    </button>
+                  </div>
+                </div>
+              )}
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {PROMPT_TEMPLATES.map((template) => (
-                  <button
-                    key={template.id}
-                    onClick={() => setSelectedTemplate(template.id)}
-                    className={cn(
-                      "p-3 rounded-lg text-left transition-all duration-200",
-                      "border",
-                      selectedTemplate === template.id
-                        ? "border-cyan-400/40 bg-gradient-to-br from-sky-400/12 to-cyan-400/12"
-                        : "border-border/30 bg-background/50 hover:border-cyan-300/40"
+                {allTemplates.map((template) => (
+                  <div key={template.id} className="relative">
+                    <button
+                      onClick={() => setSelectedTemplate(template.id)}
+                      className={cn(
+                        "w-full p-3 rounded-lg text-left transition-all duration-200",
+                        "border",
+                        selectedTemplate === template.id
+                          ? "border-cyan-400/40 bg-gradient-to-br from-sky-400/12 to-cyan-400/12"
+                          : "border-border/30 bg-background/50 hover:border-cyan-300/40"
+                      )}
+                    >
+                      <div className="font-medium text-sm mb-1">{template.name}</div>
+                      <div className="text-xs text-muted-foreground">{template.description}</div>
+                    </button>
+                    {/* 删除按钮（仅自定义Prompt） */}
+                    {template.id.startsWith('custom-prompt-') && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveCustomPrompt(template.id);
+                        }}
+                        className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
                     )}
-                  >
-                    <div className="font-medium text-sm mb-1">{template.name}</div>
-                    <div className="text-xs text-muted-foreground">{template.description}</div>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
