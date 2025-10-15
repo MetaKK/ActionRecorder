@@ -474,14 +474,14 @@ export function EnglishPromptDialog() {
         
         <div className="flex-1 overflow-hidden flex flex-col px-6 pb-6">
           {/* 配置区域 */}
-          <div className="space-y-4 mb-4">
+          <div className="space-y-6 mb-6">
             {/* 教材选择 */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium text-foreground">选择教材</label>
                 <button
                   onClick={() => setIsAddingBook(!isAddingBook)}
-                  className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1"
+                  className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 transition-colors"
                 >
                   <Plus className="h-3 w-3" />
                   添加自定义教材
@@ -490,31 +490,31 @@ export function EnglishPromptDialog() {
               
               {/* 添加自定义教材表单 */}
               {isAddingBook && (
-                <div className="p-3 rounded-lg border border-border/40 bg-muted/20 space-y-2">
+                <div className="p-4 rounded-xl border border-border/40 bg-muted/20 space-y-3 shadow-sm">
                   <input
                     type="text"
                     placeholder="教材名称（如：剑桥英语）"
                     value={newBookName}
                     onChange={(e) => setNewBookName(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-md border border-border bg-background"
+                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
                   />
                   <input
                     type="number"
                     placeholder="课程数量"
                     value={newBookLessons}
                     onChange={(e) => setNewBookLessons(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-md border border-border bg-background"
+                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={handleAddCustomBook}
-                      className="px-3 py-1.5 text-xs rounded-md bg-cyan-500 text-white hover:bg-cyan-600"
+                      className="px-4 py-2 text-xs rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition-colors font-medium"
                     >
                       确认添加
                     </button>
                     <button
                       onClick={() => setIsAddingBook(false)}
-                      className="px-3 py-1.5 text-xs rounded-md border border-border hover:bg-muted"
+                      className="px-4 py-2 text-xs rounded-lg border border-border hover:bg-muted transition-colors font-medium"
                     >
                       取消
                     </button>
@@ -522,44 +522,67 @@ export function EnglishPromptDialog() {
                 </div>
               )}
               
+              {/* 水平滚动教材选择 */}
               <div className="relative">
-                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+                <div 
+                  className="flex gap-3 overflow-x-auto pb-2" 
+                  style={{ 
+                    scrollbarWidth: 'none', 
+                    msOverflowStyle: 'none'
+                  }}
+                >
                   {allBooks.map((book) => (
                     <div key={book.id} className="relative flex-shrink-0">
                       <button
                         onClick={() => setSelectedBook(book.id)}
                         className={cn(
-                          "relative px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap",
-                          "border",
+                          "relative px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300",
+                          "border backdrop-blur-sm",
+                          "hover:scale-[1.02] active:scale-[0.98]",
                           selectedBook === book.id
-                            ? "border-cyan-400/60 bg-gradient-to-r from-sky-400/15 to-cyan-400/15 text-foreground shadow-sm"
-                            : "border-border/30 bg-background/80 text-foreground/80 hover:border-cyan-300/40 hover:bg-sky-50/50 dark:hover:bg-sky-950/20"
+                            ? "border-cyan-400/50 bg-gradient-to-br from-sky-400/15 to-cyan-400/15 text-foreground shadow-lg shadow-cyan-400/10"
+                            : "border-border/40 bg-background/60 text-foreground/80 hover:border-cyan-300/50 hover:bg-cyan-400/5"
                         )}
                       >
-                        <BookOpen className="inline-block h-3.5 w-3.5 mr-2" />
-                        {book.name}
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                          <span className="whitespace-nowrap">{book.name}</span>
+                        </div>
+                        {selectedBook === book.id && (
+                          <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-cyan-400/5 to-sky-400/5 pointer-events-none" />
+                        )}
                       </button>
-                    {/* 删除按钮（仅自定义教材） */}
-                    {book.id.startsWith('custom-') && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveCustomBook(book.id);
-                        }}
-                        className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                      {/* 删除按钮（仅自定义教材） */}
+                      {book.id.startsWith('custom-') && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveCustomBook(book.id);
+                          }}
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500/90 hover:bg-red-500 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 shadow-lg"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {/* 渐变遮罩指示可滚动 */}
+                <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none" />
+                <div className="absolute left-0 top-0 bottom-2 w-8 bg-gradient-to-r from-background via-background/80 to-transparent pointer-events-none" />
               </div>
             </div>
             
             {/* 课程范围选择 */}
             <div className="space-y-3">
-              <label className="text-sm font-medium text-foreground">选择课程范围</label>
-              <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide pb-2">
+              <div className="text-sm font-medium text-foreground">选择课程范围</div>
+              <div 
+                className="flex items-center gap-4 overflow-x-auto pb-2" 
+                style={{ 
+                  scrollbarWidth: 'none', 
+                  msOverflowStyle: 'none'
+                }}
+              >
                 {/* 开始课程 */}
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">从</span>
@@ -573,10 +596,10 @@ export function EnglishPromptDialog() {
                       onBlur={handleLessonStartBlur}
                       onFocus={(e) => e.target.select()}
                       className={cn(
-                        "w-16 h-10 px-3 text-sm rounded-xl border transition-colors duration-150",
-                        "bg-background border-border/50",
+                        "w-16 h-10 px-3 text-sm rounded-xl border transition-all duration-200",
+                        "bg-background/60 border-border/40 backdrop-blur-sm",
                         "hover:border-cyan-300/60 focus:border-cyan-400/80",
-                        "focus:outline-none focus:shadow-sm focus:shadow-cyan-400/10",
+                        "focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:shadow-lg focus:shadow-cyan-400/10",
                         "text-center font-medium",
                         "placeholder:text-muted-foreground/50"
                       )}
@@ -584,6 +607,11 @@ export function EnglishPromptDialog() {
                     />
                   </div>
                   <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">课</span>
+                </div>
+                
+                {/* 分隔符 */}
+                <div className="flex items-center">
+                  <div className="w-8 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
                 </div>
                 
                 {/* 结束课程 */}
@@ -599,10 +627,10 @@ export function EnglishPromptDialog() {
                       onBlur={handleLessonEndBlur}
                       onFocus={(e) => e.target.select()}
                       className={cn(
-                        "w-16 h-10 px-3 text-sm rounded-xl border transition-colors duration-150",
-                        "bg-background border-border/50",
+                        "w-16 h-10 px-3 text-sm rounded-xl border transition-all duration-200",
+                        "bg-background/60 border-border/40 backdrop-blur-sm",
                         "hover:border-cyan-300/60 focus:border-cyan-400/80",
-                        "focus:outline-none focus:shadow-sm focus:shadow-cyan-400/10",
+                        "focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:shadow-lg focus:shadow-cyan-400/10",
                         "text-center font-medium",
                         "placeholder:text-muted-foreground/50"
                       )}
@@ -611,24 +639,16 @@ export function EnglishPromptDialog() {
                   </div>
                   <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">课</span>
                 </div>
-                
-                {/* 状态指示器 */}
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-sky-50/50 to-cyan-50/50 dark:from-sky-950/20 dark:to-cyan-950/20 border border-sky-200/30 dark:border-sky-800/30 flex-shrink-0">
-                  <div className="h-2 w-2 rounded-full bg-gradient-to-r from-sky-400 to-cyan-500 flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
-                    共 {currentBook?.lessons || 0} 课，已选 {lessonEnd - lessonStart + 1} 课
-                  </span>
-                </div>
               </div>
             </div>
             
             {/* Prompt模板选择 */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium text-foreground">选择Prompt模板</label>
                 <button
                   onClick={() => setIsAddingPrompt(!isAddingPrompt)}
-                  className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1"
+                  className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 transition-colors"
                 >
                   <Plus className="h-3 w-3" />
                   添加自定义Prompt
@@ -637,38 +657,38 @@ export function EnglishPromptDialog() {
               
               {/* 添加自定义Prompt表单 */}
               {isAddingPrompt && (
-                <div className="p-4 rounded-lg border border-border/40 bg-muted/20 space-y-3">
+                <div className="p-4 rounded-xl border border-border/40 bg-muted/20 space-y-3 shadow-sm">
                   <input
                     type="text"
                     placeholder="Prompt名称（如：商务英语对话）"
                     value={newPromptName}
                     onChange={(e) => setNewPromptName(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-md border border-border bg-background"
+                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
                   />
                   <input
                     type="text"
                     placeholder="描述（可选）"
                     value={newPromptDescription}
                     onChange={(e) => setNewPromptDescription(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-md border border-border bg-background"
+                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
                   />
                   <textarea
                     placeholder="请输入你的自定义Prompt模板，可以使用 {date}、{activities}、{course} 等变量..."
                     value={newPromptTemplate}
                     onChange={(e) => setNewPromptTemplate(e.target.value)}
                     rows={6}
-                    className="w-full px-3 py-2 text-sm rounded-md border border-border bg-background resize-none"
+                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={handleAddCustomPrompt}
-                      className="px-3 py-1.5 text-xs rounded-md bg-cyan-500 text-white hover:bg-cyan-600"
+                      className="px-4 py-2 text-xs rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition-colors font-medium"
                     >
                       确认添加
                     </button>
                     <button
                       onClick={() => setIsAddingPrompt(false)}
-                      className="px-3 py-1.5 text-xs rounded-md border border-border hover:bg-muted"
+                      className="px-4 py-2 text-xs rounded-lg border border-border hover:bg-muted transition-colors font-medium"
                     >
                       取消
                     </button>
@@ -676,39 +696,52 @@ export function EnglishPromptDialog() {
                 </div>
               )}
               
+              {/* 水平滚动模板选择 */}
               <div className="relative">
-                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+                <div 
+                  className="flex gap-3 overflow-x-auto pb-2" 
+                  style={{ 
+                    scrollbarWidth: 'none', 
+                    msOverflowStyle: 'none'
+                  }}
+                >
                   {allTemplates.map((template) => (
-                    <div key={template.id} className="relative flex-shrink-0">
+                    <div key={template.id} className="relative flex-shrink-0 w-64">
                       <button
                         onClick={() => setSelectedTemplate(template.id)}
                         className={cn(
-                          "relative px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap min-w-[200px]",
-                          "border",
+                          "group w-full p-4 rounded-xl text-left transition-all duration-300",
+                          "border backdrop-blur-sm",
+                          "hover:scale-[1.02] active:scale-[0.98]",
                           selectedTemplate === template.id
-                            ? "border-cyan-400/60 bg-gradient-to-r from-sky-400/15 to-cyan-400/15 text-foreground shadow-sm"
-                            : "border-border/30 bg-background/80 text-foreground/80 hover:border-cyan-300/40 hover:bg-sky-50/50 dark:hover:bg-sky-950/20"
+                            ? "border-cyan-400/50 bg-gradient-to-br from-sky-400/15 to-cyan-400/15 text-foreground shadow-lg shadow-cyan-400/10"
+                            : "border-border/40 bg-background/60 text-foreground/80 hover:border-cyan-300/50 hover:bg-cyan-400/5"
                         )}
                       >
-                        <div className="text-left">
-                          <div className="font-medium text-sm mb-1">{template.name}</div>
-                          <div className="text-xs text-muted-foreground line-clamp-1">{template.description}</div>
-                        </div>
+                        <div className="font-medium text-sm mb-1.5 group-hover:text-foreground transition-colors">{template.name}</div>
+                        <div className="text-xs text-muted-foreground leading-relaxed group-hover:text-muted-foreground/80 transition-colors">{template.description}</div>
+                        {selectedTemplate === template.id && (
+                          <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-cyan-400/5 to-sky-400/5 pointer-events-none" />
+                        )}
                       </button>
-                    {/* 删除按钮（仅自定义Prompt） */}
-                    {template.id.startsWith('custom-prompt-') && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveCustomPrompt(template.id);
-                        }}
-                        className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                      {/* 删除按钮（仅自定义Prompt） */}
+                      {template.id.startsWith('custom-prompt-') && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveCustomPrompt(template.id);
+                          }}
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500/90 hover:bg-red-500 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 shadow-lg"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {/* 渐变遮罩指示可滚动 */}
+                <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none" />
+                <div className="absolute left-0 top-0 bottom-2 w-8 bg-gradient-to-r from-background via-background/80 to-transparent pointer-events-none" />
               </div>
             </div>
           
