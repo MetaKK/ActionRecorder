@@ -470,9 +470,6 @@ export function EnglishPromptDialog() {
             <GraduationCap className="h-5 w-5" />
             英文学习 Prompt 生成器
           </DialogTitle>
-          <DialogDescription className="text-xs">
-            融合教材内容与今日活动，生成个性化AI学习Prompt
-          </DialogDescription>
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden flex flex-col px-6 pb-6">
@@ -525,22 +522,23 @@ export function EnglishPromptDialog() {
                 </div>
               )}
               
-              <div className="flex flex-wrap gap-2">
-                {allBooks.map((book) => (
-                  <div key={book.id} className="relative">
-                    <button
-                      onClick={() => setSelectedBook(book.id)}
-                      className={cn(
-                        "relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                        "border",
-                        selectedBook === book.id
-                          ? "border-cyan-400/40 bg-gradient-to-br from-sky-400/12 to-cyan-400/12 text-foreground"
-                          : "border-border/30 bg-background/50 text-foreground/70 hover:border-cyan-300/40"
-                      )}
-                    >
-                      <BookOpen className="inline-block h-3.5 w-3.5 mr-1.5" />
-                      {book.name}
-                    </button>
+              <div className="relative">
+                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+                  {allBooks.map((book) => (
+                    <div key={book.id} className="relative flex-shrink-0">
+                      <button
+                        onClick={() => setSelectedBook(book.id)}
+                        className={cn(
+                          "relative px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap",
+                          "border",
+                          selectedBook === book.id
+                            ? "border-cyan-400/60 bg-gradient-to-r from-sky-400/15 to-cyan-400/15 text-foreground shadow-sm"
+                            : "border-border/30 bg-background/80 text-foreground/80 hover:border-cyan-300/40 hover:bg-sky-50/50 dark:hover:bg-sky-950/20"
+                        )}
+                      >
+                        <BookOpen className="inline-block h-3.5 w-3.5 mr-2" />
+                        {book.name}
+                      </button>
                     {/* 删除按钮（仅自定义教材） */}
                     {book.id.startsWith('custom-') && (
                       <button
@@ -561,11 +559,11 @@ export function EnglishPromptDialog() {
             {/* 课程范围选择 */}
             <div className="space-y-3">
               <label className="text-sm font-medium text-foreground">选择课程范围</label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+              <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide pb-2">
                 {/* 开始课程 */}
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">从</span>
-                  <div className="relative flex-shrink-0">
+                  <div className="relative">
                     <input
                       type="text"
                       inputMode="numeric"
@@ -575,7 +573,7 @@ export function EnglishPromptDialog() {
                       onBlur={handleLessonStartBlur}
                       onFocus={(e) => e.target.select()}
                       className={cn(
-                        "w-16 h-10 px-3 text-sm rounded-lg border transition-colors duration-150",
+                        "w-16 h-10 px-3 text-sm rounded-xl border transition-colors duration-150",
                         "bg-background border-border/50",
                         "hover:border-cyan-300/60 focus:border-cyan-400/80",
                         "focus:outline-none focus:shadow-sm focus:shadow-cyan-400/10",
@@ -589,9 +587,9 @@ export function EnglishPromptDialog() {
                 </div>
                 
                 {/* 结束课程 */}
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">到</span>
-                  <div className="relative flex-shrink-0">
+                  <div className="relative">
                     <input
                       type="text"
                       inputMode="numeric"
@@ -601,7 +599,7 @@ export function EnglishPromptDialog() {
                       onBlur={handleLessonEndBlur}
                       onFocus={(e) => e.target.select()}
                       className={cn(
-                        "w-16 h-10 px-3 text-sm rounded-lg border transition-colors duration-150",
+                        "w-16 h-10 px-3 text-sm rounded-xl border transition-colors duration-150",
                         "bg-background border-border/50",
                         "hover:border-cyan-300/60 focus:border-cyan-400/80",
                         "focus:outline-none focus:shadow-sm focus:shadow-cyan-400/10",
@@ -615,9 +613,9 @@ export function EnglishPromptDialog() {
                 </div>
                 
                 {/* 状态指示器 */}
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/20 border border-border/10 min-w-0">
-                  <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-sky-400 to-cyan-500 flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground font-medium truncate">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-sky-50/50 to-cyan-50/50 dark:from-sky-950/20 dark:to-cyan-950/20 border border-sky-200/30 dark:border-sky-800/30 flex-shrink-0">
+                  <div className="h-2 w-2 rounded-full bg-gradient-to-r from-sky-400 to-cyan-500 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
                     共 {currentBook?.lessons || 0} 课，已选 {lessonEnd - lessonStart + 1} 课
                   </span>
                 </div>
@@ -678,22 +676,25 @@ export function EnglishPromptDialog() {
                 </div>
               )}
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {allTemplates.map((template) => (
-                  <div key={template.id} className="relative">
-                    <button
-                      onClick={() => setSelectedTemplate(template.id)}
-                      className={cn(
-                        "w-full p-3 rounded-lg text-left transition-all duration-200",
-                        "border",
-                        selectedTemplate === template.id
-                          ? "border-cyan-400/40 bg-gradient-to-br from-sky-400/12 to-cyan-400/12"
-                          : "border-border/30 bg-background/50 hover:border-cyan-300/40"
-                      )}
-                    >
-                      <div className="font-medium text-sm mb-1">{template.name}</div>
-                      <div className="text-xs text-muted-foreground">{template.description}</div>
-                    </button>
+              <div className="relative">
+                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+                  {allTemplates.map((template) => (
+                    <div key={template.id} className="relative flex-shrink-0">
+                      <button
+                        onClick={() => setSelectedTemplate(template.id)}
+                        className={cn(
+                          "relative px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap min-w-[200px]",
+                          "border",
+                          selectedTemplate === template.id
+                            ? "border-cyan-400/60 bg-gradient-to-r from-sky-400/15 to-cyan-400/15 text-foreground shadow-sm"
+                            : "border-border/30 bg-background/80 text-foreground/80 hover:border-cyan-300/40 hover:bg-sky-50/50 dark:hover:bg-sky-950/20"
+                        )}
+                      >
+                        <div className="text-left">
+                          <div className="font-medium text-sm mb-1">{template.name}</div>
+                          <div className="text-xs text-muted-foreground line-clamp-1">{template.description}</div>
+                        </div>
+                      </button>
                     {/* 删除按钮（仅自定义Prompt） */}
                     {template.id.startsWith('custom-prompt-') && (
                       <button
@@ -710,7 +711,6 @@ export function EnglishPromptDialog() {
                 ))}
               </div>
             </div>
-          </div>
           
           {/* Prompt预览 */}
           <div className="flex-1 overflow-hidden flex flex-col min-h-0">
