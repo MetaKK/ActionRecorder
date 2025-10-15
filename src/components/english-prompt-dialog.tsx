@@ -850,7 +850,7 @@ export function EnglishPromptDialog() {
                 <div 
                   ref={templatesScrollRef}
                   onScroll={handleTemplatesScroll}
-                  className="flex gap-3 overflow-x-auto pb-2 scroll-smooth" 
+                  className="flex gap-3 overflow-x-auto scroll-smooth" 
                   style={{ 
                     scrollbarWidth: 'none', 
                     msOverflowStyle: 'none'
