@@ -6,7 +6,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Copy, Check, GraduationCap } from 'lucide-react';
+import { Copy, Check, GraduationCap, Plus, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -156,6 +156,18 @@ export function EnglishPromptDialog() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('template1');
   const [copied, setCopied] = useState(false);
   
+  // 新增功能状态
+  const [isAddingBook, setIsAddingBook] = useState(false);
+  const [isAddingPrompt, setIsAddingPrompt] = useState(false);
+  const [newBookName, setNewBookName] = useState('');
+  const [newBookLessons, setNewBookLessons] = useState('');
+  const [newPromptName, setNewPromptName] = useState('');
+  const [newPromptTemplate, setNewPromptTemplate] = useState('');
+  
+  // 自定义数据
+  const [customBooks, setCustomBooks] = useState<Array<{id: string, name: string, lessons: number}>>([]);
+  const [customPrompts, setCustomPrompts] = useState<Array<{id: string, name: string, template: string}>>([]);
+  
   const { records } = useRecords();
   
   
@@ -166,10 +178,15 @@ export function EnglishPromptDialog() {
     return records.filter(record => record.createdAt >= today);
   }, [records]);
   
+  // 合并教材列表（自定义教材在前）
+  const allBooks = useMemo(() => {
+    return [...customBooks, ...NCE_BOOKS];
+  }, [customBooks]);
+  
   // 当前选中的教材
   const currentBook = useMemo(() => {
-    return NCE_BOOKS.find(book => book.id === selectedBook);
-  }, [selectedBook]);
+    return allBooks.find(book => book.id === selectedBook);
+  }, [allBooks, selectedBook]);
   
   // 当教材改变时，重置课程范围
   useEffect(() => {
@@ -184,10 +201,15 @@ export function EnglishPromptDialog() {
     }
   }, [currentBook, lessonStart, lessonEnd]);
   
+  // 合并模板列表（自定义Prompt在前）
+  const allTemplates = useMemo(() => {
+    return [...customPrompts, ...PROMPT_TEMPLATES];
+  }, [customPrompts]);
+  
   // 当前选中的模板
   const currentTemplate = useMemo(() => {
-    return PROMPT_TEMPLATES.find(t => t.id === selectedTemplate);
-  }, [selectedTemplate]);
+    return allTemplates.find(t => t.id === selectedTemplate);
+  }, [allTemplates, selectedTemplate]);
   
   // 生成活动列表文本
   const activitiesText = useMemo(() => {
@@ -221,6 +243,53 @@ export function EnglishPromptDialog() {
       .replace('{course}', courseInfo);
   }, [currentTemplate, currentBook, lessonStart, lessonEnd, activitiesText]);
   
+  // 添加自定义教材
+  const handleAddCustomBook = () => {
+    if (!newBookName.trim() || !newBookLessons.trim()) {
+      toast.error('请填写教材名称和课程数量');
+      return;
+    }
+    
+    const lessons = parseInt(newBookLessons);
+    if (isNaN(lessons) || lessons < 1) {
+      toast.error('课程数量必须是正整数');
+      return;
+    }
+    
+    const newBook = {
+      id: `custom-${Date.now()}`,
+      name: newBookName.trim(),
+      lessons,
+    };
+    
+    setCustomBooks(prev => [newBook, ...prev]);
+    setSelectedBook(newBook.id);
+    setNewBookName('');
+    setNewBookLessons('');
+    setIsAddingBook(false);
+    toast.success('教材已添加');
+  };
+  
+  // 添加自定义Prompt
+  const handleAddCustomPrompt = () => {
+    if (!newPromptName.trim() || !newPromptTemplate.trim()) {
+      toast.error('请填写Prompt名称和内容');
+      return;
+    }
+    
+    const newPrompt = {
+      id: `custom-prompt-${Date.now()}`,
+      name: newPromptName.trim(),
+      template: newPromptTemplate.trim(),
+    };
+    
+    setCustomPrompts(prev => [newPrompt, ...prev]);
+    setSelectedTemplate(newPrompt.id);
+    setNewPromptName('');
+    setNewPromptTemplate('');
+    setIsAddingPrompt(false);
+    toast.success('自定义Prompt已添加');
+  };
 
   // 复制Prompt
   const handleCopy = async () => {
@@ -271,7 +340,7 @@ export function EnglishPromptDialog() {
             <div className="flex items-center gap-2 relative z-10">
               <label className="text-m font-medium text-muted-foreground whitespace-nowrap">教材</label>
               <div className="flex gap-1.5 overflow-x-auto scrollbar-none p-1">
-                {NCE_BOOKS.map((book) => (
+                {allBooks.map((book) => (
                   <button
                     key={book.id}
                     onClick={() => setSelectedBook(book.id)}
@@ -306,6 +375,20 @@ export function EnglishPromptDialog() {
                     )}
                   </button>
                 ))}
+                
+                {/* 新增教材按钮 */}
+                <button
+                  onClick={() => setIsAddingBook(!isAddingBook)}
+                  className={cn(
+                    "relative flex items-center justify-center rounded-lg px-3 py-1.5 transition-all duration-300",
+                    "border backdrop-blur-sm shrink-0",
+                    "border-dashed border-border/40 bg-background/30",
+                    "hover:border-cyan-300/40 hover:bg-gradient-to-br hover:from-cyan-400/5 hover:to-cyan-400/5",
+                    "hover:scale-[1.02]"
+                  )}
+                >
+                  <Plus className="h-3 w-3 text-muted-foreground" />
+                </button>
               </div>
             </div>
 
@@ -357,7 +440,7 @@ export function EnglishPromptDialog() {
             <div className="flex items-center gap-2 relative z-10">
               <label className="text-m font-medium text-muted-foreground whitespace-nowrap">模板</label>
               <div className="flex gap-1.5 overflow-x-auto scrollbar-none p-1">
-                {PROMPT_TEMPLATES.map((template) => (
+                {allTemplates.map((template) => (
                   <button
                     key={template.id}
                     onClick={() => setSelectedTemplate(template.id)}
@@ -392,9 +475,111 @@ export function EnglishPromptDialog() {
                     )}
                   </button>
                 ))}
+                
+                {/* 新增模板按钮 */}
+                <button
+                  onClick={() => setIsAddingPrompt(!isAddingPrompt)}
+                  className={cn(
+                    "relative flex items-center justify-center rounded-lg px-3 py-1.5 transition-all duration-300",
+                    "border backdrop-blur-sm shrink-0",
+                    "border-dashed border-border/40 bg-background/30",
+                    "hover:border-cyan-300/40 hover:bg-gradient-to-br hover:from-cyan-400/5 hover:to-cyan-400/5",
+                    "hover:scale-[1.02]"
+                  )}
+                >
+                  <Plus className="h-3 w-3 text-muted-foreground" />
+                </button>
               </div>
             </div>
           </div>
+          
+          {/* 新增教材表单 */}
+          {isAddingBook && (
+            <div className="mb-4 p-4 rounded-lg border border-border/30 bg-muted/10 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-foreground">新增教材</h3>
+                <button
+                  onClick={() => setIsAddingBook(false)}
+                  className="p-1 hover:bg-muted rounded transition-colors"
+                >
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  placeholder="教材名称"
+                  value={newBookName}
+                  onChange={(e) => setNewBookName(e.target.value)}
+                  className="px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
+                />
+                <input
+                  type="number"
+                  placeholder="课程数量"
+                  value={newBookLessons}
+                  onChange={(e) => setNewBookLessons(e.target.value)}
+                  className="px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAddCustomBook}
+                  className="px-4 py-2 text-sm rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition-colors font-medium"
+                >
+                  确认添加
+                </button>
+                <button
+                  onClick={() => setIsAddingBook(false)}
+                  className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted transition-colors font-medium"
+                >
+                  取消
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* 新增Prompt表单 */}
+          {isAddingPrompt && (
+            <div className="mb-4 p-4 rounded-lg border border-border/30 bg-muted/10 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-foreground">新增Prompt模板</h3>
+                <button
+                  onClick={() => setIsAddingPrompt(false)}
+                  className="p-1 hover:bg-muted rounded transition-colors"
+                >
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </div>
+              <input
+                type="text"
+                placeholder="Prompt名称"
+                value={newPromptName}
+                onChange={(e) => setNewPromptName(e.target.value)}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
+              />
+              <textarea
+                placeholder="请输入你的自定义Prompt模板，可以使用 {date}、{activities}、{course} 等变量..."
+                value={newPromptTemplate}
+                onChange={(e) => setNewPromptTemplate(e.target.value)}
+                rows={4}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAddCustomPrompt}
+                  className="px-4 py-2 text-sm rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition-colors font-medium"
+                >
+                  确认添加
+                </button>
+                <button
+                  onClick={() => setIsAddingPrompt(false)}
+                  className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted transition-colors font-medium"
+                >
+                  取消
+                </button>
+              </div>
+            </div>
+          )}
           
           {/* Prompt预览 - 参考导出模态窗布局 */}
           <div className="flex-1 overflow-hidden flex flex-col min-h-0">
