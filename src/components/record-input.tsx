@@ -17,6 +17,7 @@ import { useLocation } from '@/lib/hooks/use-location';
 import { useAudioRecorder } from '@/lib/hooks/use-audio-recorder';
 import { useImageUpload } from '@/lib/hooks/use-image-upload';
 import { useIsDesktop } from '@/lib/hooks/use-device-type';
+import { useMobileZoomFix } from '@/lib/hooks/use-mobile-zoom-fix';
 import { toast } from 'sonner';
 import { MapPin } from 'lucide-react';
 import { blobToBase64, formatDuration } from '@/lib/utils/audio';
@@ -29,6 +30,14 @@ export function RecordInput() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { addRecord } = useRecords();
   const { location, isLoading: isLocationLoading, isEnabled: isLocationEnabled, toggleLocation } = useLocation();
+  
+  // 移动端防放大功能
+  useMobileZoomFix({
+    enabled: true,
+    fontSizeThreshold: 16,
+    forceRestore: true,
+    dynamicViewport: true
+  });
   const { 
     isRecording: isRecordingAudio, 
     audioBlob, 

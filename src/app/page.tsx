@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { Clock, BarChart3 } from 'lucide-react';
 import { TabNav, TabItem } from "@/components/tab-nav";
@@ -14,6 +14,7 @@ import {
   StatisticsSkeleton, 
   RecordInputSkeleton 
 } from "@/components/ui/skeleton";
+import { initMobileZoomFix } from "@/lib/utils/mobile-zoom-fix";
 
 // 动态导入重型组件，提高首屏加载速度
 const RecordInput = dynamic(
@@ -50,6 +51,17 @@ const TechBackground = dynamic(
 export default function Home() {
   const [activeTab, setActiveTab] = useState('timeline');
   const { records } = useRecords();
+  
+  // 初始化移动端防放大功能
+  useEffect(() => {
+    initMobileZoomFix({
+      enabled: true,
+      fontSizeThreshold: 16,
+      forceRestore: true,
+      dynamicViewport: true,
+      iosSpecialHandling: true
+    });
+  }, []);
 
   // Tab 配置 - 核心功能
   const tabs: TabItem[] = useMemo(() => [

@@ -23,6 +23,7 @@ import { formatShortDateTime } from '@/lib/utils/date';
 import { formatLocation } from '@/lib/hooks/use-location';
 import { useRecords } from '@/lib/hooks/use-records';
 import { useIsDesktop } from '@/lib/hooks/use-device-type';
+import { useMobileZoomFix } from '@/lib/hooks/use-mobile-zoom-fix';
 import { toast } from 'sonner';
 import { MapPin } from 'lucide-react';
 
@@ -44,6 +45,14 @@ const TimelineItemComponent = function TimelineItem({ record }: TimelineItemProp
   const { updateRecord, deleteRecord } = useRecords();
   const isDesktop = useIsDesktop();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // 移动端防放大功能
+  useMobileZoomFix({
+    enabled: true,
+    fontSizeThreshold: 16,
+    forceRestore: true,
+    dynamicViewport: true
+  });
   
   // 检测移动端
   useEffect(() => {
