@@ -166,6 +166,8 @@ export function EnglishPromptDialog() {
   const [selectedBook, setSelectedBook] = useState<string>('nce1');
   const [lessonStart, setLessonStart] = useState<number>(1);
   const [lessonEnd, setLessonEnd] = useState<number>(1);
+  const [lessonStartInput, setLessonStartInput] = useState<string>('1');
+  const [lessonEndInput, setLessonEndInput] = useState<string>('1');
   const [selectedTemplate, setSelectedTemplate] = useState<string>('template1');
   const [customBooks, setCustomBooks] = useState<CustomBook[]>([]);
   const [isAddingBook, setIsAddingBook] = useState(false);
@@ -240,6 +242,21 @@ export function EnglishPromptDialog() {
   const currentBook = useMemo(() => {
     return allBooks.find(book => book.id === selectedBook);
   }, [allBooks, selectedBook]);
+  
+  // 当教材改变时，重置课程范围
+  useEffect(() => {
+    if (currentBook) {
+      const maxLessons = currentBook.lessons;
+      if (lessonStart > maxLessons) {
+        setLessonStart(1);
+        setLessonStartInput('1');
+      }
+      if (lessonEnd > maxLessons) {
+        setLessonEnd(maxLessons);
+        setLessonEndInput(maxLessons.toString());
+      }
+    }
+  }, [currentBook, lessonStart, lessonEnd]);
   
   // 合并模板列表
   const allTemplates = useMemo(() => {
@@ -349,6 +366,65 @@ export function EnglishPromptDialog() {
       setSelectedTemplate('template1');
     }
     toast.success('自定义Prompt已删除');
+  };
+  
+  // 处理课程开始输入
+  const handleLessonStartChange = (value: string) => {
+    setLessonStartInput(value);
+    
+    // 允许空值，不立即验证
+    if (value === '') {
+      return;
+    }
+    
+    const num = parseInt(value);
+    if (!isNaN(num) && num > 0) {
+      const maxLessons = currentBook?.lessons || 1;
+      const clampedValue = Math.min(num, maxLessons);
+      setLessonStart(clampedValue);
+      
+      // 如果开始课程大于结束课程，自动调整结束课程
+      if (clampedValue > lessonEnd) {
+        setLessonEnd(clampedValue);
+        setLessonEndInput(clampedValue.toString());
+      }
+    }
+  };
+  
+  // 处理课程结束输入
+  const handleLessonEndChange = (value: string) => {
+    setLessonEndInput(value);
+    
+    // 允许空值，不立即验证
+    if (value === '') {
+      return;
+    }
+    
+    const num = parseInt(value);
+    if (!isNaN(num) && num > 0) {
+      const maxLessons = currentBook?.lessons || 1;
+      const clampedValue = Math.min(num, maxLessons);
+      setLessonEnd(clampedValue);
+    }
+  };
+  
+  // 处理输入框失焦时的验证
+  const handleLessonStartBlur = () => {
+    if (lessonStartInput === '' || lessonStartInput === '0') {
+      setLessonStartInput('1');
+      setLessonStart(1);
+      if (lessonEnd < 1) {
+        setLessonEnd(1);
+        setLessonEndInput('1');
+      }
+    }
+  };
+  
+  const handleLessonEndBlur = () => {
+    if (lessonEndInput === '' || lessonEndInput === '0') {
+      setLessonEndInput(lessonStart.toString());
+      setLessonEnd(lessonStart);
+    }
   };
   
   // 复制Prompt
@@ -483,59 +559,68 @@ export function EnglishPromptDialog() {
             </div>
             
             {/* 课程范围选择 */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <label className="text-sm font-medium text-foreground">选择课程范围</label>
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">从</span>
-                  <input
-                    type="number"
-                    min="1"
-                    max={currentBook?.lessons || 1}
-                    value={lessonStart}
-                    onChange={(e) => {
-                      const inputValue = e.target.value;
-                      if (inputValue === '') {
-                        setLessonStart(1);
-                        return;
-                      }
-                      const val = parseInt(inputValue);
-                      if (!isNaN(val)) {
-                        const clampedVal = Math.max(1, Math.min(val, currentBook?.lessons || 1));
-                        setLessonStart(clampedVal);
-                        if (clampedVal > lessonEnd) setLessonEnd(clampedVal);
-                      }
-                    }}
-                    className="w-20 px-3 py-2 text-sm rounded-md border border-border bg-background"
-                  />
-                  <span className="text-sm text-muted-foreground">课</span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                {/* 开始课程 */}
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">从</span>
+                  <div className="relative flex-shrink-0">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={lessonStartInput}
+                      onChange={(e) => handleLessonStartChange(e.target.value)}
+                      onBlur={handleLessonStartBlur}
+                      onFocus={(e) => e.target.select()}
+                      className={cn(
+                        "w-16 h-10 px-3 text-sm rounded-lg border transition-colors duration-150",
+                        "bg-background border-border/50",
+                        "hover:border-cyan-300/60 focus:border-cyan-400/80",
+                        "focus:outline-none focus:shadow-sm focus:shadow-cyan-400/10",
+                        "text-center font-medium",
+                        "placeholder:text-muted-foreground/50"
+                      )}
+                      placeholder="1"
+                    />
+                  </div>
+                  <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">课</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">到</span>
-                  <input
-                    type="number"
-                    min={lessonStart}
-                    max={currentBook?.lessons || 1}
-                    value={lessonEnd}
-                    onChange={(e) => {
-                      const inputValue = e.target.value;
-                      if (inputValue === '') {
-                        setLessonEnd(lessonStart);
-                        return;
-                      }
-                      const val = parseInt(inputValue);
-                      if (!isNaN(val)) {
-                        const clampedVal = Math.max(lessonStart, Math.min(val, currentBook?.lessons || 1));
-                        setLessonEnd(clampedVal);
-                      }
-                    }}
-                    className="w-20 px-3 py-2 text-sm rounded-md border border-border bg-background"
-                  />
-                  <span className="text-sm text-muted-foreground">课</span>
+                
+                {/* 结束课程 */}
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">到</span>
+                  <div className="relative flex-shrink-0">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={lessonEndInput}
+                      onChange={(e) => handleLessonEndChange(e.target.value)}
+                      onBlur={handleLessonEndBlur}
+                      onFocus={(e) => e.target.select()}
+                      className={cn(
+                        "w-16 h-10 px-3 text-sm rounded-lg border transition-colors duration-150",
+                        "bg-background border-border/50",
+                        "hover:border-cyan-300/60 focus:border-cyan-400/80",
+                        "focus:outline-none focus:shadow-sm focus:shadow-cyan-400/10",
+                        "text-center font-medium",
+                        "placeholder:text-muted-foreground/50"
+                      )}
+                      placeholder="1"
+                    />
+                  </div>
+                  <span className="text-sm text-muted-foreground font-medium whitespace-nowrap">课</span>
                 </div>
-                <span className="text-xs text-muted-foreground/70">
-                  （共 {currentBook?.lessons || 0} 课，已选 {lessonEnd - lessonStart + 1} 课）
-                </span>
+                
+                {/* 状态指示器 */}
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/20 border border-border/10 min-w-0">
+                  <div className="h-1.5 w-1.5 rounded-full bg-gradient-to-r from-sky-400 to-cyan-500 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground font-medium truncate">
+                    共 {currentBook?.lessons || 0} 课，已选 {lessonEnd - lessonStart + 1} 课
+                  </span>
+                </div>
               </div>
             </div>
             
