@@ -398,7 +398,7 @@ export function EnglishPromptDialog() {
             {/* 课程范围选择 */}
             <div className="flex items-center gap-2 relative z-10">
               <label className="text-m font-medium text-muted-foreground whitespace-nowrap">范围</label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <select
                   value={lessonStart}
                   onChange={(e) => {
@@ -408,13 +408,13 @@ export function EnglishPromptDialog() {
                       setLessonEnd(value);
                     }
                   }}
-                  className="w-12 h-7 px-2 text-xs font-semibold text-center rounded border border-border/30 bg-background/80 appearance-none cursor-pointer focus:border-cyan-400/40 focus:outline-none"
+                  className="w-14 h-8 px-2 text-sm font-semibold text-center rounded-lg border border-border/30 bg-background/80 appearance-none cursor-pointer focus:border-cyan-400/40 focus:outline-none transform scale-90 origin-center transition-all duration-200 hover:scale-95 hover:border-cyan-300/50 hover:shadow-sm"
                 >
                   {Array.from({ length: currentBook?.lessons || 1 }, (_, i) => i + 1).map(num => (
                     <option key={num} value={num}>{num}</option>
                   ))}
                 </select>
-                <span className="text-xs text-muted-foreground">-</span>
+                <span className="text-xs text-muted-foreground transform scale-90">-</span>
                 <select
                   value={lessonEnd}
                   onChange={(e) => {
@@ -424,7 +424,7 @@ export function EnglishPromptDialog() {
                       setLessonStart(value);
                     }
                   }}
-                  className="w-12 h-7 px-2 text-xs font-semibold text-center rounded border border-border/30 bg-background/80 appearance-none cursor-pointer focus:border-cyan-400/40 focus:outline-none"
+                  className="w-14 h-8 px-2 text-sm font-semibold text-center rounded-lg border border-border/30 bg-background/80 appearance-none cursor-pointer focus:border-cyan-400/40 focus:outline-none transform scale-90 origin-center transition-all duration-200 hover:scale-95 hover:border-cyan-300/50 hover:shadow-sm"
                 >
                   {Array.from({ length: currentBook?.lessons || 1 }, (_, i) => i + 1).map(num => (
                     <option key={num} value={num}>{num}</option>
@@ -495,42 +495,42 @@ export function EnglishPromptDialog() {
           
           {/* 新增教材表单 */}
           {isAddingBook && (
-            <div className="mb-4 p-4 rounded-lg border border-border/30 bg-muted/10 space-y-3">
+            <div className="mb-4 p-3 rounded-lg border border-border/30 bg-muted/10 space-y-2.5 transform scale-95 origin-top transition-all duration-300">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-foreground">新增教材</h3>
+                <h3 className="text-xs font-medium text-foreground transform scale-90 origin-left">新增教材</h3>
                 <button
                   onClick={() => setIsAddingBook(false)}
-                  className="p-1 hover:bg-muted rounded transition-colors"
+                  className="p-1 hover:bg-muted rounded transition-colors transform scale-90 hover:scale-95"
                 >
-                  <X className="h-4 w-4 text-muted-foreground" />
+                  <X className="h-3 w-3 text-muted-foreground" />
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <input
                   type="text"
                   placeholder="教材名称"
                   value={newBookName}
                   onChange={(e) => setNewBookName(e.target.value)}
-                  className="px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
+                  className="px-2.5 py-1.5 text-xs rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all transform scale-95 hover:scale-100"
                 />
                 <input
                   type="number"
                   placeholder="课程数量"
                   value={newBookLessons}
                   onChange={(e) => setNewBookLessons(e.target.value)}
-                  className="px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
+                  className="px-2.5 py-1.5 text-xs rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all transform scale-95 hover:scale-100"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 <button
                   onClick={handleAddCustomBook}
-                  className="px-4 py-2 text-sm rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition-colors font-medium"
+                  className="px-3 py-1.5 text-xs rounded-md bg-cyan-500 text-white hover:bg-cyan-600 transition-all font-medium transform scale-90 hover:scale-95"
                 >
                   确认添加
                 </button>
                 <button
                   onClick={() => setIsAddingBook(false)}
-                  className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted transition-colors font-medium"
+                  className="px-3 py-1.5 text-xs rounded-md border border-border hover:bg-muted transition-all font-medium transform scale-90 hover:scale-95"
                 >
                   取消
                 </button>
@@ -540,14 +540,14 @@ export function EnglishPromptDialog() {
           
           {/* 新增Prompt表单 */}
           {isAddingPrompt && (
-            <div className="mb-4 p-4 rounded-lg border border-border/30 bg-muted/10 space-y-3">
+            <div className="mb-4 p-3 rounded-lg border border-border/30 bg-muted/10 space-y-2.5 transform scale-95 origin-top transition-all duration-300">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-foreground">新增Prompt模板</h3>
+                <h3 className="text-xs font-medium text-foreground transform scale-90 origin-left">新增Prompt模板</h3>
                 <button
                   onClick={() => setIsAddingPrompt(false)}
-                  className="p-1 hover:bg-muted rounded transition-colors"
+                  className="p-1 hover:bg-muted rounded transition-colors transform scale-90 hover:scale-95"
                 >
-                  <X className="h-4 w-4 text-muted-foreground" />
+                  <X className="h-3 w-3 text-muted-foreground" />
                 </button>
               </div>
               <input
@@ -555,25 +555,25 @@ export function EnglishPromptDialog() {
                 placeholder="Prompt名称"
                 value={newPromptName}
                 onChange={(e) => setNewPromptName(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
+                className="w-full px-2.5 py-1.5 text-xs rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all transform scale-95 hover:scale-100"
               />
               <textarea
                 placeholder="请输入你的自定义Prompt模板，可以使用 {date}、{activities}、{course} 等变量..."
                 value={newPromptTemplate}
                 onChange={(e) => setNewPromptTemplate(e.target.value)}
-                rows={4}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
+                rows={3}
+                className="w-full px-2.5 py-1.5 text-xs rounded-md border border-border bg-background resize-none focus:outline-none focus:ring-1 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all transform scale-95 hover:scale-100"
               />
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 <button
                   onClick={handleAddCustomPrompt}
-                  className="px-4 py-2 text-sm rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition-colors font-medium"
+                  className="px-3 py-1.5 text-xs rounded-md bg-cyan-500 text-white hover:bg-cyan-600 transition-all font-medium transform scale-90 hover:scale-95"
                 >
                   确认添加
                 </button>
                 <button
                   onClick={() => setIsAddingPrompt(false)}
-                  className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted transition-colors font-medium"
+                  className="px-3 py-1.5 text-xs rounded-md border border-border hover:bg-muted transition-all font-medium transform scale-90 hover:scale-95"
                 >
                   取消
                 </button>
