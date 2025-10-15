@@ -636,7 +636,7 @@ export function EnglishPromptDialog() {
                 {canScrollLeft && (
                   <button
                     onClick={() => scrollBooks('left')}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background/95 backdrop-blur-sm border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
                   >
                     <ChevronLeft className="h-4 w-4 text-foreground/80" />
                   </button>
@@ -646,7 +646,7 @@ export function EnglishPromptDialog() {
                 {canScrollRight && (
                   <button
                     onClick={() => scrollBooks('right')}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background/95 backdrop-blur-sm border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
                   >
                     <ChevronRight className="h-4 w-4 text-foreground/80" />
                   </button>
@@ -849,7 +849,7 @@ export function EnglishPromptDialog() {
                 {canScrollLeftTemplate && (
                   <button
                     onClick={() => scrollTemplates('left')}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background/95 backdrop-blur-sm border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
                   >
                     <ChevronLeft className="h-4 w-4 text-foreground/80" />
                   </button>
@@ -859,7 +859,7 @@ export function EnglishPromptDialog() {
                 {canScrollRightTemplate && (
                   <button
                     onClick={() => scrollTemplates('right')}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background/95 backdrop-blur-sm border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
                   >
                     <ChevronRight className="h-4 w-4 text-foreground/80" />
                   </button>
