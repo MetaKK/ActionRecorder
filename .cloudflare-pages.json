@@ -1,0 +1,10 @@
+{
+  "build": {
+    "command": "npm run build",
+    "cwd": ".",
+    "watch": []
+  },
+  "deployment": {
+    "outputDirectory": "out"
+  }
+}

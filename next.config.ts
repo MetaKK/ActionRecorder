@@ -22,6 +22,11 @@ const nextConfig: NextConfig = {
   // React严格模式
   reactStrictMode: true,
   
+  // Cloudflare Pages 支持
+  output: 'export',
+  trailingSlash: true,
+  skipTrailingSlashRedirect: true,
+  
   // 实验性功能
   experimental: {
     // 优化包导入
