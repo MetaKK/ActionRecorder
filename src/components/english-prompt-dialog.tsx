@@ -173,7 +173,6 @@ export function EnglishPromptDialog() {
   const [customPrompts, setCustomPrompts] = useState<CustomPrompt[]>([]);
   const [isAddingPrompt, setIsAddingPrompt] = useState(false);
   const [newPromptName, setNewPromptName] = useState('');
-  const [newPromptDescription, setNewPromptDescription] = useState('');
   const [newPromptTemplate, setNewPromptTemplate] = useState('');
   const [copied, setCopied] = useState(false);
   
@@ -395,7 +394,7 @@ export function EnglishPromptDialog() {
     const newPrompt: CustomPrompt = {
       id: `custom-prompt-${Date.now()}`,
       name: newPromptName.trim(),
-      description: newPromptDescription.trim() || '自定义学习Prompt',
+      description: '自定义学习Prompt',
       template: newPromptTemplate.trim(),
     };
     
@@ -408,7 +407,6 @@ export function EnglishPromptDialog() {
     setTimeout(() => setHighlightedTemplateId(null), 3000); // 3秒后取消高亮
     
     setNewPromptName('');
-    setNewPromptDescription('');
     setNewPromptTemplate('');
     setIsAddingPrompt(false);
     toast.success('自定义Prompt已添加');
@@ -772,40 +770,33 @@ export function EnglishPromptDialog() {
                 </button>
               </div>
               
-              {/* 添加自定义Prompt表单 */}
+              {/* 添加自定义Prompt表单 - 精简版 */}
               {isAddingPrompt && (
-                <div className="p-4 rounded-xl border border-border/40 bg-muted/20 space-y-3 shadow-sm">
+                <div className="p-3 rounded-lg border border-border/30 bg-muted/10 space-y-3 shadow-sm">
                   <input
                     type="text"
                     placeholder="Prompt名称（如：商务英语对话）"
                     value={newPromptName}
                     onChange={(e) => setNewPromptName(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
-                  />
-                  <input
-                    type="text"
-                    placeholder="描述（可选）"
-                    value={newPromptDescription}
-                    onChange={(e) => setNewPromptDescription(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
                   />
                   <textarea
                     placeholder="请输入你的自定义Prompt模板，可以使用 {date}、{activities}、{course} 等变量..."
                     value={newPromptTemplate}
                     onChange={(e) => setNewPromptTemplate(e.target.value)}
-                    rows={6}
-                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
+                    rows={4}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400/40 transition-all"
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={handleAddCustomPrompt}
-                      className="px-4 py-2 text-xs rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition-colors font-medium"
+                      className="px-3 py-1.5 text-xs rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition-colors font-medium"
                     >
                       确认添加
                     </button>
                     <button
                       onClick={() => setIsAddingPrompt(false)}
-                      className="px-4 py-2 text-xs rounded-lg border border-border hover:bg-muted transition-colors font-medium"
+                      className="px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-muted transition-colors font-medium"
                     >
                       取消
                     </button>
@@ -845,7 +836,7 @@ export function EnglishPromptDialog() {
                   }}
                 >
                   {allTemplates.map((template) => (
-                    <div key={template.id} className="relative flex-shrink-0 w-64">
+                    <div key={template.id} className="relative flex-shrink-0 w-48">
                       <button
                         onClick={() => {
                           setSelectedTemplate(template.id);
@@ -859,7 +850,7 @@ export function EnglishPromptDialog() {
                         }}
                         data-template-id={template.id}
                         className={cn(
-                          "group w-full p-4 rounded-xl text-left transition-all duration-300",
+                          "group w-full p-3 rounded-lg text-center transition-all duration-300",
                           "border backdrop-blur-sm",
                           "hover:scale-[1.02] active:scale-[0.98]",
                           selectedTemplate === template.id
@@ -869,10 +860,9 @@ export function EnglishPromptDialog() {
                           highlightedTemplateId === template.id && "animate-pulse border-emerald-400/60 bg-gradient-to-br from-emerald-400/20 to-green-400/20 shadow-lg shadow-emerald-400/20"
                         )}
                       >
-                        <div className="font-medium text-sm mb-1.5 group-hover:text-foreground transition-colors">{template.name}</div>
-                        <div className="text-xs text-muted-foreground leading-relaxed group-hover:text-muted-foreground/80 transition-colors">{template.description}</div>
+                        <div className="font-medium text-sm group-hover:text-foreground transition-colors">{template.name}</div>
                         {selectedTemplate === template.id && (
-                          <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-cyan-400/5 to-sky-400/5 pointer-events-none" />
+                          <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-cyan-400/5 to-sky-400/5 pointer-events-none" />
                         )}
                       </button>
                       {/* 删除按钮（仅自定义Prompt） */}
@@ -882,9 +872,9 @@ export function EnglishPromptDialog() {
                             e.stopPropagation();
                             handleRemoveCustomPrompt(template.id);
                           }}
-                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500/90 hover:bg-red-500 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 shadow-lg"
+                          className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-red-500/90 hover:bg-red-500 text-white flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 shadow-lg"
                         >
-                          <X className="h-3 w-3" />
+                          <X className="h-2.5 w-2.5" />
                         </button>
                       )}
                     </div>
