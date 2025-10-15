@@ -5,12 +5,11 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { BookOpen, Copy, Check, GraduationCap, Plus, X } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { BookOpen, Copy, Check, GraduationCap, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -180,6 +179,16 @@ export function EnglishPromptDialog() {
   const [newPromptTemplate, setNewPromptTemplate] = useState('');
   const [copied, setCopied] = useState(false);
   
+  // 滚动相关状态
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true); // 默认显示右箭头
+  const [canScrollLeftTemplate, setCanScrollLeftTemplate] = useState(false);
+  const [canScrollRightTemplate, setCanScrollRightTemplate] = useState(true); // 默认显示右箭头
+  
+  // 滚动容器引用
+  const booksScrollRef = useRef<HTMLDivElement>(null);
+  const templatesScrollRef = useRef<HTMLDivElement>(null);
+  
   const { records } = useRecords();
   
   // 从本地存储加载自定义教材
@@ -226,6 +235,7 @@ export function EnglishPromptDialog() {
     }
   }, [customPrompts]);
   
+  
   // 获取今天的记录
   const todayRecords = useMemo(() => {
     const today = new Date();
@@ -267,6 +277,39 @@ export function EnglishPromptDialog() {
   const currentTemplate = useMemo(() => {
     return allTemplates.find(t => t.id === selectedTemplate);
   }, [allTemplates, selectedTemplate]);
+  
+  // 初始化滚动状态检测
+  useEffect(() => {
+    const checkInitialScrollStatus = () => {
+      if (booksScrollRef.current) {
+        checkScrollStatus(booksScrollRef.current, setCanScrollLeft, setCanScrollRight);
+      }
+      if (templatesScrollRef.current) {
+        checkScrollStatus(templatesScrollRef.current, setCanScrollLeftTemplate, setCanScrollRightTemplate);
+      }
+    };
+    
+    // 延迟检测，确保DOM已渲染
+    const timer = setTimeout(checkInitialScrollStatus, 100);
+    return () => clearTimeout(timer);
+  }, [allBooks, allTemplates]);
+  
+  // 动态调整右箭头显示（当只有一个选项时隐藏）
+  useEffect(() => {
+    // 教材选择：只有一个教材时隐藏右箭头
+    if (allBooks.length <= 1) {
+      setCanScrollRight(false);
+    } else {
+      setCanScrollRight(true);
+    }
+    
+    // 模板选择：只有一个模板时隐藏右箭头
+    if (allTemplates.length <= 1) {
+      setCanScrollRightTemplate(false);
+    } else {
+      setCanScrollRightTemplate(true);
+    }
+  }, [allBooks.length, allTemplates.length]);
   
   // 生成活动列表文本
   const activitiesText = useMemo(() => {
@@ -427,6 +470,55 @@ export function EnglishPromptDialog() {
     }
   };
   
+  // 检查滚动状态
+  const checkScrollStatus = (container: HTMLDivElement, setCanScrollLeft: (value: boolean) => void, setCanScrollRight: (value: boolean) => void) => {
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+    setCanScrollLeft(scrollLeft > 0);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+  };
+
+  // 滚动到指定位置（居中）
+  const scrollToCenter = (container: HTMLDivElement, targetElement: HTMLElement) => {
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = targetElement.getBoundingClientRect();
+    const scrollLeft = container.scrollLeft + (targetRect.left - containerRect.left) - (containerRect.width / 2) + (targetRect.width / 2);
+    
+    container.scrollTo({
+      left: scrollLeft,
+      behavior: 'smooth'
+    });
+  };
+
+  // 滚动处理函数
+  const handleBooksScroll = () => {
+    if (booksScrollRef.current) {
+      checkScrollStatus(booksScrollRef.current, setCanScrollLeft, setCanScrollRight);
+    }
+  };
+
+  const handleTemplatesScroll = () => {
+    if (templatesScrollRef.current) {
+      checkScrollStatus(templatesScrollRef.current, setCanScrollLeftTemplate, setCanScrollRightTemplate);
+    }
+  };
+
+  // 手动滚动函数
+  const scrollBooks = (direction: 'left' | 'right') => {
+    if (booksScrollRef.current) {
+      const scrollAmount = 200;
+      const newScrollLeft = booksScrollRef.current.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount);
+      booksScrollRef.current.scrollTo({ left: newScrollLeft, behavior: 'smooth' });
+    }
+  };
+
+  const scrollTemplates = (direction: 'left' | 'right') => {
+    if (templatesScrollRef.current) {
+      const scrollAmount = 200;
+      const newScrollLeft = templatesScrollRef.current.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount);
+      templatesScrollRef.current.scrollTo({ left: newScrollLeft, behavior: 'smooth' });
+    }
+  };
+
   // 复制Prompt
   const handleCopy = async () => {
     try {
@@ -524,8 +616,30 @@ export function EnglishPromptDialog() {
               
               {/* 水平滚动教材选择 */}
               <div className="relative">
+                {/* 左滚动按钮 */}
+                {canScrollLeft && (
+                  <button
+                    onClick={() => scrollBooks('left')}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background/95 backdrop-blur-sm border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
+                  >
+                    <ChevronLeft className="h-4 w-4 text-foreground/80" />
+                  </button>
+                )}
+                
+                {/* 右滚动按钮 */}
+                {canScrollRight && (
+                  <button
+                    onClick={() => scrollBooks('right')}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background/95 backdrop-blur-sm border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
+                  >
+                    <ChevronRight className="h-4 w-4 text-foreground/80" />
+                  </button>
+                )}
+                
                 <div 
-                  className="flex gap-3 overflow-x-auto pb-2" 
+                  ref={booksScrollRef}
+                  onScroll={handleBooksScroll}
+                  className="flex gap-3 overflow-x-auto scroll-smooth" 
                   style={{ 
                     scrollbarWidth: 'none', 
                     msOverflowStyle: 'none'
@@ -534,7 +648,17 @@ export function EnglishPromptDialog() {
                   {allBooks.map((book) => (
                     <div key={book.id} className="relative flex-shrink-0">
                       <button
-                        onClick={() => setSelectedBook(book.id)}
+                        onClick={() => {
+                          setSelectedBook(book.id);
+                          // 选中后居中滚动
+                          setTimeout(() => {
+                            const button = document.querySelector(`[data-book-id="${book.id}"]`) as HTMLElement;
+                            if (button && booksScrollRef.current) {
+                              scrollToCenter(booksScrollRef.current, button);
+                            }
+                          }, 100);
+                        }}
+                        data-book-id={book.id}
                         className={cn(
                           "relative px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300",
                           "border backdrop-blur-sm",
@@ -567,9 +691,14 @@ export function EnglishPromptDialog() {
                     </div>
                   ))}
                 </div>
-                {/* 渐变遮罩指示可滚动 */}
-                <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none" />
-                <div className="absolute left-0 top-0 bottom-2 w-8 bg-gradient-to-r from-background via-background/80 to-transparent pointer-events-none" />
+                
+                {/* 滚动指示器 */}
+                {canScrollLeft && (
+                  <div className="absolute left-0 top-0 bottom-2 w-6 bg-gradient-to-r from-background via-background/60 to-transparent pointer-events-none" />
+                )}
+                {canScrollRight && (
+                  <div className="absolute right-0 top-0 bottom-2 w-6 bg-gradient-to-l from-background via-background/60 to-transparent pointer-events-none" />
+                )}
               </div>
             </div>
             
@@ -698,8 +827,30 @@ export function EnglishPromptDialog() {
               
               {/* 水平滚动模板选择 */}
               <div className="relative">
+                {/* 左滚动按钮 */}
+                {canScrollLeftTemplate && (
+                  <button
+                    onClick={() => scrollTemplates('left')}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background/95 backdrop-blur-sm border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
+                  >
+                    <ChevronLeft className="h-4 w-4 text-foreground/80" />
+                  </button>
+                )}
+                
+                {/* 右滚动按钮 */}
+                {canScrollRightTemplate && (
+                  <button
+                    onClick={() => scrollTemplates('right')}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background/95 backdrop-blur-sm border border-border/50 shadow-lg hover:bg-background hover:scale-110 transition-all duration-200 flex items-center justify-center"
+                  >
+                    <ChevronRight className="h-4 w-4 text-foreground/80" />
+                  </button>
+                )}
+                
                 <div 
-                  className="flex gap-3 overflow-x-auto pb-2" 
+                  ref={templatesScrollRef}
+                  onScroll={handleTemplatesScroll}
+                  className="flex gap-3 overflow-x-auto pb-2 scroll-smooth" 
                   style={{ 
                     scrollbarWidth: 'none', 
                     msOverflowStyle: 'none'
@@ -708,7 +859,17 @@ export function EnglishPromptDialog() {
                   {allTemplates.map((template) => (
                     <div key={template.id} className="relative flex-shrink-0 w-64">
                       <button
-                        onClick={() => setSelectedTemplate(template.id)}
+                        onClick={() => {
+                          setSelectedTemplate(template.id);
+                          // 选中后居中滚动
+                          setTimeout(() => {
+                            const button = document.querySelector(`[data-template-id="${template.id}"]`) as HTMLElement;
+                            if (button && templatesScrollRef.current) {
+                              scrollToCenter(templatesScrollRef.current, button);
+                            }
+                          }, 100);
+                        }}
+                        data-template-id={template.id}
                         className={cn(
                           "group w-full p-4 rounded-xl text-left transition-all duration-300",
                           "border backdrop-blur-sm",
@@ -739,9 +900,14 @@ export function EnglishPromptDialog() {
                     </div>
                   ))}
                 </div>
-                {/* 渐变遮罩指示可滚动 */}
-                <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none" />
-                <div className="absolute left-0 top-0 bottom-2 w-8 bg-gradient-to-r from-background via-background/80 to-transparent pointer-events-none" />
+                
+                {/* 滚动指示器 */}
+                {canScrollLeftTemplate && (
+                  <div className="absolute left-0 top-0 bottom-2 w-6 bg-gradient-to-r from-background via-background/60 to-transparent pointer-events-none" />
+                )}
+                {canScrollRightTemplate && (
+                  <div className="absolute right-0 top-0 bottom-2 w-6 bg-gradient-to-l from-background via-background/60 to-transparent pointer-events-none" />
+                )}
               </div>
             </div>
           
