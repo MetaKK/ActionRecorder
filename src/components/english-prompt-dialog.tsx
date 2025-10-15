@@ -525,7 +525,7 @@ export function EnglishPromptDialog() {
             {/* 教材选择 */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-foreground">选择教材</label>
+                <label className="text-m font-medium text-foreground">选择教材</label>
                 <button
                   onClick={() => setIsAddingBook(!isAddingBook)}
                   className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 transition-colors"
@@ -662,15 +662,15 @@ export function EnglishPromptDialog() {
              {/* 课程范围选择 - Apple风格Select */}
              <div className="space-y-4">
                <div className="flex items-center justify-between">
-                 <div className="text-sm font-semibold text-foreground">课程范围</div>
+                 <div className="text-m font-semibold text-foreground">课程范围</div>
                  <div className="text-xs text-muted-foreground">
                    共 {currentBook?.lessons || 0} 课
                  </div>
                </div>
                
                {/* Apple风格的范围选择器 - 一行布局 */}
-               <div className="bg-muted/5 rounded-xl p-4 border border-border/10">
-                 <div className="flex items-center justify-center gap-6">
+               <div className="bg-muted/5 rounded-xl p-2 border border-border/10">
+                 <div className="flex items-center justify-center gap-4">
                    {/* 起始课程选择器 */}
                    <div className="flex items-center gap-3">
                      <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
@@ -756,23 +756,13 @@ export function EnglishPromptDialog() {
                      <span className="text-sm text-muted-foreground">课</span>
                    </div>
                  </div>
-                 
-                 {/* 精致的范围指示器 */}
-                 <div className="mt-3 text-center">
-                   <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/8 rounded-full border border-primary/15">
-                     <div className="w-1.5 h-1.5 bg-primary/70 rounded-full" />
-                     <span className="text-xs font-medium text-primary/90">
-                       第 {lessonStart} - {lessonEnd} 课
-                     </span>
-                   </div>
-                 </div>
                </div>
              </div>
             
             {/* Prompt模板选择 */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-foreground">选择Prompt模板</label>
+                <label className="text-m font-medium text-foreground">选择Prompt模板</label>
                 <button
                   onClick={() => setIsAddingPrompt(!isAddingPrompt)}
                   className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 transition-colors"
