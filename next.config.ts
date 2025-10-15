@@ -26,6 +26,7 @@ const nextConfig: NextConfig = {
   output: 'export',
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
+  distDir: 'out',
   
   // 实验性功能
   experimental: {

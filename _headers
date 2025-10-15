@@ -1,10 +1,8 @@
-# Cloudflare Pages 安全头配置
+# Cloudflare Pages 基础配置
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';
 
 # 静态资源缓存
 /_next/static/*
@@ -13,7 +11,3 @@
 # 图片缓存
 /img/*
   Cache-Control: public, max-age=31536000, immutable
-
-# HTML 文件
-/*.html
-  Cache-Control: public, max-age=0, must-revalidate
