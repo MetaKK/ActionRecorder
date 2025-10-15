@@ -668,13 +668,13 @@ export function EnglishPromptDialog() {
                  </div>
                </div>
                
-               {/* Apple风格的范围选择器 */}
-               <div className="bg-muted/10 rounded-2xl p-6 border border-border/20">
-                 <div className="flex items-center justify-center gap-8">
+               {/* Apple风格的范围选择器 - 一行布局 */}
+               <div className="bg-muted/5 rounded-xl p-4 border border-border/10">
+                 <div className="flex items-center justify-center gap-6">
                    {/* 起始课程选择器 */}
-                   <div className="flex flex-col items-center space-y-3">
-                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                       起始课程
+                   <div className="flex items-center gap-3">
+                     <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                       从第
                      </label>
                      <div className="relative">
                        <select
@@ -688,10 +688,10 @@ export function EnglishPromptDialog() {
                            }
                          }}
                          className={cn(
-                           "w-24 h-12 px-4 text-lg font-bold text-center rounded-xl border-2 transition-all duration-300",
-                           "bg-background border-border/20 appearance-none cursor-pointer",
-                           "hover:border-primary/30 hover:shadow-md",
-                           "focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 focus:shadow-lg focus:shadow-primary/5",
+                           "w-16 h-9 px-3 text-sm font-semibold text-center rounded-lg border transition-all duration-200",
+                           "bg-background/80 border-border/30 appearance-none cursor-pointer",
+                           "hover:border-primary/40 hover:bg-background hover:shadow-sm",
+                           "focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-md",
                            "text-foreground"
                          )}
                        >
@@ -701,26 +701,25 @@ export function EnglishPromptDialog() {
                            </option>
                          ))}
                        </select>
-                       {/* 自定义下拉箭头 */}
-                       <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                         <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                       {/* 精致的下拉箭头 */}
+                       <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                         <svg className="w-3 h-3 text-muted-foreground/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                          </svg>
                        </div>
-                       {/* Apple风格的焦点指示器 */}
-                       <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-primary/60 rounded-full opacity-0 transition-opacity duration-300 focus-within:opacity-100" />
                      </div>
+                     <span className="text-sm text-muted-foreground">课</span>
                    </div>
                    
-                   {/* 优雅的连接线 */}
+                   {/* 优雅的分隔符 */}
                    <div className="flex items-center">
-                     <div className="w-20 h-0.5 bg-gradient-to-r from-border/40 via-border/60 to-border/40 rounded-full" />
+                     <div className="w-6 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
                    </div>
                    
                    {/* 结束课程选择器 */}
-                   <div className="flex flex-col items-center space-y-3">
-                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                       结束课程
+                   <div className="flex items-center gap-3">
+                     <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                       到第
                      </label>
                      <div className="relative">
                        <select
@@ -734,10 +733,10 @@ export function EnglishPromptDialog() {
                            }
                          }}
                          className={cn(
-                           "w-24 h-12 px-4 text-lg font-bold text-center rounded-xl border-2 transition-all duration-300",
-                           "bg-background border-border/20 appearance-none cursor-pointer",
-                           "hover:border-primary/30 hover:shadow-md",
-                           "focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 focus:shadow-lg focus:shadow-primary/5",
+                           "w-16 h-9 px-3 text-sm font-semibold text-center rounded-lg border transition-all duration-200",
+                           "bg-background/80 border-border/30 appearance-none cursor-pointer",
+                           "hover:border-primary/40 hover:bg-background hover:shadow-sm",
+                           "focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:shadow-md",
                            "text-foreground"
                          )}
                        >
@@ -747,24 +746,23 @@ export function EnglishPromptDialog() {
                            </option>
                          ))}
                        </select>
-                       {/* 自定义下拉箭头 */}
-                       <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                         <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                       {/* 精致的下拉箭头 */}
+                       <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                         <svg className="w-3 h-3 text-muted-foreground/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                          </svg>
                        </div>
-                       {/* Apple风格的焦点指示器 */}
-                       <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-primary/60 rounded-full opacity-0 transition-opacity duration-300 focus-within:opacity-100" />
                      </div>
+                     <span className="text-sm text-muted-foreground">课</span>
                    </div>
                  </div>
                  
-                 {/* 范围状态指示器 */}
-                 <div className="mt-6 text-center">
-                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-full border border-primary/10">
-                     <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                     <span className="text-sm font-semibold text-primary">
-                       选择第 {lessonStart} - {lessonEnd} 课
+                 {/* 精致的范围指示器 */}
+                 <div className="mt-3 text-center">
+                   <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/8 rounded-full border border-primary/15">
+                     <div className="w-1.5 h-1.5 bg-primary/70 rounded-full" />
+                     <span className="text-xs font-medium text-primary/90">
+                       第 {lessonStart} - {lessonEnd} 课
                      </span>
                    </div>
                  </div>
