@@ -12,13 +12,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AIMarkdown } from "./ai-markdown";
+import { AIMultimodalMessage } from "./ai-multimodal-message";
+
+// 定义消息内容类型
+interface MessageContent {
+  type: "text" | "image" | "file";
+  content: string;
+  url?: string;
+  name?: string;
+  size?: number;
+}
 
 // 定义消息类型
 interface Message {
   id: string;
   role: "user" | "assistant";
-  content: string;
+  content: string | MessageContent[];
+  timestamp?: Date;
 }
 
 interface AIMessageProps {
@@ -43,10 +53,13 @@ export function AIMessage({
   const isAssistant = message.role === "assistant";
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(message.content);
+    const textContent = typeof message.content === 'string' 
+      ? message.content 
+      : message.content.find(c => c.type === 'text')?.content || '';
+    await navigator.clipboard.writeText(textContent);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    onCopy?.(message.content);
+    onCopy?.(textContent);
   };
 
   const handleRegenerate = () => {
@@ -58,7 +71,10 @@ export function AIMessage({
   };
 
   const handleEdit = () => {
-    onEdit?.(message.id, message.content);
+    const textContent = typeof message.content === 'string' 
+      ? message.content 
+      : message.content.find(c => c.type === 'text')?.content || '';
+    onEdit?.(message.id, textContent);
   };
 
   return (
@@ -106,11 +122,9 @@ export function AIMessage({
               <Skeleton className="h-4 w-1/2" />
             </div>
           ) : isAssistant ? (
-            <AIMarkdown content={message.content} />
+            <AIMultimodalMessage content={message.content} />
           ) : (
-            <div className="whitespace-pre-wrap break-words">
-              {message.content}
-            </div>
+            <AIMultimodalMessage content={message.content} />
           )}
 
           {/* Message Actions */}

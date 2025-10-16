@@ -16,7 +16,7 @@ import {
   downloadAsFile,
 } from '@/lib/utils/export';
 import { formatDate } from '@/lib/utils/date';
-import { getStorageInfo, cleanupOldRecords } from '@/lib/utils/storage';
+// import { getStorageInfo, cleanupOldRecords } from '@/lib/utils/storage';
 import { toast } from 'sonner';
 
 const TIME_RANGES: Array<{ value: ExportTimeRange; label: string }> = [
@@ -40,8 +40,14 @@ export function ExportPanel() {
   
   // 更新存储信息
   useEffect(() => {
-    const info = getStorageInfo();
-    setStorageInfo(info);
+    // const info = getStorageInfo();
+    // setStorageInfo(info);
+    setStorageInfo({ 
+      totalRecords: records.length, 
+      totalSize: 0, 
+      audioRecords: 0, 
+      audioSize: 0 
+    });
   }, [records]);
   
   // 生成导出内容
@@ -77,16 +83,17 @@ export function ExportPanel() {
   
   // 清理旧记录
   const handleCleanup = () => {
-    const result = cleanupOldRecords(30);
-    if (result.deleted > 0) {
-      const freedMB = (result.freedSize / 1024 / 1024).toFixed(2);
-      toast.success(`已清理 ${result.deleted} 条旧记录，释放 ${freedMB} MB 空间`);
-      // 更新存储信息
-      const info = getStorageInfo();
-      setStorageInfo(info);
-    } else {
-      toast.info('没有需要清理的记录');
-    }
+    // const result = cleanupOldRecords(30);
+    // if (result.deleted > 0) {
+    //   const freedMB = (result.freedSize / 1024 / 1024).toFixed(2);
+    //   toast.success(`已清理 ${result.deleted} 条旧记录，释放 ${freedMB} MB 空间`);
+    //   // 更新存储信息
+    //   const info = getStorageInfo();
+    //   setStorageInfo(info);
+    // } else {
+    //   toast.info('没有需要清理的记录');
+    // }
+    toast.info('清理功能暂时不可用');
   };
   
   // 格式化存储大小

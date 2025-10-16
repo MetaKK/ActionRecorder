@@ -1,4 +1,4 @@
-import { AIChat } from "@/components/ai/ai-chat";
+import { AIChatOptimized } from "@/components/ai/ai-chat-optimized";
 import { isValidChatId } from "@/lib/ai/utils";
 import { notFound } from "next/navigation";
 
@@ -18,5 +18,5 @@ export default async function AIChatPage({ params }: AIChatPageProps) {
     notFound();
   }
 
-  return <AIChat chatId={id} />;
+  return <AIChatOptimized chatId={id} />;
 }

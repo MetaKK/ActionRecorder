@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useVoiceRecorder, useVoicePlayer } from "@/lib/hooks/use-voice-recorder";
+// 移除独立的图片上传组件，集成到输入框中
 
 interface AIInputProps {
   value: string;
@@ -46,8 +47,8 @@ export function AIInput({
   lastMessage,
 }: AIInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isComposing, setIsComposing] = useState(false);
 
   // 语音录制功能
