@@ -113,7 +113,7 @@ export function AIChatButton() {
 
               {/* 泡泡尾巴 */}
               <div 
-                className={`absolute -bottom-2 right-8 w-4 h-4 bg-gradient-to-br ${currentPlugin.metadata.color} rotate-45 rounded-sm`}
+                className={`absolute -bottom-2 right-8 w-4 h-4 bg-gradient-to-br ${currentPlugin.metadata.color} rotate-45 rounded-full`}
                 style={{
                   maskImage: 'linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,1))',
                   WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,1))',
