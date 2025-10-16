@@ -80,17 +80,19 @@ export function AIMessage({
   return (
     <div
       className={cn(
-        "group flex gap-3 hover:bg-muted/50 p-2 rounded-lg transition-colors",
+        "group flex gap-3 hover:bg-muted/30 p-3 rounded-xl transition-all duration-200",
+        "hover:shadow-sm hover:scale-[1.01]",
         isUser ? "flex-row-reverse" : "flex-row"
       )}
     >
-      {/* Avatar */}
+      {/* Avatar - Apple风格优化 */}
       <div
         className={cn(
-          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-200",
+          "shadow-sm border border-border/20",
           isUser
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-muted-foreground"
+            ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/20"
+            : "bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 text-gray-600 dark:text-gray-300"
         )}
       >
         {isUser ? (
@@ -109,10 +111,11 @@ export function AIMessage({
       >
         <div
           className={cn(
-            "rounded-2xl px-4 py-3 text-sm relative group/message",
+            "rounded-2xl px-4 py-3 text-sm relative group/message transition-all duration-200",
+            "shadow-sm border border-border/10",
             isUser
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-foreground"
+              ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/20"
+              : "bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 text-foreground shadow-gray-500/10"
           )}
         >
           {isLoading && isAssistant ? (
@@ -127,42 +130,56 @@ export function AIMessage({
             <AIMultimodalMessage content={message.content} />
           )}
 
-          {/* Message Actions */}
-          <div className="absolute -right-2 -top-2 opacity-0 group-hover/message:opacity-100 transition-opacity">
+          {/* Message Actions - Notion风格优化 */}
+          <div className="absolute -right-2 -top-2 opacity-0 group-hover/message:opacity-100 transition-all duration-200 transform scale-95 group-hover/message:scale-100">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   size="sm"
                   variant="secondary"
-                  className="h-8 w-8 p-0 rounded-full shadow-md"
+                  className={cn(
+                    "h-8 w-8 p-0 rounded-full shadow-lg border border-border/20",
+                    "bg-background/90 backdrop-blur-sm",
+                    "hover:bg-background hover:shadow-xl hover:scale-105",
+                    "transition-all duration-200"
+                  )}
                 >
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleCopy}>
-                  <Copy className="h-4 w-4 mr-2" />
-                  {copied ? "已复制" : "复制"}
+              <DropdownMenuContent align="end" className="w-48 shadow-xl border border-border/20 bg-background/95 backdrop-blur-sm">
+                <DropdownMenuItem 
+                  onClick={handleCopy}
+                  className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50 transition-colors"
+                >
+                  <Copy className="h-4 w-4" />
+                  <span className="font-medium">{copied ? "已复制" : "复制"}</span>
                 </DropdownMenuItem>
                 {isAssistant && onRegenerate && (
-                  <DropdownMenuItem onClick={handleRegenerate}>
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    重新生成
+                  <DropdownMenuItem 
+                    onClick={handleRegenerate}
+                    className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50 transition-colors"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    <span className="font-medium">重新生成</span>
                   </DropdownMenuItem>
                 )}
                 {onEdit && (
-                  <DropdownMenuItem onClick={handleEdit}>
-                    <Edit3 className="h-4 w-4 mr-2" />
-                    编辑
+                  <DropdownMenuItem 
+                    onClick={handleEdit}
+                    className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50 transition-colors"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    <span className="font-medium">编辑</span>
                   </DropdownMenuItem>
                 )}
                 {onDelete && (
                   <DropdownMenuItem 
                     onClick={handleDelete}
-                    className="text-destructive focus:text-destructive"
+                    className="flex items-center gap-3 px-3 py-2.5 text-destructive hover:bg-destructive/10 focus:text-destructive transition-colors"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    删除
+                    <Trash2 className="h-4 w-4" />
+                    <span className="font-medium">删除</span>
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -170,8 +187,8 @@ export function AIMessage({
           </div>
         </div>
         
-        {/* Timestamp */}
-        <div className="text-xs text-muted-foreground">
+        {/* Timestamp - Apple风格优化 */}
+        <div className="text-xs text-muted-foreground/60 font-medium">
           {formatMessageTime(new Date())}
         </div>
       </div>

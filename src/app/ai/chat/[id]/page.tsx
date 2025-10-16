@@ -1,4 +1,4 @@
-import { AIChatOptimized } from "@/components/ai/ai-chat-optimized";
+import { ChatGPTEnhancedChat } from "@/components/ai/chatgpt-enhanced-chat";
 import { isValidChatId } from "@/lib/ai/utils";
 import { notFound } from "next/navigation";
 
@@ -18,5 +18,5 @@ export default async function AIChatPage({ params }: AIChatPageProps) {
     notFound();
   }
 
-  return <AIChatOptimized chatId={id} />;
+  return <ChatGPTEnhancedChat chatId={id} />;
 }

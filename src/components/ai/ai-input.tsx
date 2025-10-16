@@ -139,8 +139,8 @@ export function AIInput({
   };
 
   return (
-    <div className="space-y-2">
-      <form onSubmit={handleSubmit} className="flex gap-2">
+    <div className="space-y-3">
+      <form onSubmit={handleSubmit} className="flex gap-3">
         <div className="flex-1 relative">
           <Textarea
             ref={textareaRef}
@@ -152,14 +152,16 @@ export function AIInput({
             placeholder="输入你的消息... (Shift+Enter换行)"
             disabled={disabled}
             className={cn(
-              "min-h-[44px] max-h-[120px] resize-none border-0 bg-background px-4 py-3 pr-12 text-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0",
-              "rounded-2xl border border-input shadow-sm"
+              "min-h-[48px] max-h-[140px] resize-none border-0 bg-background/80 backdrop-blur-sm px-4 py-3 pr-14 text-sm placeholder:text-muted-foreground/70 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0",
+              "rounded-2xl border border-border/50 shadow-sm transition-all duration-200",
+              "hover:border-border/70 hover:shadow-md",
+              "focus-within:border-primary/40 focus-within:shadow-lg focus-within:shadow-primary/5"
             )}
             rows={1}
           />
           
-          {/* 工具栏 */}
-          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+          {/* 工具栏 - Apple风格优化 */}
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1.5">
             {isVoiceSupported && (
               <Button
                 type="button"
@@ -167,8 +169,9 @@ export function AIInput({
                 variant="ghost"
                 onClick={handleVoiceToggle}
                 className={cn(
-                  "h-8 w-8 p-0",
-                  isVoiceRecording && "text-red-500"
+                  "h-8 w-8 p-0 rounded-full transition-all duration-200",
+                  "hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/20 dark:hover:text-red-400",
+                  isVoiceRecording && "bg-red-50 text-red-600 dark:bg-red-950/20 dark:text-red-400 animate-pulse"
                 )}
                 aria-label={isVoiceRecording ? "停止录音" : "开始录音"}
               >
@@ -187,8 +190,9 @@ export function AIInput({
                 variant="ghost"
                 onClick={handlePlayLastMessage}
                 className={cn(
-                  "h-8 w-8 p-0",
-                  isPlaying && "text-blue-500"
+                  "h-8 w-8 p-0 rounded-full transition-all duration-200",
+                  "hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/20 dark:hover:text-blue-400",
+                  isPlaying && "bg-blue-50 text-blue-600 dark:bg-blue-950/20 dark:text-blue-400"
                 )}
                 aria-label={isPlaying ? "停止播放" : "播放最后一条消息"}
               >
@@ -205,7 +209,7 @@ export function AIInput({
               size="sm"
               variant="ghost"
               onClick={() => imageInputRef.current?.click()}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 rounded-full transition-all duration-200 hover:bg-gray-50 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
               aria-label="上传图片"
             >
               <Image className="h-4 w-4" />
@@ -216,7 +220,7 @@ export function AIInput({
               size="sm"
               variant="ghost"
               onClick={() => fileInputRef.current?.click()}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 rounded-full transition-all duration-200 hover:bg-gray-50 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
             >
               <Paperclip className="h-4 w-4" />
             </Button>
@@ -227,7 +231,12 @@ export function AIInput({
           type="submit"
           size="sm"
           disabled={isLoading || !value.trim() || disabled}
-          className="h-11 w-11 rounded-full p-0"
+          className={cn(
+            "h-12 w-12 rounded-full p-0 transition-all duration-200",
+            "bg-primary hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground",
+            "shadow-lg hover:shadow-xl active:scale-95",
+            "focus-visible:ring-2 focus-visible:ring-primary/20"
+          )}
         >
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -253,17 +262,33 @@ export function AIInput({
         accept="image/*"
       />
 
-      {/* 快捷提示 */}
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
+      {/* 快捷提示 - Notion风格优化 */}
+      <div className="flex items-center justify-between text-xs text-muted-foreground/60">
         <div className="flex items-center gap-4">
-          <span>Enter 发送</span>
-          <span>Shift+Enter 换行</span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border">Enter</kbd>
+            <span>发送</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border">Shift</kbd>
+            <span>+</span>
+            <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border">Enter</kbd>
+            <span>换行</span>
+          </span>
           {isVoiceSupported && (
-            <span>点击麦克风开始语音输入</span>
+            <span className="flex items-center gap-1">
+              <Mic className="h-3 w-3" />
+              <span>语音输入</span>
+            </span>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span>{value.length}/2000</span>
+          <span className={cn(
+            "transition-colors",
+            value.length > 1800 ? "text-orange-500" : "text-muted-foreground/60"
+          )}>
+            {value.length}/2000
+          </span>
         </div>
       </div>
     </div>

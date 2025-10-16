@@ -328,68 +328,71 @@ export function EnglishPromptDialog() {
           />
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col gap-0 p-0">
-        <DialogHeader className="px-6 pt-6 pb-4">
-          <DialogTitle className="text-xl">英文学习 Prompt 生成器</DialogTitle>
+      <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col gap-0 p-0 bg-background/95 backdrop-blur-xl border border-border/20 shadow-2xl">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/10">
+          <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            英文学习 Prompt 生成器
+          </DialogTitle>
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden flex flex-col px-6 pb-6">
-          {/* 顶部选项区 - 参考导出模态窗布局 */}
-          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-4">
-            {/* 教材选择 */}
-            <div className="flex items-center gap-2 relative z-10">
-              <label className="text-m font-medium text-muted-foreground whitespace-nowrap">教材</label>
-              <div className="flex gap-1.5 overflow-x-auto scrollbar-none p-1">
+          {/* 顶部选项区 - Apple风格优化 */}
+          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-6 p-4 bg-muted/30 rounded-xl border border-border/20">
+            {/* 教材选择 - Notion风格优化 */}
+            <div className="flex items-center gap-3 relative z-10">
+              <label className="text-sm font-semibold text-foreground/80 whitespace-nowrap">教材</label>
+              <div className="flex gap-2 overflow-x-auto scrollbar-none p-1">
                 {allBooks.map((book) => (
                   <button
                     key={book.id}
                     onClick={() => setSelectedBook(book.id)}
                     className={cn(
-                      "relative flex items-center justify-center rounded-lg px-3 py-1.5 transition-all duration-300",
-                      "border backdrop-blur-sm shrink-0",
+                      "relative flex items-center justify-center rounded-xl px-4 py-2.5 transition-all duration-300",
+                      "border backdrop-blur-sm shrink-0 shadow-sm",
                       selectedBook === book.id
                         ? [
-                            "border-cyan-400/40 bg-gradient-to-br from-sky-400/12 via-blue-400/12 to-cyan-400/12",
-                            "shadow-md shadow-cyan-400/10",
-                            "scale-[1.05]",
+                            "border-blue-400/50 bg-gradient-to-br from-blue-500/15 via-blue-400/15 to-blue-500/15",
+                            "shadow-lg shadow-blue-500/20",
+                            "scale-[1.05] ring-2 ring-blue-400/30",
                           ]
                         : [
-                            "border-border/30 bg-background/50",
-                            "hover:border-cyan-300/40 hover:bg-gradient-to-br hover:from-sky-400/5 hover:to-cyan-400/5",
-                            "hover:scale-[1.02]",
+                            "border-border/40 bg-background/80 hover:bg-background",
+                            "hover:border-blue-300/50 hover:bg-gradient-to-br hover:from-blue-400/8 hover:to-blue-500/8",
+                            "hover:scale-[1.02] hover:shadow-md",
                           ]
                     )}
                   >
                     <span className={cn(
-                      "text-xs font-semibold transition-colors whitespace-nowrap",
+                      "text-sm font-semibold transition-colors whitespace-nowrap",
                       selectedBook === book.id 
-                        ? "text-foreground" 
+                        ? "text-blue-700 dark:text-blue-300" 
                         : "text-foreground/70"
                     )}>
                       {book.name}
                     </span>
                     
-                    {/* 选中下划线 */}
+                    {/* 选中指示器 */}
                     {selectedBook === book.id && (
-                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full bg-gradient-to-r from-sky-400 to-cyan-400" />
+                      <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-blue-500 shadow-lg" />
                     )}
                   </button>
                 ))}
               </div>
               
-              {/* 新增教材按钮 - 移到外部，始终可见 */}
+              {/* 新增教材按钮 - Apple风格优化 */}
               <button
                 onClick={() => setIsAddingBook(!isAddingBook)}
                 className={cn(
-                  "relative flex items-center justify-center rounded-lg px-2 py-1.5 transition-all duration-300",
-                  "border backdrop-blur-sm shrink-0",
-                  "border-dashed border-border/40 bg-background/30",
-                  "hover:border-cyan-300/40 hover:bg-gradient-to-br hover:from-cyan-400/5 hover:to-cyan-400/5",
-                  "hover:scale-[1.02]"
+                  "relative flex items-center justify-center rounded-xl px-3 py-2.5 transition-all duration-300",
+                  "border backdrop-blur-sm shrink-0 shadow-sm",
+                  "border-dashed border-border/50 bg-background/60",
+                  "hover:border-blue-300/50 hover:bg-gradient-to-br hover:from-blue-400/8 hover:to-blue-500/8",
+                  "hover:scale-[1.02] hover:shadow-md",
+                  isAddingBook && "border-blue-400/50 bg-blue-50 dark:bg-blue-950/20"
                 )}
                 title="添加自定义教材"
               >
-                <Plus className="h-3 w-3 text-muted-foreground" />
+                <Plus className="h-4 w-4 text-muted-foreground" />
               </button>
             </div>
 
@@ -602,28 +605,28 @@ export function EnglishPromptDialog() {
             </Card>
           </div>
           
-          {/* 操作按钮 */}
-          <div className="flex gap-2.5 pt-4 border-t border-border/30 mt-4">
+          {/* 操作按钮 - Apple风格优化 */}
+          <div className="flex gap-3 pt-6 border-t border-border/20 mt-6">
             <Button
               onClick={handleCopy}
               className={cn(
-                "group relative flex-1 h-10 rounded-xl text-sm font-semibold transition-all duration-300",
-                "bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500",
-                "hover:from-sky-600 hover:via-blue-600 hover:to-cyan-600",
-                "hover:shadow-lg hover:shadow-sky-500/25 hover:scale-[1.01]",
-                "active:scale-[0.99]",
-                copied && "from-emerald-500 via-green-500 to-teal-500"
+                "group relative flex-1 h-12 rounded-2xl text-sm font-semibold transition-all duration-300",
+                "bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700",
+                "hover:from-blue-600 hover:via-blue-700 hover:to-blue-800",
+                "hover:shadow-xl hover:shadow-blue-500/30 hover:scale-[1.02]",
+                "active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-blue-500/20",
+                copied && "from-emerald-500 via-green-600 to-teal-700 hover:from-emerald-600 hover:via-green-700 hover:to-teal-800"
               )}
             >
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               {copied ? (
                 <>
-                  <Check className="mr-1.5 h-4 w-4" strokeWidth={2.5} />
+                  <Check className="mr-2 h-4 w-4" strokeWidth={2.5} />
                   已复制
                 </>
               ) : (
                 <>
-                  <Copy className="mr-1.5 h-4 w-4" strokeWidth={2.5} />
+                  <Copy className="mr-2 h-4 w-4" strokeWidth={2.5} />
                   复制 Prompt
                 </>
               )}
