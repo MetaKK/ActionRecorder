@@ -30,6 +30,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
   const [apiKey, setApiKey] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [previewFiles, setPreviewFiles] = useState<{file: File, preview: string, type: 'image' | 'file'}[]>([]);
+  const [apiKeyError, setApiKeyError] = useState("");
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -147,6 +148,19 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
       });
 
       if (!response.ok) {
+        // 检查是否是API key错误
+        if (response.status === 500) {
+          try {
+            const errorData = await response.json();
+            if (errorData.error && errorData.error.includes('API key not configured')) {
+              setApiKeyError("需要配置API Key才能使用AI功能");
+              setShowSettings(true);
+              return;
+            }
+          } catch {
+            // 如果无法解析错误响应，继续抛出错误
+          }
+        }
         throw new Error('AI API request failed');
       }
 
@@ -180,6 +194,8 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
       setCurrentAIMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
+      // 显示通用错误消息
+      setApiKeyError("发送消息时出现错误，请检查网络连接或API配置");
     } finally {
       setIsSending(false);
       setIsTyping(false);
@@ -317,13 +333,21 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
                 <input
                   type="password"
                   value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
+                  onChange={(e) => {
+                    setApiKey(e.target.value);
+                    setApiKeyError(""); // 清除错误状态
+                  }}
                   placeholder="留空则使用环境变量中的key"
-                  className="w-full px-3 py-2.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200/60 dark:border-gray-600/60 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 shadow-sm hover:shadow-md"
+                  className={`w-full px-3 py-2.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 shadow-sm hover:shadow-md ${
+                    apiKeyError ? 'border-red-300 dark:border-red-600' : 'border-gray-200/60 dark:border-gray-600/60'
+                  }`}
                 />
                 {apiKey && (
                   <button
-                    onClick={() => setApiKey("")}
+                    onClick={() => {
+                      setApiKey("");
+                      setApiKeyError("");
+                    }}
                     className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-200/80 dark:bg-gray-600/80 hover:bg-gray-300/90 dark:hover:bg-gray-500/90 flex items-center justify-center transition-all duration-200"
                   >
                     <svg className="w-2.5 h-2.5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,6 +356,26 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
                   </button>
                 )}
               </div>
+              
+              {/* API Key 错误提示 */}
+              {apiKeyError && (
+                <div className="flex items-start gap-2 p-3 bg-red-50/80 dark:bg-red-950/30 border border-red-200/60 dark:border-red-800/60 rounded-lg">
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center mt-0.5">
+                    <svg className="w-3 h-3 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">
+                      {apiKeyError}
+                    </p>
+                    <p className="text-xs text-red-600 dark:text-red-300 leading-relaxed">
+                      请在上方输入您的OpenAI API Key，或联系管理员配置环境变量。您可以在 <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">OpenAI平台</a> 获取API Key。
+                    </p>
+                  </div>
+                </div>
+              )}
+              
               <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
                 仅保存在浏览器会话中，刷新后需重新输入
               </p>
