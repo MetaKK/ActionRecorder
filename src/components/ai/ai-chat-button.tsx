@@ -106,46 +106,56 @@ export function AIChatButton() {
   return (
     <div className="fixed bottom-6 right-6 z-50">
       <div className="relative">
-        {/* 思考气泡 - 显示在小人上方 */}
+        {/* 思考气泡 - 精致卡通效果 */}
         <AnimatePresence>
           {showBubble && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              initial={{ opacity: 0, scale: 0.5, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              exit={{ opacity: 0, scale: 0.5, y: 10 }}
               transition={{ 
                 type: "spring", 
-                stiffness: 300, 
-                damping: 20 
+                stiffness: 400, 
+                damping: 25 
               }}
-              className="absolute bottom-full right-0 mb-4"
+              className="absolute bottom-full right-0 mb-3"
+              style={{ transformOrigin: 'bottom right' }}
             >
-              {/* 主思考气泡 - 可点击 */}
+              {/* 主思考气泡 - 精致紧凑版 */}
               <motion.button
                 onClick={() => handlePluginClick(currentPlugin)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.08, rotate: -2 }}
+                whileTap={{ scale: 0.92 }}
                 className={`
                   relative group
-                  px-6 py-4 rounded-2xl
+                  px-3 py-2.5 rounded-xl
                   bg-gradient-to-br ${currentPlugin.color}
-                  shadow-lg hover:shadow-xl
-                  transition-all duration-300
+                  shadow-xl hover:shadow-2xl
+                  transition-all duration-200
                   cursor-pointer
                   backdrop-blur-sm
-                  border border-white/20
+                  border-2 border-white/30
                 `}
+                style={{
+                  filter: 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2))',
+                }}
               >
-                {/* 气泡尾巴 */}
-                <div className="absolute -bottom-2 right-8 w-4 h-4 bg-inherit transform rotate-45" />
+                {/* 卡通气泡尾巴 - 优化位置 */}
+                <div 
+                  className="absolute w-3 h-3 bg-inherit transform rotate-45 border-r-2 border-b-2 border-white/30" 
+                  style={{
+                    bottom: '-4px',
+                    right: '16px',
+                  }}
+                />
                 
-                {/* 内容 */}
-                <div className="flex items-center gap-3">
+                {/* 内容 - 紧凑布局 */}
+                <div className="flex items-center gap-2">
                   <motion.span 
-                    className="text-4xl"
+                    className="text-2xl"
                     animate={{ 
-                      rotate: [0, -10, 10, -10, 0],
-                      scale: [1, 1.1, 1, 1.1, 1]
+                      rotate: [0, -8, 8, -8, 0],
+                      scale: [1, 1.15, 1, 1.15, 1]
                     }}
                     transition={{ 
                       duration: 2,
@@ -156,31 +166,65 @@ export function AIChatButton() {
                     {currentPlugin.emoji}
                   </motion.span>
                   <div className="text-left">
-                    <p className="text-white font-medium text-sm leading-tight">
+                    <p className="text-white font-semibold text-xs leading-tight whitespace-nowrap">
                       {currentPlugin.label}
-                    </p>
-                    <p className="text-white/70 text-xs mt-0.5">
-                      点击探索 →
                     </p>
                   </div>
                 </div>
 
-                {/* 光效 */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                {/* 卡通光效 */}
+                <motion.div 
+                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/0 via-white/30 to-white/0"
+                  animate={{
+                    x: ['-100%', '200%'],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                  style={{
+                    maskImage: 'linear-gradient(90deg, transparent, black, transparent)',
+                  }}
+                />
               </motion.button>
 
-              {/* 小气泡装饰 */}
+              {/* 思考点点点 - 修正相对位置 */}
               <motion.div
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 }}
-                className="absolute -bottom-6 right-6 w-3 h-3 bg-white rounded-full shadow-md"
+                transition={{ delay: 0.15 }}
+                className="absolute bg-white/90 rounded-full shadow-lg"
+                style={{
+                  width: '6px',
+                  height: '6px',
+                  bottom: '-12px',
+                  right: '20px',
+                }}
               />
               <motion.div
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-                className="absolute -bottom-4 right-10 w-2 h-2 bg-white rounded-full shadow-md"
+                transition={{ delay: 0.25 }}
+                className="absolute bg-white/80 rounded-full shadow-md"
+                style={{
+                  width: '4px',
+                  height: '4px',
+                  bottom: '-18px',
+                  right: '24px',
+                }}
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.35 }}
+                className="absolute bg-white/70 rounded-full shadow-sm"
+                style={{
+                  width: '3px',
+                  height: '3px',
+                  bottom: '-22px',
+                  right: '27px',
+                }}
               />
             </motion.div>
           )}
@@ -252,28 +296,45 @@ export function AIChatButton() {
               />
             </div>
 
-            {/* 装饰配件 */}
-            <motion.img
-              src="/img/46e91f58a3919e25.png"
-              alt="装饰"
-              className="absolute pointer-events-none"
-              style={{
-                width: '80px',
-                height: '80px',
-                objectFit: 'contain',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-              }}
-              animate={isThinking ? {
-                rotate: [-5, 5, -5],
-              } : {}}
-              transition={{
-                duration: 2,
-                repeat: isThinking ? Infinity : 0,
-                ease: "easeInOut",
-              }}
-            />
+            {/* 小鸭子装饰 - 思考时短暂消失 */}
+            <AnimatePresence>
+              {!showBubble && (
+                <motion.img
+                  src="/img/46e91f58a3919e25.png"
+                  alt="装饰"
+                  className="absolute pointer-events-none"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ 
+                    opacity: 1, 
+                    scale: 1,
+                    rotate: isThinking ? [-3, 3, -3] : 0,
+                  }}
+                  exit={{ 
+                    opacity: 0, 
+                    scale: 0.8,
+                    y: -10,
+                    transition: { duration: 0.15 },
+                  }}
+                  transition={{
+                    opacity: { duration: 0.2 },
+                    scale: { duration: 0.2 },
+                    rotate: {
+                      duration: 2,
+                      repeat: isThinking ? Infinity : 0,
+                      ease: "easeInOut",
+                    },
+                  }}
+                  style={{
+                    width: '66px',
+                    height: '66px',
+                    objectFit: 'contain',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                />
+              )}
+            </AnimatePresence>
           </div>
         </motion.div>
 
