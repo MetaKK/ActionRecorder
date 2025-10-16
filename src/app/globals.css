@@ -396,6 +396,16 @@
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.5),
                  0 2px 4px rgba(0, 0, 0, 0.2);
   }
+  
+  /* 骨架屏 shimmer 动画 */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
 }
 
 /* Notion AI Button 交互效果 */

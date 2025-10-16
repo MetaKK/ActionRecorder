@@ -5,15 +5,17 @@ import dynamic from 'next/dynamic';
 import { Clock, BarChart3 } from 'lucide-react';
 import { TabNav, TabItem } from "@/components/tab-nav";
 import { useRecords } from "@/lib/hooks/use-records";
-import { AppHeader } from "@/components/app-header";
+// 移除静态导入，改为动态导入
 import { ExportDialog } from "@/components/export-dialog";
 import { EnglishPromptDialog } from "@/components/english-prompt-dialog";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { AIChatButton } from "@/components/ai/ai-chat-button";
+// 移除静态导入，改为动态导入
 import { 
   TimelineSkeleton, 
   StatisticsSkeleton, 
-  RecordInputSkeleton 
+  RecordInputSkeleton,
+  AIChatButtonSkeleton,
+  AppHeaderSkeleton
 } from "@/components/ui/skeleton";
 import { initMobileZoomFix } from "@/lib/utils/mobile-zoom-fix";
 
@@ -46,6 +48,24 @@ const TechBackground = dynamic(
   () => import("@/components/tech-background").then(mod => ({ default: mod.TechBackground })),
   { 
     ssr: true // 背景可以SSR
+  }
+);
+
+// App Header 动态导入
+const AppHeader = dynamic(
+  () => import("@/components/app-header").then(mod => ({ default: mod.AppHeader })),
+  { 
+    loading: () => <AppHeaderSkeleton />,
+    ssr: true // Header 可以SSR
+  }
+);
+
+// AI Chat 按钮动态导入
+const AIChatButton = dynamic(
+  () => import("@/components/ai/ai-chat-button").then(mod => ({ default: mod.AIChatButton })),
+  { 
+    loading: () => <AIChatButtonSkeleton />,
+    ssr: false // AI 按钮不需要SSR
   }
 );
 
