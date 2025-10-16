@@ -84,8 +84,8 @@ export function useVoiceRecorder({
         let interimTranscript = "";
         let finalTranscript = "";
 
-        // 遍历所有识别结果
-        for (let i = 0; i < speechEvent.results.length; i++) {
+        // ⭐ 只处理新的识别结果（从 resultIndex 开始），避免重复处理历史结果
+        for (let i = speechEvent.resultIndex; i < speechEvent.results.length; i++) {
           const transcript = speechEvent.results[i][0].transcript;
           
           if (speechEvent.results[i].isFinal) {

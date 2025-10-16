@@ -82,14 +82,14 @@ export function RecordInput() {
     error,
   } = useVoiceRecorder({
     language: 'zh-CN',
-    onResult: (text, isFinal) => {
-      // 最终确认的文本 - 追加到输入框
+    onResult: (text) => {
+      // 最终确认的文本 - 直接追加到当前输入文本
       setInputText(prev => prev + text);
       // 清空临时文本
       setInterimText('');
     },
     onInterimResult: (text) => {
-      // 实时临时结果 - 仅用于显示
+      // 实时临时结果 - 仅用于显示，不修改实际输入
       setInterimText(text);
     },
     onError: (error) => {
@@ -387,16 +387,6 @@ export function RecordInput() {
                 minHeight: '120px',
               }}
             />
-            
-            {/* 临时识别文本指示器 - 实时反馈 */}
-            {interimText && (
-              <div className="absolute right-3 top-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-100/90 dark:bg-purple-900/40 backdrop-blur-sm border border-purple-200/50 dark:border-purple-700/50 shadow-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-                <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
-                  识别中...
-                </span>
-              </div>
-            )}
           </div>
           
           {/* 底部按钮栏 - Lovable 风格 */}

@@ -297,18 +297,6 @@ export function AIInputMinimal({
                   maxHeight: "144px" // 6行
                 }}
               />
-              
-              {/* 临时识别文本指示器 - 实时反馈 */}
-              {interimText && (
-                <div className="absolute right-0 top-0 bottom-0 flex items-center pointer-events-none">
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-100/80 dark:bg-purple-900/30 backdrop-blur-sm">
-                    <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-                    <span className="text-[11px] font-medium text-purple-700 dark:text-purple-300">
-                      识别中
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* 工具栏 - 精致设计 */}
