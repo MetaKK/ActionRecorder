@@ -14,7 +14,7 @@ export interface PluginCompletionData {
   pluginId: string;
   duration?: number; // 持续时间（秒）
   content?: string; // 自定义内容
-  customData?: Record<string, any>; // 自定义数据
+  customData?: Record<string, unknown>; // 自定义数据
 }
 
 /**

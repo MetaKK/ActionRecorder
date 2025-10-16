@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { ImmersiveContainer } from "@/components/immersive-container";
 import { ImmersiveContent, ImmersiveContentConfig } from "@/components/immersive-content";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
 /**
  * 通用沉浸式内容页面
@@ -26,7 +26,7 @@ import { useEffect, useState } from "react";
  * - muted: 是否静音 (true/false)
  * - volume: 音量 (0-1)
  */
-export default function ImmersiveContentPage() {
+function ImmersiveContentComponent() {
   const searchParams = useSearchParams();
   const [config, setConfig] = useState<ImmersiveContentConfig | null>(null);
 
@@ -100,5 +100,25 @@ export default function ImmersiveContentPage() {
     >
       <ImmersiveContent config={config} />
     </ImmersiveContainer>
+  );
+}
+
+export default function ImmersiveContentPage() {
+  return (
+    <Suspense fallback={
+      <ImmersiveContainer
+        showBackButton={true}
+        backButtonPosition="top-left"
+        showEmotionCharacter={true}
+        backRoute="/"
+      >
+        <div className="flex flex-col items-center justify-center h-screen text-gray-400">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-lg">加载中...</p>
+        </div>
+      </ImmersiveContainer>
+    }>
+      <ImmersiveContentComponent />
+    </Suspense>
   );
 }

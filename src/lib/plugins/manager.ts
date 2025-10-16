@@ -3,7 +3,7 @@
  * 负责插件的激活、导航、生命周期管理
  */
 
-import { Plugin, PluginHookContext, PluginEventType, PluginType } from "./types";
+import { PluginHookContext, PluginEventType, PluginType } from "./types";
 import { pluginRegistry } from "./registry";
 import { pluginLogger } from "./logger";
 

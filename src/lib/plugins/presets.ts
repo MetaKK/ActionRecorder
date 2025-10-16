@@ -4,7 +4,7 @@
  */
 
 import { Plugin, PluginType, PluginCategory, PluginHookContext } from "./types";
-import { pluginLogger, createTimelineRecord } from "./logger";
+import { pluginLogger } from "./logger";
 
 /**
  * 番茄钟插件

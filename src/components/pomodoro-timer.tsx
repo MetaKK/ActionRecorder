@@ -157,7 +157,7 @@ export function PomodoroTimer() {
   const playCompletionSound = () => {
     // 使用 Web Audio API 生成简单的提示音
     if (typeof window !== 'undefined' && 'AudioContext' in window) {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
@@ -185,11 +185,11 @@ export function PomodoroTimer() {
   };
 
   // 切换模式
-  const switchMode = (newMode: PomodoroMode) => {
+  const switchMode = useCallback((newMode: PomodoroMode) => {
     setMode(newMode);
     setTimeLeft(getDurationForMode(newMode));
     setIsRunning(false);
-  };
+  }, []);
 
   // 获取模式时长
   const getDurationForMode = (m: PomodoroMode): number => {

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -35,9 +36,11 @@ export function ChatGPTMessage({ message, isTyping = false }: ChatGPTMessageProp
     >
       {/* Avatar - 使用情绪小人图片 */}
       {isAssistant && (
-        <img
+        <Image
           src="/img/9ade71d75a1c0e93.png"
           alt="AI助手"
+          width={32}
+          height={32}
           className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-border/20 shadow-md"
         />
       )}

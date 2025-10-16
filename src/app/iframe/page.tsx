@@ -2,10 +2,10 @@
 
 import { useSearchParams } from "next/navigation";
 import { ImmersiveContainer } from "@/components/immersive-container";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { motion } from "framer-motion";
 
-export default function IframePage() {
+function IframeContent() {
   const searchParams = useSearchParams();
   const url = searchParams.get('url');
   const title = searchParams.get('title');
@@ -84,6 +84,26 @@ export default function IframePage() {
         />
       </div>
     </ImmersiveContainer>
+  );
+}
+
+export default function IframePage() {
+  return (
+    <Suspense fallback={
+      <ImmersiveContainer
+        showBackButton={true}
+        backButtonPosition="top-left"
+        showEmotionCharacter={true}
+        backRoute="/"
+      >
+        <div className="flex flex-col items-center justify-center h-screen text-gray-400">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-lg">加载中...</p>
+        </div>
+      </ImmersiveContainer>
+    }>
+      <IframeContent />
+    </Suspense>
   );
 }
 

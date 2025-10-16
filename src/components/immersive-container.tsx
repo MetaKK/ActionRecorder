@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { ReactNode } from "react";
@@ -123,17 +124,21 @@ export function ImmersiveContainer({
                 }}
               >
                 {/* AI头像 - 静态显示 */}
-                <img
+                <Image
                   src="/img/9ade71d75a1c0e93.png"
                   alt="AI助手"
+                  width={200}
+                  height={200}
                   className="w-full h-full object-cover"
                 />
               </div>
 
               {/* 小鸭子装饰 */}
-              <img
+              <Image
                 src="/img/46e91f58a3919e25.png"
                 alt="装饰"
+                width={100}
+                height={100}
                 className="absolute pointer-events-none"
                 style={{
                   width: '66px',

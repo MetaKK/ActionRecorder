@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { formatMessageTime } from "@/lib/ai/utils";
 import { cn } from "@/lib/utils";
 import { User, Copy, RotateCcw, Trash2, Edit3, MoreHorizontal } from "lucide-react";
@@ -91,9 +92,11 @@ export function AIMessage({
             <User className="h-4 w-4" />
           </div>
         ) : (
-          <img
+          <Image
             src="/img/9ade71d75a1c0e93.png"
             alt="AI助手"
+            width={36}
+            height={36}
             className="h-9 w-9 rounded-full object-cover border border-border/20 shadow-md"
           />
         )}
@@ -134,7 +137,13 @@ export function AIMessage({
                         <span className="whitespace-pre-wrap">{item.content}</span>
                       )}
                       {item.type === 'image' && (
-                        <img src={item.url || item.content} alt="Image" className="max-w-full rounded" />
+                        <Image 
+                          src={item.url || item.content} 
+                          alt="Image" 
+                          width={400}
+                          height={300}
+                          className="max-w-full rounded" 
+                        />
                       )}
                       {item.type === 'file' && (
                         <div className={cn(

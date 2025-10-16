@@ -3,7 +3,7 @@
  * 参考 Notion 插件架构设计
  */
 
-import { ReactNode } from "react";
+// import { ReactNode } from "react";
 
 /**
  * 插件类型枚举
@@ -72,7 +72,7 @@ export interface PluginConfig {
   /** 是否需要认证 */
   requiresAuth?: boolean;
   /** 自定义数据 */
-  customData?: Record<string, any>;
+  customData?: Record<string, unknown>;
 }
 
 /**
@@ -84,9 +84,9 @@ export interface PluginHookContext {
   /** 触发时间戳 */
   timestamp: number;
   /** 用户数据（可选） */
-  user?: any;
+  user?: unknown;
   /** 自定义数据 */
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 /**
@@ -162,6 +162,6 @@ export interface PluginEvent {
   /** 事件时间戳 */
   timestamp: number;
   /** 事件数据 */
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 

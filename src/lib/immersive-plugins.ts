@@ -3,7 +3,7 @@
  * 支持内置组件和外部网页嵌入
  */
 
-import { ReactNode } from "react";
+// import { ReactNode } from "react";
 
 export type ImmersivePluginType = 'component' | 'external' | 'iframe';
 

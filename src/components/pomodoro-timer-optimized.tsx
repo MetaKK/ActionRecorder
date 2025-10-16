@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
@@ -40,6 +40,14 @@ export function PomodoroTimerOptimized() {
 
   // 进度计算（0-100%）
   const progress = ((getDurationForMode(mode) - timeLeft) / getDurationForMode(mode)) * 100;
+
+  // 切换模式
+  const switchMode = useCallback((newMode: PomodoroMode) => {
+    setMode(newMode);
+    setTimeLeft(getDurationForMode(newMode));
+    setIsRunning(false);
+    hasCompletedRef.current = false; // 重置完成标记
+  }, []);
 
   // 初始化
   useEffect(() => {
@@ -132,7 +140,7 @@ export function PomodoroTimerOptimized() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isRunning, mode, completedPomodoros, currentTask, addRecord]);
+  }, [isRunning, mode, completedPomodoros, currentTask, addRecord, switchMode]);
 
   function getDurationForMode(m: PomodoroMode): number {
     switch (m) {
@@ -160,7 +168,7 @@ export function PomodoroTimerOptimized() {
 
   const playCompletionSound = () => {
     if (typeof window !== 'undefined' && 'AudioContext' in window) {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       
       [800, 1000].forEach((freq, index) => {
         const oscillator = audioContext.createOscillator();
@@ -189,14 +197,6 @@ export function PomodoroTimerOptimized() {
         icon: '/img/9ade71d75a1c0e93.png',
       });
     }
-  };
-
-
-  const switchMode = (newMode: PomodoroMode) => {
-    setMode(newMode);
-    setTimeLeft(getDurationForMode(newMode));
-    setIsRunning(false);
-    hasCompletedRef.current = false; // 重置完成标记
   };
 
   const toggleTimer = () => {

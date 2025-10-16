@@ -1,5 +1,5 @@
 import { streamText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { AI_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 
 export async function POST(request: Request) {
@@ -27,8 +27,9 @@ export async function POST(request: Request) {
     }
 
     // 只支持OpenAI模型
+    const openai = createOpenAI({ apiKey });
     const result = await streamText({
-      model: openai(model, { apiKey }),
+      model: openai(model),
       system: AI_SYSTEM_PROMPT,
       messages,
     });

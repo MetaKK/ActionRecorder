@@ -7,7 +7,6 @@ import {
   Download, 
   Share2, 
   MoreHorizontal,
-  Sparkles,
   Trash2,
   Copy,
   Archive,
@@ -36,7 +35,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { AI_MODELS } from "@/lib/ai/providers";
+// import { AI_MODELS } from "@/lib/ai/providers";
 import type { ChatSession } from "@/lib/hooks/use-ai-chat";
 import { cn } from "@/lib/utils";
 import { formatMessageDate, truncateText } from "@/lib/ai/utils";
@@ -59,7 +58,7 @@ interface AIChatHeaderProps {
 export const AIChatHeader = memo(function AIChatHeader({
   chatId,
   currentSession,
-  selectedModel,
+  // selectedModel,
   onToggleSettings,
   onExportChat,
   onShareChat,
@@ -70,7 +69,7 @@ export const AIChatHeader = memo(function AIChatHeader({
   hasMessages,
 }: AIChatHeaderProps) {
   const router = useRouter();
-  const modelName = AI_MODELS.find(m => m.id === selectedModel)?.name || "AI 助手";
+  // const modelName = AI_MODELS.find(m => m.id === selectedModel)?.name || "AI 助手";
   
   // 聊天历史对话框状态
   const [showHistory, setShowHistory] = useState(false);

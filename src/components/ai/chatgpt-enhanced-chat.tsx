@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { Bot, Paperclip, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAIChat } from "@/lib/hooks/use-ai-chat";
@@ -105,7 +106,6 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
   // 处理提交
   const handleSubmit = useCallback(async () => {
     if (!input.trim() || isSending) return;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -175,7 +175,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
       setIsSending(false);
       setIsTyping(false);
     }
-  }, [input, isSending]);
+  }, [input, isSending, apiKey, messages, selectedModel]);
 
   // 处理文件上传
   const handleFileUpload = useCallback((file: File) => {
@@ -387,9 +387,11 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
                 <div key={index} className="relative group">
                   {item.type === 'image' ? (
                     <div className="relative">
-                      <img
+                      <Image
                         src={item.preview}
                         alt=""
+                        width={64}
+                        height={64}
                         className="h-16 w-16 object-cover rounded border"
                       />
                       <Button

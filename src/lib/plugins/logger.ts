@@ -3,7 +3,7 @@
  * 统一管理插件的日志记录、事件追踪和数据持久化
  */
 
-import { PluginEvent, PluginEventType, PluginHookContext } from "./types";
+import { PluginEvent, PluginEventType } from "./types";
 
 /**
  * 日志级别
@@ -23,7 +23,7 @@ export interface LogEntry {
   message: string;
   pluginId?: string;
   timestamp: number;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 /**
@@ -38,7 +38,7 @@ class PluginLogger {
   /**
    * 记录日志
    */
-  log(level: LogLevel, message: string, pluginId?: string, data?: Record<string, any>): void {
+  log(level: LogLevel, message: string, pluginId?: string, data?: Record<string, unknown>): void {
     const entry: LogEntry = {
       level,
       message,
@@ -64,28 +64,28 @@ class PluginLogger {
   /**
    * Debug 日志
    */
-  debug(message: string, pluginId?: string, data?: Record<string, any>): void {
+  debug(message: string, pluginId?: string, data?: Record<string, unknown>): void {
     this.log(LogLevel.DEBUG, message, pluginId, data);
   }
 
   /**
    * Info 日志
    */
-  info(message: string, pluginId?: string, data?: Record<string, any>): void {
+  info(message: string, pluginId?: string, data?: Record<string, unknown>): void {
     this.log(LogLevel.INFO, message, pluginId, data);
   }
 
   /**
    * Warning 日志
    */
-  warn(message: string, pluginId?: string, data?: Record<string, any>): void {
+  warn(message: string, pluginId?: string, data?: Record<string, unknown>): void {
     this.log(LogLevel.WARN, message, pluginId, data);
   }
 
   /**
    * Error 日志
    */
-  error(message: string, pluginId?: string, data?: Record<string, any>): void {
+  error(message: string, pluginId?: string, data?: Record<string, unknown>): void {
     this.log(LogLevel.ERROR, message, pluginId, data);
   }
 
@@ -182,11 +182,11 @@ export interface TimelineRecordParams {
   icon: string;
   content: string;
   duration?: string;
-  customData?: Record<string, any>;
+  customData?: Record<string, unknown>;
 }
 
 export function createTimelineRecord(params: TimelineRecordParams): string {
-  const { icon, pluginName, content, duration } = params;
+  const { icon, content, duration } = params;
   
   let record = `${icon} ${content}`;
   

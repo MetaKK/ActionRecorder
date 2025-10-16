@@ -23,7 +23,7 @@ class HybridStorage {
         await del("test");
         this.isIndexedDBSupported = true;
       }
-    } catch (error) {
+    } catch {
       console.warn("IndexedDB not supported, falling back to localStorage");
       this.isIndexedDBSupported = false;
     }
@@ -135,7 +135,7 @@ class HybridStorage {
         size,
         available: size > 0,
       };
-    } catch (error) {
+    } catch {
       return {
         type: "localStorage",
         size: 0,

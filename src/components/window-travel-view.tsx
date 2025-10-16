@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform } from "framer-motion";
-import { Volume2, VolumeX, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export interface TravelContent {
   id: string;
@@ -53,7 +54,7 @@ export function WindowTravelView({
   const currentVideo = videos[currentVideoIndex];
   const currentWindow = windowFrames[currentWindowIndex];
   const nextVideoIndex = (currentVideoIndex + 1) % videos.length;
-  const prevVideoIndex = (currentVideoIndex - 1 + videos.length) % videos.length;
+  // const prevVideoIndex = (currentVideoIndex - 1 + videos.length) % videos.length;
 
   // 视频加载完成
   const handleVideoLoad = useCallback(() => {
@@ -134,12 +135,12 @@ export function WindowTravelView({
     [videos.length, windowFrames.length, y, x]
   );
 
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-    }
-  };
+  // const toggleMute = () => {
+  //   setIsMuted(!isMuted);
+  //   if (videoRef.current) {
+  //     videoRef.current.muted = !isMuted;
+  //   }
+  // };
 
   // 开始体验 - 关闭启动页面并播放视频
   const handleStartExperience = useCallback(() => {
@@ -336,9 +337,11 @@ export function WindowTravelView({
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="absolute inset-0 pointer-events-none"
           >
-            <img
+            <Image
               src={currentWindow.imageUrl}
               alt={currentWindow.name || "窗口框架"}
+              width={800}
+              height={600}
               className="w-full h-full object-cover"
             />
           </motion.div>

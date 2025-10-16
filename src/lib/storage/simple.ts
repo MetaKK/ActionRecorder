@@ -13,6 +13,13 @@ class SimpleStorage {
   private readonly STORE_MEDIA = 'media';
   
   /**
+   * 检查数据库是否已初始化
+   */
+  isInitialized(): boolean {
+    return this.db !== null;
+  }
+
+  /**
    * 初始化数据库
    */
   async init(): Promise<void> {
@@ -271,7 +278,7 @@ let instance: SimpleStorage | null = null;
 let initPromise: Promise<SimpleStorage> | null = null;
 
 export async function getStorage(): Promise<SimpleStorage> {
-  if (instance && instance.db) {
+  if (instance && instance.isInitialized()) {
     return instance;
   }
   
@@ -284,7 +291,7 @@ export async function getStorage(): Promise<SimpleStorage> {
       instance = new SimpleStorage();
     }
     
-    if (!instance.db) {
+    if (!instance.isInitialized()) {
       await instance.init();
     }
     

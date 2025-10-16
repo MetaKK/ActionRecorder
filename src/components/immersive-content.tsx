@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, Volume2, VolumeX, Maximize2 } from "lucide-react";
 
@@ -141,10 +142,12 @@ export function ImmersiveContent({ config, className = "" }: ImmersiveContentPro
       <div className="relative w-full h-full">
         {/* 图片内容 */}
         {(config.type === 'image' || config.type === 'image+music') && config.imageUrl && (
-          <img
+          <Image
             ref={imageRef}
             src={config.imageUrl}
             alt={config.title || "沉浸式内容"}
+            width={800}
+            height={600}
             className="w-full h-full object-cover"
             onLoad={handleLoad}
             onError={handleError}
