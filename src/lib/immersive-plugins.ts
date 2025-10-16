@@ -60,19 +60,6 @@ export interface ImmersivePluginConfig {
  * 内置沉浸式插件配置
  */
 export const IMMERSIVE_PLUGINS: Record<string, ImmersivePluginConfig> = {
-  relax: {
-    id: 'relax',
-    type: 'component',
-    label: '休息一下',
-    icon: '✈️',
-    route: '/relax',
-    showBackButton: true,
-    backButtonPosition: 'top-left',
-    showEmotionCharacter: true,
-    fullImmersive: false,
-    backRoute: '/',
-  },
-  
   // 示例：外部网页嵌入（通过 iframe）
   // meditation: {
   //   id: 'meditation',

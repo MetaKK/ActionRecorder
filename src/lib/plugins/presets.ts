@@ -121,26 +121,6 @@ export const memoryPlugin: Plugin = {
   },
 };
 
-/**
- * 休息一下插件
- */
-export const relaxPlugin: Plugin = {
-  metadata: {
-    id: "relax",
-    name: "休息一下",
-    description: "观看旅行风景，放松心情",
-    version: "1.0.0",
-    category: PluginCategory.ENTERTAINMENT,
-    icon: "✈️",
-    color: "from-cyan-500 to-blue-600",
-    enabled: true,
-    weight: 50,
-  },
-  config: {
-    type: PluginType.IMMERSIVE,
-    route: "/relax",
-  },
-};
 
 /**
  * 维基百科插件
@@ -193,7 +173,6 @@ export const presetPlugins: Plugin[] = [
   analyzePlugin,
   insightPlugin,
   memoryPlugin,
-  relaxPlugin,
   wikipediaPlugin,
   hackerNewsPlugin,
 ];

@@ -10,9 +10,9 @@ import { completePluginWithRecord } from "@/lib/plugins";
 type PomodoroMode = 'work' | 'shortBreak' | 'longBreak';
 
 const POMODORO_CONFIG = {
-  work: 10, // 测试用：10秒，正式环境改为 25 * 60
-  shortBreak: 5, // 测试用：5秒，正式环境改为 5 * 60
-  longBreak: 8, // 测试用：8秒，正式环境改为 15 * 60
+  work: 25 * 60, // 25分钟
+  shortBreak: 5 * 60, // 5分钟
+  longBreak: 15 * 60, // 15分钟
   pomodorosUntilLongBreak: 4,
 };
 
