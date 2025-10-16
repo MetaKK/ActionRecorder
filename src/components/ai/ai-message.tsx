@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { formatMessageTime } from "@/lib/ai/utils";
 import { cn } from "@/lib/utils";
-import { Bot, User, Copy, RotateCcw, Trash2, Edit3, MoreHorizontal } from "lucide-react";
+import { User, Copy, RotateCcw, Trash2, Edit3, MoreHorizontal } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -84,20 +84,18 @@ export function AIMessage({
         isUser ? "flex-row-reverse" : "flex-row"
       )}
     >
-      {/* Avatar - Apple风格优化 */}
-      <div
-        className={cn(
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-200",
-          "shadow-sm border border-border/20",
-          isUser
-            ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/20"
-            : "bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 text-gray-600 dark:text-gray-300"
-        )}
-      >
+      {/* Avatar - 使用情绪小人图片 */}
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-200">
         {isUser ? (
-          <User className="h-4 w-4" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md border border-border/20">
+            <User className="h-4 w-4" />
+          </div>
         ) : (
-          <Bot className="h-4 w-4" />
+          <img
+            src="/img/9ade71d75a1c0e93.png"
+            alt="AI助手"
+            className="h-9 w-9 rounded-full object-cover border border-border/20 shadow-md"
+          />
         )}
       </div>
 
@@ -112,6 +110,7 @@ export function AIMessage({
           className={cn(
             "rounded-2xl px-4 py-3 text-sm relative group/message transition-all duration-200",
             "shadow-sm border border-border/10",
+            "[&_*]:!m-0 [&_p]:!m-0", // 强制移除所有元素的margin
             isUser
               ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/20"
               : "bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 text-foreground shadow-gray-500/10"
@@ -123,46 +122,25 @@ export function AIMessage({
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
             </div>
-          ) : isAssistant ? (
-            <div className="prose prose-sm max-w-none dark:prose-invert">
-              {typeof message.content === 'string' ? (
-                <p className="whitespace-pre-wrap">{message.content}</p>
-              ) : (
-                <div className="space-y-2">
-                  {message.content.map((item, index) => (
-                    <div key={index}>
-                      {item.type === 'text' && (
-                        <p className="whitespace-pre-wrap">{item.content}</p>
-                      )}
-                      {item.type === 'image' && (
-                        <img src={item.url || item.content} alt="Image" className="max-w-full rounded" />
-                      )}
-                      {item.type === 'file' && (
-                        <div className="flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-800 rounded">
-                          <span className="text-sm">📎 {item.content}</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           ) : (
-            <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div className="whitespace-pre-wrap leading-relaxed">
               {typeof message.content === 'string' ? (
-                <p className="whitespace-pre-wrap">{message.content}</p>
+                message.content
               ) : (
                 <div className="space-y-2">
                   {message.content.map((item, index) => (
                     <div key={index}>
                       {item.type === 'text' && (
-                        <p className="whitespace-pre-wrap">{item.content}</p>
+                        <span className="whitespace-pre-wrap">{item.content}</span>
                       )}
                       {item.type === 'image' && (
                         <img src={item.url || item.content} alt="Image" className="max-w-full rounded" />
                       )}
                       {item.type === 'file' && (
-                        <div className="flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                        <div className={cn(
+                          "flex items-center gap-2 p-2 rounded",
+                          isUser ? "bg-blue-400/20" : "bg-gray-100 dark:bg-gray-800"
+                        )}>
                           <span className="text-sm">📎 {item.content}</span>
                         </div>
                       )}

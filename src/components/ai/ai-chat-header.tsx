@@ -164,7 +164,7 @@ export const AIChatHeader = memo(function AIChatHeader({
       <header className="flex-shrink-0 border-b border-gray-200/80 dark:border-gray-700/50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-gray-900/80">
         <div className="flex items-center justify-between h-14 px-4">
           {/* Left Section */}
-          <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="flex items-center min-w-0 flex-1">
             <Button
               variant="ghost"
               size="sm"
@@ -183,11 +183,8 @@ export const AIChatHeader = memo(function AIChatHeader({
             {/* Title Section */}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 shadow-sm">
-                  <Sparkles className="h-3.5 w-3.5 text-white" />
-                </div>
                 <div className="min-w-0">
-                  <h1 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                  <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">
                     {currentSession?.title || "新对话"}
                   </h1>
                 </div>

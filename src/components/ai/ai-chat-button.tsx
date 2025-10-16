@@ -166,16 +166,9 @@ export function AIChatButton() {
         {/* 主容器 */}
         <div 
           className="relative w-[56px] h-[56px] cursor-pointer"
-          onClick={() => {
-            if (!showBubble) {
-              setIsThinking(true);
-              setShowBubble(true);
-              setCurrentPluginIndex(Math.floor(Math.random() * plugins.length));
-              setTimeout(() => {
-                setIsThinking(false);
-                setTimeout(() => setShowBubble(false), 300);
-              }, 8000);
-            }
+          onClick={async () => {
+            // 点击直接进入AI聊天页面
+            await navigateToPlugin('chat');
           }}
         >
           {/* AI头像 */}

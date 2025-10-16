@@ -6,7 +6,6 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeHighlight from "rehype-highlight";
-import { Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ChatGPTMessageProps {
@@ -34,24 +33,27 @@ export function ChatGPTMessage({ message, isTyping = false }: ChatGPTMessageProp
         isUser ? "justify-end" : "justify-start"
       )}
     >
-      {/* Avatar - 只显示AI头像 */}
+      {/* Avatar - 使用情绪小人图片 */}
       {isAssistant && (
-        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
-          <Bot className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-        </div>
+        <img
+          src="/img/9ade71d75a1c0e93.png"
+          alt="AI助手"
+          className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-border/20 shadow-md"
+        />
       )}
       
       {/* Message Content */}
       <div
         className={cn(
           "max-w-[80%] rounded-2xl px-4 py-3 relative",
+          "[&_*]:!m-0 [&_p]:!m-0 [&_ul]:!m-0 [&_ol]:!m-0", // 强制移除所有margin
           isUser
             ? "bg-blue-500 text-white"
             : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
         )}
       >
         {/* Message Text */}
-        <div className="prose prose-sm max-w-none dark:prose-invert">
+        <div className="prose prose-sm max-w-none dark:prose-invert [&_*]:!m-0 [&_p]:!m-0">
           <ReactMarkdown
             remarkPlugins={[remarkGfm, remarkBreaks]}
             rehypePlugins={[rehypeHighlight]}
