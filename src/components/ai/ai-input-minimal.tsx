@@ -87,13 +87,13 @@ export function AIInputMinimal({
     stopPlaying 
   } = useVoicePlayer();
 
-  // 自动调整高度 - 支持多行自适应 (line-height: 28px)
+  // 自动调整高度 - 支持多行自适应 (line-height: 24px)
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = "auto";
       const scrollHeight = textarea.scrollHeight;
-      const maxHeight = 28 * 6; // 最大6行 (line-height: 28px)
+      const maxHeight = 24 * 6; // 最大6行 (line-height: 24px)
       textarea.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
     }
   }, [value]);
@@ -157,40 +157,40 @@ export function AIInputMinimal({
   return (
     <div className={cn(
       "flex-shrink-0 relative",
-      "bg-gradient-to-b from-white/60 via-white/80 to-white/95",
-      "dark:from-gray-950/60 dark:via-gray-950/80 dark:to-gray-950/95",
-      "backdrop-blur-2xl",
-      "border-t border-gray-200/40 dark:border-gray-800/40",
-      "py-5 px-4 sm:px-6",
+      "bg-gradient-to-b from-white/50 via-white/70 to-white/90",
+      "dark:from-gray-950/50 dark:via-gray-950/70 dark:to-gray-950/90",
+      "backdrop-blur-xl",
+      "border-t border-gray-200/30 dark:border-gray-800/30",
+      "py-3 px-3 sm:px-4",
       className
     )}>
       {/* 顶部光效 */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-200/50 dark:via-gray-700/50 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-200/40 dark:via-gray-700/40 to-transparent" />
       
-      <div className="w-full max-w-4xl mx-auto">
+      <div className="w-full max-w-3xl mx-auto">
         <div className={cn(
           "group relative overflow-hidden",
-          "bg-gradient-to-b from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-900/50",
-          "rounded-[26px] border-[1.5px] transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
-          // 阴影系统
-          "shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)]",
-          "hover:shadow-[0_4px_16px_rgba(0,0,0,0.08),0_2px_4px_rgba(0,0,0,0.06)]",
-          "focus-within:shadow-[0_8px_24px_rgba(0,0,0,0.12),0_4px_8px_rgba(0,0,0,0.08)]",
-          // 边框和光环
+          "bg-white/95 dark:bg-gray-900/95",
+          "rounded-[22px] border transition-all duration-300 ease-out",
+          // 阴影系统 - 更细腻
+          "shadow-[0_1px_4px_rgba(0,0,0,0.04),0_0.5px_1px_rgba(0,0,0,0.04)]",
+          "hover:shadow-[0_2px_8px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]",
+          "focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.08),0_2px_4px_rgba(0,0,0,0.04)]",
+          // 边框和光环 - 更精致
           isFocused 
-            ? "border-blue-400/60 dark:border-blue-500/60 ring-[3px] ring-blue-400/10 dark:ring-blue-500/10" 
-            : "border-gray-300/60 dark:border-gray-700/60",
-          isVoiceRecording && "border-purple-400/60 dark:border-purple-500/60 ring-[3px] ring-purple-400/10 dark:ring-purple-500/10 animate-pulse"
+            ? "border-blue-400/70 dark:border-blue-500/70 ring-[2px] ring-blue-400/8 dark:ring-blue-500/8" 
+            : "border-gray-300/70 dark:border-gray-700/70",
+          isVoiceRecording && "border-purple-400/70 dark:border-purple-500/70 ring-[2px] ring-purple-400/8 dark:ring-purple-500/8"
         )}>
-          {/* 内光效 */}
+          {/* 内光效 - 更微妙 */}
           <div className={cn(
-            "absolute inset-0 rounded-[26px] opacity-0 transition-opacity duration-500",
-            "bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5",
+            "absolute inset-0 rounded-[22px] opacity-0 transition-opacity duration-300",
+            "bg-gradient-to-br from-blue-500/[0.02] via-transparent to-purple-500/[0.02]",
             isFocused && "opacity-100",
-            isVoiceRecording && "from-purple-500/5 to-blue-500/5 opacity-100"
+            isVoiceRecording && "from-purple-500/[0.02] to-blue-500/[0.02] opacity-100"
           )} />
           
-          <form onSubmit={handleSubmit} className="relative flex items-end gap-2.5 px-4 py-3.5">
+          <form onSubmit={handleSubmit} className="relative flex items-center gap-1.5 px-3 py-2.5">
             {/* 添加附件菜单 */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -198,59 +198,58 @@ export function AIInputMinimal({
                   type="button"
                   disabled={disabled}
                   className={cn(
-                    "flex-shrink-0 w-10 h-10 rounded-full transition-all duration-300 ease-out",
+                    "flex-shrink-0 w-8 h-8 rounded-full transition-all duration-200 ease-out",
                     "flex items-center justify-center group/btn relative",
                     "text-gray-500 dark:text-gray-400",
                     "hover:text-gray-900 dark:hover:text-gray-100",
-                    "hover:bg-gray-100/90 dark:hover:bg-gray-800/90",
-                    "hover:shadow-sm hover:scale-105",
-                    "active:scale-95 active:shadow-none",
-                    "disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    "hover:bg-gray-100/80 dark:hover:bg-gray-800/80",
+                    "active:scale-90",
+                    "disabled:opacity-30 disabled:cursor-not-allowed"
                   )}
                   tabIndex={0}
                 >
-                  <Plus className="w-5 h-5 transition-transform group-hover/btn:rotate-90 duration-300" strokeWidth={2.5} />
+                  <Plus className="w-[18px] h-[18px] transition-transform group-hover/btn:rotate-90 duration-200" strokeWidth={2.5} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 side="top" 
                 align="start"
                 className={cn(
-                  "w-56 rounded-[20px]",
-                  "shadow-[0_8px_32px_rgba(0,0,0,0.12)]",
-                  "border-[1.5px] border-gray-200/70 dark:border-gray-700/70",
-                  "bg-white/98 dark:bg-gray-900/98 backdrop-blur-3xl",
-                  "p-2"
+                  "w-48 rounded-[18px]",
+                  "shadow-[0_6px_24px_rgba(0,0,0,0.1)]",
+                  "border border-gray-200/80 dark:border-gray-700/80",
+                  "bg-white/98 dark:bg-gray-900/98 backdrop-blur-xl",
+                  "p-1.5"
                 )}
-                sideOffset={18}
+                sideOffset={12}
               >
                 <DropdownMenuItem 
                   onClick={handleImageSelect}
-                  className="rounded-[14px] py-3 px-4 cursor-pointer transition-all duration-200 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
+                  className="rounded-[12px] py-2 px-3 cursor-pointer transition-all duration-150 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
                 >
-                  <Camera className="mr-3 h-5 w-5 text-gray-600 dark:text-gray-300" strokeWidth={2} />
-                  <span className="text-[15px] font-medium text-gray-900 dark:text-gray-100">拍照</span>
+                  <Camera className="mr-2.5 h-4 w-4 text-gray-600 dark:text-gray-300" strokeWidth={2} />
+                  <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">拍照</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={handleFileSelect}
-                  className="rounded-[14px] py-3 px-4 cursor-pointer transition-all duration-200 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
+                  className="rounded-[12px] py-2 px-3 cursor-pointer transition-all duration-150 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
                 >
-                  <Paperclip className="mr-3 h-5 w-5 text-gray-600 dark:text-gray-300" strokeWidth={2} />
-                  <span className="text-[15px] font-medium text-gray-900 dark:text-gray-100">添加文件</span>
+                  <Paperclip className="mr-2.5 h-4 w-4 text-gray-600 dark:text-gray-300" strokeWidth={2} />
+                  <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">添加文件</span>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-2 bg-gradient-to-r from-transparent via-gray-300/50 dark:via-gray-600/50 to-transparent h-[1px]" />
+                <DropdownMenuSeparator className="my-1.5 bg-gradient-to-r from-transparent via-gray-300/40 dark:via-gray-600/40 to-transparent h-px" />
                 <DropdownMenuItem 
                   onClick={handleImageSelect}
-                  className="rounded-[14px] py-3 px-4 cursor-pointer transition-all duration-200 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
+                  className="rounded-[12px] py-2 px-3 cursor-pointer transition-all duration-150 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
                 >
-                  <ImageIcon className="mr-3 h-5 w-5 text-gray-600 dark:text-gray-300" strokeWidth={2} />
-                  <span className="text-[15px] font-medium text-gray-900 dark:text-gray-100">添加图片</span>
+                  <ImageIcon className="mr-2.5 h-4 w-4 text-gray-600 dark:text-gray-300" strokeWidth={2} />
+                  <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">添加图片</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
             {/* 输入框 - 多行自适应设计 */}
-            <div className="flex-1 relative min-h-[28px]">
+            <div className="flex-1 relative flex items-center min-h-[32px]">
               <textarea
                 ref={textareaRef}
                 value={value}
@@ -266,22 +265,23 @@ export function AIInputMinimal({
                 className={cn(
                   "w-full resize-none border-0 bg-transparent",
                   "text-gray-900 dark:text-gray-50",
-                  "placeholder:text-gray-400/80 dark:placeholder:text-gray-500/80",
+                  "placeholder:text-gray-400/70 dark:placeholder:text-gray-500/70",
                   "focus:outline-none focus:ring-0",
-                  "leading-7 text-[15px] font-normal antialiased",
-                  "overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent",
+                  "leading-6 text-[14.5px] font-normal antialiased",
+                  "overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300/60 dark:scrollbar-thumb-gray-600/60 scrollbar-track-transparent",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
-                  "selection:bg-blue-100 dark:selection:bg-blue-900/30"
+                  "selection:bg-blue-100/80 dark:selection:bg-blue-900/30",
+                  "py-0.5"
                 )}
                 style={{
-                  minHeight: "28px",
-                  maxHeight: "168px" // 6行
+                  minHeight: "24px",
+                  maxHeight: "144px" // 6行
                 }}
               />
             </div>
 
             {/* 工具栏 - 精致设计 */}
-            <div className="flex items-center gap-2 pb-1">
+            <div className="flex items-center gap-1">
               {/* 语音播放按钮 */}
               {isClient && lastMessage && (
                 <button
@@ -289,23 +289,21 @@ export function AIInputMinimal({
                   onClick={handlePlayLastMessage}
                   disabled={disabled}
                   className={cn(
-                    "h-10 w-10 rounded-full transition-all duration-300 ease-out",
-                    "flex items-center justify-center relative overflow-hidden",
+                    "h-8 w-8 rounded-full transition-all duration-200 ease-out",
+                    "flex items-center justify-center relative",
                     "text-gray-500 dark:text-gray-400",
                     "hover:text-blue-600 dark:hover:text-blue-400",
-                    "hover:bg-gradient-to-br hover:from-blue-50 hover:to-cyan-50",
-                    "dark:hover:from-blue-950/40 dark:hover:to-cyan-950/40",
-                    "hover:shadow-sm hover:scale-105",
-                    "active:scale-95 active:shadow-none",
-                    "disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100",
-                    isPlaying && "bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/40 dark:to-cyan-950/40 text-blue-600 dark:text-blue-400 shadow-sm scale-105"
+                    "hover:bg-blue-50/80 dark:hover:bg-blue-950/30",
+                    "active:scale-90",
+                    "disabled:opacity-30 disabled:cursor-not-allowed",
+                    isPlaying && "bg-blue-50/80 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400"
                   )}
                   aria-label={isPlaying ? "停止播放" : "播放最后一条消息"}
                 >
                   {isPlaying ? (
-                    <VolumeX className="h-5 w-5" strokeWidth={2.5} />
+                    <VolumeX className="h-[18px] w-[18px]" strokeWidth={2.5} />
                   ) : (
-                    <Volume2 className="h-5 w-5" strokeWidth={2.5} />
+                    <Volume2 className="h-[18px] w-[18px]" strokeWidth={2.5} />
                   )}
                 </button>
               )}
@@ -317,26 +315,24 @@ export function AIInputMinimal({
                   onClick={handleVoiceToggle}
                   disabled={disabled}
                   className={cn(
-                    "h-10 w-10 rounded-full transition-all duration-300 ease-out",
-                    "flex items-center justify-center relative overflow-hidden",
+                    "h-8 w-8 rounded-full transition-all duration-200 ease-out",
+                    "flex items-center justify-center relative",
                     "text-gray-500 dark:text-gray-400",
                     "hover:text-purple-600 dark:hover:text-purple-400",
-                    "hover:bg-gradient-to-br hover:from-purple-50 hover:via-fuchsia-50 hover:to-blue-50",
-                    "dark:hover:from-purple-950/40 dark:hover:via-fuchsia-950/40 dark:hover:to-blue-950/40",
-                    "hover:shadow-sm hover:scale-105",
-                    "active:scale-95 active:shadow-none",
-                    "disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100",
-                    isVoiceRecording && "bg-gradient-to-br from-purple-50 via-fuchsia-50 to-blue-50 dark:from-purple-950/50 dark:via-fuchsia-950/50 dark:to-blue-950/50 text-purple-600 dark:text-purple-400 shadow-md scale-105"
+                    "hover:bg-purple-50/80 dark:hover:bg-purple-950/30",
+                    "active:scale-90",
+                    "disabled:opacity-30 disabled:cursor-not-allowed",
+                    isVoiceRecording && "bg-gradient-to-br from-purple-50/80 via-fuchsia-50/80 to-blue-50/80 dark:from-purple-950/40 dark:via-fuchsia-950/40 dark:to-blue-950/40 text-purple-600 dark:text-purple-400"
                   )}
                   aria-label={isVoiceRecording ? "停止录音" : "开始录音"}
                 >
                   {isVoiceRecording ? (
                     <>
-                      <Circle className="h-5 w-5 fill-current animate-pulse" strokeWidth={0} />
-                      <span className="absolute -inset-1 rounded-full animate-ping opacity-40 bg-gradient-to-br from-purple-400 via-fuchsia-400 to-blue-400" />
+                      <Circle className="h-[18px] w-[18px] fill-current animate-pulse" strokeWidth={0} />
+                      <span className="absolute -inset-0.5 rounded-full animate-ping opacity-30 bg-gradient-to-br from-purple-400 via-fuchsia-400 to-blue-400" />
                     </>
                   ) : (
-                    <Mic className="h-5 w-5" strokeWidth={2.5} />
+                    <Mic className="h-[18px] w-[18px]" strokeWidth={2.5} />
                   )}
                 </button>
               )}
@@ -346,44 +342,41 @@ export function AIInputMinimal({
                 type="submit"
                 disabled={isLoading || !value.trim() || disabled}
                 className={cn(
-                  "h-10 w-10 rounded-full transition-all duration-300 ease-out relative overflow-hidden",
+                  "h-8 w-8 rounded-full transition-all duration-200 ease-out relative overflow-hidden",
                   "flex items-center justify-center",
-                  "bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600",
-                  "dark:from-blue-600 dark:via-blue-700 dark:to-cyan-700",
+                  "bg-gradient-to-br from-blue-500 via-blue-600 to-blue-600",
+                  "dark:from-blue-600 dark:via-blue-600 dark:to-blue-700",
                   "text-white",
-                  "hover:from-blue-600 hover:via-blue-700 hover:to-cyan-700",
-                  "dark:hover:from-blue-700 dark:hover:via-blue-800 dark:hover:to-cyan-800",
-                  "hover:shadow-[0_4px_16px_rgba(59,130,246,0.4)] dark:hover:shadow-[0_4px_16px_rgba(59,130,246,0.3)]",
-                  "hover:scale-105",
-                  "active:scale-95 active:shadow-sm",
-                  "disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100",
-                  "shadow-[0_2px_8px_rgba(59,130,246,0.25)]"
+                  "hover:from-blue-600 hover:via-blue-600 hover:to-blue-700",
+                  "dark:hover:from-blue-700 dark:hover:via-blue-700 dark:hover:to-blue-800",
+                  "hover:shadow-[0_2px_12px_rgba(59,130,246,0.35)] dark:hover:shadow-[0_2px_12px_rgba(59,130,246,0.25)]",
+                  "active:scale-90",
+                  "disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none",
+                  "shadow-[0_1px_4px_rgba(59,130,246,0.2)]"
                 )}
                 aria-label="发送消息"
               >
                 {/* 发光效果 */}
                 {!isLoading && !disabled && value.trim() && (
-                  <span className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent" />
                 )}
                 {isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" strokeWidth={2.5} />
+                  <Loader2 className="h-[18px] w-[18px] animate-spin relative z-10" strokeWidth={2.5} />
                 ) : (
-                  <Send className="h-5 w-5 relative z-10" strokeWidth={2.5} />
+                  <Send className="h-[18px] w-[18px] relative z-10" strokeWidth={2.5} />
                 )}
               </button>
             </div>
           </form>
 
-          {/* 语音录制多层波纹指示器 */}
+          {/* 语音录制精致指示器 */}
           {isVoiceRecording && (
-            <div className="absolute -top-1.5 -right-1.5 pointer-events-none">
-              <div className="relative h-4 w-4">
+            <div className="absolute -top-1 -right-1 pointer-events-none">
+              <div className="relative h-3 w-3">
                 {/* 核心光点 */}
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500 via-fuchsia-500 to-blue-500 animate-pulse shadow-lg shadow-purple-500/50" />
-                {/* 第一层波纹 */}
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400 via-fuchsia-400 to-blue-400 animate-ping opacity-60" />
-                {/* 第二层波纹 */}
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-300 via-fuchsia-300 to-blue-300 animate-ping opacity-40" style={{ animationDelay: '0.3s' }} />
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500 via-fuchsia-500 to-blue-500 animate-pulse shadow-md shadow-purple-500/40" />
+                {/* 外层波纹 */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400 via-fuchsia-400 to-blue-400 animate-ping opacity-50" />
               </div>
             </div>
           )}
