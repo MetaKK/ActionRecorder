@@ -11,9 +11,18 @@ interface AIPlugin {
   label: string;
   route: string;
   color: string;
+  type?: 'route' | 'immersive'; // 默认为 'route'
 }
 
 const AI_PLUGINS: AIPlugin[] = [
+  {
+    id: "focus",
+    emoji: "🍅",
+    label: "专注时钟",
+    route: "/focus",
+    color: "from-red-500 to-orange-600",
+    type: "immersive",
+  },
   {
     id: "chat",
     emoji: "💬",
@@ -41,6 +50,14 @@ const AI_PLUGINS: AIPlugin[] = [
     label: "记忆回顾",
     route: "/ai/memory",
     color: "from-pink-500 to-rose-600",
+  },
+  {
+    id: "relax",
+    emoji: "✈️",
+    label: "休息一下",
+    route: "/relax",
+    color: "from-cyan-500 to-blue-600",
+    type: "immersive",
   },
 ];
 
