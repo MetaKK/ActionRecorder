@@ -134,8 +134,11 @@ export const useRecordsStore = create<RecordsStore>((set, get) => ({
   },
 }));
 
-// 自动加载数据
+// 自动加载数据 - 延迟执行确保组件挂载后
 if (typeof window !== 'undefined') {
-  useRecordsStore.getState().loadFromStorage();
+  // 使用 setTimeout 确保在下一个事件循环中执行
+  setTimeout(() => {
+    useRecordsStore.getState().loadFromStorage();
+  }, 0);
 }
 

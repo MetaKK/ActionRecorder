@@ -50,43 +50,36 @@ export function AIChatButton() {
   const [currentPluginIndex, setCurrentPluginIndex] = useState(0);
   const router = useRouter();
 
-  // 暂时显示卡片和圆点用于调整位置
+  // 间歇性思考动画 (每15-25秒触发一次，持续8秒)
   useEffect(() => {
-    setIsThinking(true);
-    setShowBubble(true);
-    setCurrentPluginIndex(0);
+    const triggerThinking = () => {
+      setIsThinking(true);
+      setShowBubble(true);
+      
+      // 随机选择一个插件
+      setCurrentPluginIndex(Math.floor(Math.random() * AI_PLUGINS.length));
+      
+      // 8秒后停止思考动画
+      setTimeout(() => {
+        setIsThinking(false);
+        setTimeout(() => setShowBubble(false), 300);
+      }, 8000);
+    };
+
+    // 首次延迟3秒后触发
+    const initialTimeout = setTimeout(triggerThinking, 3000);
+
+    // 之后每15-25秒随机触发
+    const interval = setInterval(() => {
+      const randomDelay = 15000 + Math.random() * 10000;
+      setTimeout(triggerThinking, randomDelay);
+    }, 25000);
+
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
   }, []);
-
-  // 间歇性思考动画 (每15-25秒触发一次，持续5秒) - 暂时注释
-  // useEffect(() => {
-  //   const triggerThinking = () => {
-  //     setIsThinking(true);
-  //     setShowBubble(true);
-      
-  //     // 随机选择一个插件
-  //     setCurrentPluginIndex(Math.floor(Math.random() * AI_PLUGINS.length));
-      
-  //     // 8秒后停止思考动画
-  //     setTimeout(() => {
-  //       setIsThinking(false);
-  //       setTimeout(() => setShowBubble(false), 300);
-  //     }, 8000);
-  //   };
-
-  //   // 首次延迟3秒后触发
-  //   const initialTimeout = setTimeout(triggerThinking, 3000);
-
-  //   // 之后每15-25秒随机触发
-  //   const interval = setInterval(() => {
-  //     const randomDelay = 15000 + Math.random() * 10000;
-  //     setTimeout(triggerThinking, randomDelay);
-  //   }, 25000);
-
-  //   return () => {
-  //     clearTimeout(initialTimeout);
-  //     clearInterval(interval);
-  //   };
-  // }, []);
 
   // 预加载GIF
   useEffect(() => {

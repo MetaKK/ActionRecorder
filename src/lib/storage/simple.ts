@@ -51,7 +51,10 @@ class SimpleStorage {
    * 保存记录
    */
   async saveRecord(record: Record): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      await this.init();
+      if (!this.db) throw new Error('Database not initialized');
+    }
     
     // 先保存媒体
     if (record.images?.length) {
@@ -80,7 +83,10 @@ class SimpleStorage {
    * 获取所有记录
    */
   async getAllRecords(): Promise<Record[]> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      await this.init();
+      if (!this.db) throw new Error('Database not initialized');
+    }
     
     const tx = this.db.transaction([this.STORE_RECORDS], 'readonly');
     const store = tx.objectStore(this.STORE_RECORDS);
@@ -111,7 +117,10 @@ class SimpleStorage {
    * 更新记录
    */
   async updateRecord(id: string, updates: Partial<Record>): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      await this.init();
+      if (!this.db) throw new Error('Database not initialized');
+    }
     
     const tx = this.db.transaction([this.STORE_RECORDS], 'readwrite');
     const store = tx.objectStore(this.STORE_RECORDS);
@@ -138,7 +147,10 @@ class SimpleStorage {
    * 删除记录
    */
   async deleteRecord(id: string): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      await this.init();
+      if (!this.db) throw new Error('Database not initialized');
+    }
     
     const tx = this.db.transaction([this.STORE_RECORDS, this.STORE_MEDIA], 'readwrite');
     const recordStore = tx.objectStore(this.STORE_RECORDS);
@@ -173,7 +185,10 @@ class SimpleStorage {
    * 保存媒体
    */
   async saveMedia(media: MediaData): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      await this.init();
+      if (!this.db) throw new Error('Database not initialized');
+    }
     
     const blob = this.base64ToBlob(media.data, media.mimeType);
     
@@ -204,7 +219,10 @@ class SimpleStorage {
    * 获取媒体
    */
   async getMedia(id: string): Promise<MediaData | null> {
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) {
+      await this.init();
+      if (!this.db) throw new Error('Database not initialized');
+    }
     
     const tx = this.db.transaction([this.STORE_MEDIA], 'readonly');
     const store = tx.objectStore(this.STORE_MEDIA);
@@ -250,12 +268,29 @@ class SimpleStorage {
 
 // 单例
 let instance: SimpleStorage | null = null;
+let initPromise: Promise<SimpleStorage> | null = null;
 
 export async function getStorage(): Promise<SimpleStorage> {
-  if (!instance) {
-    instance = new SimpleStorage();
-    await instance.init();
+  if (instance && instance.db) {
+    return instance;
   }
-  return instance;
+  
+  if (initPromise) {
+    return initPromise;
+  }
+  
+  initPromise = (async () => {
+    if (!instance) {
+      instance = new SimpleStorage();
+    }
+    
+    if (!instance.db) {
+      await instance.init();
+    }
+    
+    return instance;
+  })();
+  
+  return initPromise;
 }
 
