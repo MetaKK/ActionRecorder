@@ -1,6 +1,8 @@
 import { streamText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
 import { AI_SYSTEM_PROMPT } from "@/lib/ai/prompts";
+import { getLanguageModel } from "@/lib/ai/providers-v2";
+import { processModelRequest } from "@/lib/ai/model-handlers";
+import { getModelById } from "@/lib/ai/config";
 
 export async function POST(request: Request) {
   try {
@@ -11,10 +13,25 @@ export async function POST(request: Request) {
       return new Response("Invalid messages format", { status: 400 });
     }
 
-    // 确定使用哪个API Key
-    const apiKey = customApiKey || process.env.OPENAI_API_KEY;
-    
-    if (!apiKey) {
+    // 获取模型配置
+    const modelConfig = getModelById(model);
+    if (!modelConfig) {
+      return new Response(
+        JSON.stringify({ 
+          error: `Model ${model} not found. Please select a valid model.` 
+        }), 
+        { 
+          status: 400,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
+
+    // 获取语言模型实例
+    let languageModel;
+    try {
+      languageModel = getLanguageModel(model, customApiKey || undefined);
+    } catch {
       return new Response(
         JSON.stringify({ 
           error: "API key not configured. Please set API key in settings or environment variable." 
@@ -26,20 +43,50 @@ export async function POST(request: Request) {
       );
     }
 
-    // 只支持OpenAI模型
-    const openai = createOpenAI({ apiKey });
-    const result = await streamText({
-      model: openai(model),
-      system: AI_SYSTEM_PROMPT,
-      messages,
-    });
+    // 处理特殊模型需求（如o1、Perplexity等）
+    const processedRequest = processModelRequest(model, messages, AI_SYSTEM_PROMPT);
+
+    // 构建streamText参数
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const streamParams: any = {
+      model: languageModel,
+      messages: processedRequest.messages,
+    };
+
+    // 只在支持的模型上添加system prompt
+    if (processedRequest.system) {
+      streamParams.system = processedRequest.system;
+    }
+
+    // 添加temperature（如果指定）
+    if (processedRequest.temperature !== undefined) {
+      streamParams.temperature = processedRequest.temperature;
+    }
+
+    // 添加maxTokens（如果指定）
+    if (processedRequest.maxTokens) {
+      streamParams.maxTokens = processedRequest.maxTokens;
+    }
+
+    // 添加其他参数
+    if (processedRequest.additionalParams) {
+      Object.assign(streamParams, processedRequest.additionalParams);
+    }
+
+    // 执行流式文本生成
+    const result = await streamText(streamParams);
 
     return result.toTextStreamResponse();
   } catch (error) {
     console.error("AI Chat API Error:", error);
+    
+    // 提供更详细的错误信息
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    
     return new Response(
       JSON.stringify({ 
-        error: "Failed to process request. Please check your API configuration." 
+        error: "Failed to process request. Please check your API configuration.",
+        details: errorMessage
       }), 
       { 
         status: 500,

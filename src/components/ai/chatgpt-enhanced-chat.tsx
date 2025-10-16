@@ -8,6 +8,7 @@ import { useAIChat } from "@/lib/hooks/use-ai-chat";
 import { AIChatHeader } from "./ai-chat-header";
 import { ChatGPTMessage } from "./chatgpt-message";
 import { AIInputMinimal } from "./ai-input-minimal";
+import { getModelById, CAPABILITY_NAMES } from "@/lib/ai/config";
 
 interface ChatGPTEnhancedChatProps {
   chatId: string;
@@ -316,12 +317,46 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
                     backgroundSize: '14px'
                   }}
                 >
-                  <option value="gpt-4o">GPT-4o (最新)</option>
-                  <option value="gpt-4o-mini">GPT-4o Mini (推荐)</option>
-                  <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                  <optgroup label="标准对话">
+                    <option value="gpt-4o-mini">GPT-4o Mini (推荐⭐)</option>
+                    <option value="gpt-4o">GPT-4o (最新)</option>
+                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+                    <option value="claude-3-5-haiku">Claude 3.5 Haiku</option>
+                  </optgroup>
+                  <optgroup label="深度思考 🧠">
+                    <option value="o1-preview">o1 Preview (新🔥)</option>
+                    <option value="o1-mini">o1 Mini (新🔥)</option>
+                  </optgroup>
+                  <optgroup label="联网搜索 🌐">
+                    <option value="sonar-pro">Sonar Pro (新🔥)</option>
+                    <option value="sonar">Sonar</option>
+                  </optgroup>
                 </select>
               </div>
+              
+              {/* 模型信息显示 */}
+              {(() => {
+                const modelInfo = getModelById(selectedModel);
+                if (!modelInfo) return null;
+                
+                return (
+                  <div className="mt-2 p-2.5 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/40 dark:border-blue-800/40 rounded-lg">
+                    <p className="text-xs text-blue-800 dark:text-blue-200 mb-1.5">{modelInfo.description}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {modelInfo.capabilities.map(cap => (
+                        <span 
+                          key={cap}
+                          className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-blue-100/80 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+                        >
+                          {CAPABILITY_NAMES[cap]}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* API Key 输入 - Apple风格 */}
