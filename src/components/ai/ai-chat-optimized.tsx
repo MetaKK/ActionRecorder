@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAIChat } from "@/lib/hooks/use-ai-chat";
 import { AIChatHeader } from "./ai-chat-header";
 import { AIMessagesList } from "./ai-messages-list";
-import { AIInputOptimized } from "./ai-input-optimized";
+import { AIInputMinimal } from "./ai-input-minimal";
 import { AIModelSelector } from "./ai-model-selector";
 import { StorageStatus } from "./storage-status";
 import { useStorageInit } from "@/lib/storage/init-storage";
@@ -125,23 +125,18 @@ export function AIChatOptimized({ chatId }: AIChatOptimizedProps) {
         onEdit={editMessage}
       />
 
-      {/* Input */}
-      <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-4">
-        <div className="mx-auto max-w-3xl">
-          <AIInputOptimized
-            value={input}
-            onChange={handleInputChange}
-            onSubmit={handleSubmit}
-            isLoading={isLoading}
-            disabled={isLoading}
-            onVoiceResult={handleVoiceResult}
-            onVoiceError={handleVoiceError}
-            onImageUpload={uploadImage}
-            onFileUpload={uploadFile}
-            lastMessage={getLastAIMessage()}
-          />
-        </div>
-      </div>
+      {/* Input - 使用优化的单行输入组件 */}
+      <AIInputMinimal
+        value={input}
+        onChange={setInput}
+        onSubmit={handleSubmit}
+        isLoading={isLoading}
+        onVoiceResult={handleVoiceResult}
+        onVoiceError={handleVoiceError}
+        lastMessage={getLastAIMessage()}
+        placeholder="询问任何问题..."
+        className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      />
     </div>
   );
 }

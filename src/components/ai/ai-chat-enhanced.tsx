@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAIChat } from "@/lib/hooks/use-ai-chat";
-import { AIInput } from "./ai-input";
+import { AIInputMinimal } from "./ai-input-minimal";
 import { AIMessage } from "./ai-message";
 import { AITypingIndicator } from "./ai-typing-indicator";
 import { AISuggestionChips } from "./ai-suggestion-chips";
@@ -171,20 +171,18 @@ export function AIChatEnhanced({
         </div>
       </ScrollArea>
 
-      {/* Input Area - Apple风格优化 */}
-      <div className="p-4 border-t border-border/20 bg-background/95 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto">
-          <AIInput
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onSubmit={handleSubmit}
-            isLoading={isLoading}
-            onVoiceResult={handleVoiceResult}
-            onVoiceError={handleVoiceError}
-            lastMessage={lastMessage}
-          />
-        </div>
-      </div>
+      {/* Input Area - 使用优化的单行输入组件 */}
+      <AIInputMinimal
+        value={input}
+        onChange={setInput}
+        onSubmit={handleSubmit}
+        isLoading={isLoading}
+        onVoiceResult={handleVoiceResult}
+        onVoiceError={handleVoiceError}
+        lastMessage={lastMessage}
+        placeholder="询问任何问题..."
+        className="border-t border-border/20 bg-background/95 backdrop-blur-sm"
+      />
     </div>
   );
 }

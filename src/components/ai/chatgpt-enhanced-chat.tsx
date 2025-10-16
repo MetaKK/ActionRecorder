@@ -9,7 +9,7 @@ import { AIModelSelector } from "./ai-model-selector";
 import { StorageStatus } from "./storage-status";
 import { useStorageInit } from "@/lib/storage/init-storage";
 import { ChatGPTMessage } from "./chatgpt-message";
-import { ChatGPTAdaptiveInput } from "./chatgpt-adaptive-input";
+import { AIInputMinimal } from "./ai-input-minimal";
 
 interface ChatGPTEnhancedChatProps {
   chatId: string;
@@ -251,7 +251,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
       </div>
 
       {/* Input Area */}
-      <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+      <div className="flex-shrink-0 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
         <div className="w-full max-w-4xl mx-auto">
           {/* 文件预览 */}
           {previewFiles.length > 0 && (
@@ -295,15 +295,15 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
             </div>
           )}
 
-          {/* ChatGPT自适应输入框 */}
-          <ChatGPTAdaptiveInput
+          {/* 使用优化的单行输入组件 */}
+          <AIInputMinimal
             value={input}
-            onChange={handleInputChange}
+            onChange={setInput}
             onSubmit={handleSubmit}
             isLoading={isSending}
-            disabled={isSending}
+            onVoiceResult={(text) => setInput(prev => prev + text)}
+            onVoiceError={(error) => console.error("Voice error:", error)}
             placeholder="询问任何问题..."
-            onFileUpload={handleFileUpload}
           />
         </div>
       </div>
