@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils';
 
 export function RecordInput() {
   const [inputText, setInputText] = useState('');
+  const [interimText, setInterimText] = useState(''); // 临时识别文本
   const [placeholder, setPlaceholder] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -81,22 +82,27 @@ export function RecordInput() {
     error,
   } = useVoiceRecorder({
     language: 'zh-CN',
-    onResult: (text) => {
-      // Hook 已内置防重复逻辑，直接添加即可
+    onResult: (text, isFinal) => {
+      // 最终确认的文本 - 追加到输入框
       setInputText(prev => prev + text);
+      // 清空临时文本
+      setInterimText('');
+    },
+    onInterimResult: (text) => {
+      // 实时临时结果 - 仅用于显示
+      setInterimText(text);
     },
     onError: (error) => {
       toast.error(error);
+      setInterimText('');
     },
-    preventDuplicates: true, // 启用防重复（默认已启用，这里显式声明）
+    preventDuplicates: true,
   });
   
   const isDesktop = useIsDesktop();
   
-  // 语音识别结果已通过onResult回调处理
-  
-  // 显示输入文本
-  const displayText = inputText;
+  // 显示输入文本：已确认文本 + 临时识别文本（实时反馈）
+  const displayText = inputText + interimText;
   
   // 动态 placeholder 效果 - 打字机动画（仅在未聚焦时运行）
   useEffect(() => {
@@ -360,7 +366,15 @@ export function RecordInput() {
               ref={textareaRef}
               placeholder={placeholder}
               value={displayText}
-              onChange={(e) => setInputText(e.target.value)}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                // 如果有临时文本，需要正确处理
+                if (interimText && newValue.endsWith(interimText)) {
+                  setInputText(newValue.slice(0, -interimText.length));
+                } else {
+                  setInputText(newValue);
+                }
+              }}
               onKeyDown={handleKeyDown}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
@@ -373,6 +387,16 @@ export function RecordInput() {
                 minHeight: '120px',
               }}
             />
+            
+            {/* 临时识别文本指示器 - 实时反馈 */}
+            {interimText && (
+              <div className="absolute right-3 top-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-100/90 dark:bg-purple-900/40 backdrop-blur-sm border border-purple-200/50 dark:border-purple-700/50 shadow-sm">
+                <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+                <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                  识别中...
+                </span>
+              </div>
+            )}
           </div>
           
           {/* 底部按钮栏 - Lovable 风格 */}

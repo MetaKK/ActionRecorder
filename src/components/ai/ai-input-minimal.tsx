@@ -58,29 +58,37 @@ export function AIInputMinimal({
   const [isComposing, setIsComposing] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [interimText, setInterimText] = useState(""); // 临时识别文本
 
   // 确保客户端渲染一致性
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // 语音录制功能
+  // 语音录制功能 - 支持实时反馈
   const { 
     isRecording: isVoiceRecording, 
     isSupported: isVoiceSupported, 
     startRecording, 
     stopRecording
   } = useVoiceRecorder({
-    onResult: (text) => {
-      // 使用函数式更新，确保获取最新的 value
+    onResult: (text, isFinal) => {
+      // 最终确认的文本 - 追加到输入框
       onChange(value + text);
+      // 清空临时文本
+      setInterimText("");
       // 通知父组件（如果需要）
       onVoiceResult?.(text);
     },
+    onInterimResult: (text) => {
+      // 实时临时结果 - 仅用于显示，不修改实际 value
+      setInterimText(text);
+    },
     onError: (error) => {
       onVoiceError?.(error);
+      setInterimText("");
     },
-    preventDuplicates: true, // 启用防重复
+    preventDuplicates: true,
   });
 
   // 语音播放功能
@@ -255,8 +263,16 @@ export function AIInputMinimal({
             <div className="flex-1 relative flex items-center min-h-[32px]">
               <textarea
                 ref={textareaRef}
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
+                value={value + interimText}
+                onChange={(e) => {
+                  // 只更新确认的文本部分
+                  const newValue = e.target.value;
+                  if (interimText && newValue.endsWith(interimText)) {
+                    onChange(newValue.slice(0, -interimText.length));
+                  } else {
+                    onChange(newValue);
+                  }
+                }}
                 onKeyDown={handleKeyDown}
                 onCompositionStart={() => setIsComposing(true)}
                 onCompositionEnd={() => setIsComposing(false)}
@@ -281,6 +297,18 @@ export function AIInputMinimal({
                   maxHeight: "144px" // 6行
                 }}
               />
+              
+              {/* 临时识别文本指示器 - 实时反馈 */}
+              {interimText && (
+                <div className="absolute right-0 top-0 bottom-0 flex items-center pointer-events-none">
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-100/80 dark:bg-purple-900/30 backdrop-blur-sm">
+                    <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+                    <span className="text-[11px] font-medium text-purple-700 dark:text-purple-300">
+                      识别中
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 工具栏 - 精致设计 */}
