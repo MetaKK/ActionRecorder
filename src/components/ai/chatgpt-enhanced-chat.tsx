@@ -9,6 +9,8 @@ import { AIChatHeader } from "./ai-chat-header";
 import { ChatGPTMessage } from "./chatgpt-message";
 import { AIInputMinimal } from "./ai-input-minimal";
 import { getModelById, CAPABILITY_NAMES } from "@/lib/ai/config";
+import { generateUserContext, formatUserContext } from "@/lib/ai/user-context";
+import { useRecords } from "@/lib/hooks/use-records";
 
 interface ChatGPTEnhancedChatProps {
   chatId: string;
@@ -37,6 +39,9 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // 获取用户记录
+  const { records } = useRecords();
 
   // 从本地存储加载聊天历史
   useEffect(() => {
@@ -132,6 +137,10 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
     setCurrentAIMessage("");
 
     try {
+      // 生成用户上下文
+      const context = generateUserContext(records);
+      const userContextStr = formatUserContext(context);
+      
       // 调用真实的AI API
       const response = await fetch('/ai/api/chat', {
         method: 'POST',
@@ -145,6 +154,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
             content: msg.content,
           })),
           model: selectedModel,
+          userContext: userContextStr, // 传递用户上下文
         }),
       });
 
@@ -201,7 +211,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
       setIsSending(false);
       setIsTyping(false);
     }
-  }, [input, isSending, apiKey, messages, selectedModel]);
+  }, [input, isSending, apiKey, messages, selectedModel, records]);
 
   // 处理文件上传
   const handleFileUpload = useCallback((file: File) => {

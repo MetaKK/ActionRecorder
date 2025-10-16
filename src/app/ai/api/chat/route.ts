@@ -3,12 +3,10 @@ import { getSystemPromptWithTime } from "@/lib/ai/prompts";
 import { getLanguageModel } from "@/lib/ai/providers";
 import { processModelRequest } from "@/lib/ai/model-handlers";
 import { getModelById } from "@/lib/ai/config";
-import { generateUserContext, formatUserContext } from "@/lib/ai/user-context";
-import { getStorage } from "@/lib/storage/simple";
 
 export async function POST(request: Request) {
   try {
-    const { messages, model = "gpt-4o-mini" } = await request.json();
+    const { messages, model = "gpt-4o-mini", userContext } = await request.json();
     const customApiKey = request.headers.get("X-API-Key");
 
     if (!messages || !Array.isArray(messages)) {
@@ -43,18 +41,6 @@ export async function POST(request: Request) {
           headers: { "Content-Type": "application/json" }
         }
       );
-    }
-
-    // 获取用户记录数据
-    let userContext = "";
-    try {
-      const storage = await getStorage();
-      const records = await storage.getAllRecords();
-      const context = generateUserContext(records);
-      userContext = formatUserContext(context);
-    } catch (error) {
-      console.warn("Failed to load user records for context:", error);
-      // 如果获取记录失败，继续执行但不包含用户上下文
     }
 
     // 处理特殊模型需求（如o1、Perplexity等）
