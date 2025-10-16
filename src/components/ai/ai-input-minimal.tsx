@@ -72,9 +72,14 @@ export function AIInputMinimal({
     startRecording, 
     stopRecording
   } = useVoiceRecorder({
-    onResult: (text, isFinal) => {
-      // 最终确认的文本 - 追加到输入框
-      onChange(value + text);
+    onResult: (text) => {
+      // ⭐ 最终确认的文本 - 使用 textarea ref 获取最新值，避免闭包陷阱
+      const latestValue = textareaRef.current?.value || '';
+      // 移除临时识别文本（如果存在）
+      const confirmedText = interimText && latestValue.endsWith(interimText)
+        ? latestValue.slice(0, -interimText.length)
+        : latestValue;
+      onChange(confirmedText + text);
       // 清空临时文本
       setInterimText("");
       // 通知父组件（如果需要）
