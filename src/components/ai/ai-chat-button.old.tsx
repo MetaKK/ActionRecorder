@@ -46,7 +46,7 @@ const AI_PLUGINS: AIPlugin[] = [
   },
   {
     id: "memory",
-    emoji: "🧠",
+    emoji: "💭",
     label: "记忆回顾",
     route: "/ai/memory",
     color: "from-pink-500 to-rose-600",

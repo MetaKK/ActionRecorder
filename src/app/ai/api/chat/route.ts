@@ -1,6 +1,6 @@
 import { streamText } from "ai";
 import { AI_SYSTEM_PROMPT } from "@/lib/ai/prompts";
-import { getLanguageModel } from "@/lib/ai/providers-v2";
+import { getLanguageModel } from "@/lib/ai/providers";
 import { processModelRequest } from "@/lib/ai/model-handlers";
 import { getModelById } from "@/lib/ai/config";
 
