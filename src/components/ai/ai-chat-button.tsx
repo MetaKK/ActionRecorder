@@ -59,11 +59,11 @@ export function AIChatButton() {
       // 随机选择一个插件
       setCurrentPluginIndex(Math.floor(Math.random() * AI_PLUGINS.length));
       
-      // 5秒后停止思考动画
+      // 8秒后停止思考动画
       setTimeout(() => {
         setIsThinking(false);
         setTimeout(() => setShowBubble(false), 300);
-      }, 5000);
+      }, 8000);
     };
 
     // 首次延迟3秒后触发
@@ -106,7 +106,7 @@ export function AIChatButton() {
   return (
     <div className="fixed bottom-6 right-6 z-50">
       <div className="relative">
-        {/* 思考气泡 - 精致卡通效果 */}
+        {/* 思考气泡 - 云朵卡通效果 */}
         <AnimatePresence>
           {showBubble && (
             <motion.div
@@ -121,111 +121,116 @@ export function AIChatButton() {
               className="absolute bottom-full right-0 mb-3"
               style={{ transformOrigin: 'bottom right' }}
             >
-              {/* 主思考气泡 - 精致紧凑版 */}
+              {/* 主思考气泡 - 精致长方形 */}
               <motion.button
                 onClick={() => handlePluginClick(currentPlugin)}
                 whileHover={{ scale: 1.08, rotate: -2 }}
                 whileTap={{ scale: 0.92 }}
-                className={`
-                  relative group
-                  px-3 py-2.5 rounded-xl
-                  bg-gradient-to-br ${currentPlugin.color}
-                  shadow-xl hover:shadow-2xl
-                  transition-all duration-200
-                  cursor-pointer
-                  backdrop-blur-sm
-                  border-2 border-white/30
-                `}
+                className="relative group cursor-pointer"
                 style={{
-                  filter: 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2))',
+                  filter: 'drop-shadow(0 6px 16px rgba(0, 0, 0, 0.15))',
                 }}
               >
-                {/* 卡通气泡尾巴 - 优化位置 */}
+                {/* 长方形容器 - 精致圆角 */}
                 <div 
-                  className="absolute w-3 h-3 bg-inherit transform rotate-45 border-r-2 border-b-2 border-white/30" 
+                  className={`
+                    relative overflow-hidden
+                    px-3 py-2.5
+                    bg-gradient-to-br ${currentPlugin.color}
+                    shadow-xl hover:shadow-2xl
+                    transition-all duration-200
+                    border-2 border-white/40
+                    rounded-xl
+                  `}
                   style={{
-                    bottom: '-4px',
-                    right: '16px',
+                    minWidth: '120px',
                   }}
-                />
-                
-                {/* 内容 - 紧凑布局 */}
-                <div className="flex items-center gap-2">
-                  <motion.span 
-                    className="text-2xl"
-                    animate={{ 
-                      rotate: [0, -8, 8, -8, 0],
-                      scale: [1, 1.15, 1, 1.15, 1]
-                    }}
-                    transition={{ 
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }}
-                  >
-                    {currentPlugin.emoji}
-                  </motion.span>
-                  <div className="text-left">
-                    <p className="text-white font-semibold text-xs leading-tight whitespace-nowrap">
-                      {currentPlugin.label}
-                    </p>
+                >
+                  {/* 内容 - 紧凑布局 */}
+                  <div className="relative z-10 flex items-center gap-2.5">
+                    <motion.span 
+                      className="text-2xl"
+                      animate={{ 
+                        rotate: [0, -8, 8, -8, 0],
+                        scale: [1, 1.15, 1, 1.15, 1]
+                      }}
+                      transition={{ 
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      {currentPlugin.emoji}
+                    </motion.span>
+                    <div className="text-left">
+                      <p className="text-white font-semibold text-sm leading-tight whitespace-nowrap drop-shadow-sm">
+                        {currentPlugin.label}
+                      </p>
+                    </div>
                   </div>
+
+                  {/* 流动光效 - 不受边界限制 */}
+                  <motion.div 
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+                      width: '150%',
+                      left: '-25%',
+                    }}
+                    animate={{
+                      x: ['-100%', '100%'],
+                    }}
+                    transition={{
+                      duration: 2.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      repeatDelay: 0.5,
+                    }}
+                  />
+
+                  {/* 微妙的脉冲光晕 */}
+                  <motion.div
+                    className="absolute inset-0 rounded-[inherit] pointer-events-none"
+                    style={{
+                      background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 60%)',
+                    }}
+                    animate={{
+                      opacity: [0.3, 0.6, 0.3],
+                      scale: [1, 1.05, 1],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
                 </div>
 
-                {/* 卡通光效 */}
-                <motion.div 
-                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/0 via-white/30 to-white/0"
+                {/* 外部光晕效果 - 可溢出 */}
+                <motion.div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: `radial-gradient(ellipse at center, ${
+                      currentPlugin.color.includes('blue') ? 'rgba(59, 130, 246, 0.3)' :
+                      currentPlugin.color.includes('green') ? 'rgba(34, 197, 94, 0.3)' :
+                      currentPlugin.color.includes('yellow') ? 'rgba(251, 191, 36, 0.3)' :
+                      'rgba(236, 72, 153, 0.3)'
+                    } 0%, transparent 70%)`,
+                    filter: 'blur(8px)',
+                    transform: 'scale(1.3)',
+                  }}
                   animate={{
-                    x: ['-100%', '200%'],
+                    opacity: [0.4, 0.7, 0.4],
+                    scale: [1.3, 1.5, 1.3],
                   }}
                   transition={{
                     duration: 2,
                     repeat: Infinity,
-                    ease: "linear",
-                  }}
-                  style={{
-                    maskImage: 'linear-gradient(90deg, transparent, black, transparent)',
+                    ease: "easeInOut",
                   }}
                 />
               </motion.button>
 
-              {/* 思考点点点 - 修正相对位置 */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.15 }}
-                className="absolute bg-white/90 rounded-full shadow-lg"
-                style={{
-                  width: '6px',
-                  height: '6px',
-                  bottom: '-12px',
-                  right: '20px',
-                }}
-              />
-              <motion.div
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.25 }}
-                className="absolute bg-white/80 rounded-full shadow-md"
-                style={{
-                  width: '4px',
-                  height: '4px',
-                  bottom: '-18px',
-                  right: '24px',
-                }}
-              />
-              <motion.div
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.35 }}
-                className="absolute bg-white/70 rounded-full shadow-sm"
-                style={{
-                  width: '3px',
-                  height: '3px',
-                  bottom: '-22px',
-                  right: '27px',
-                }}
-              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -338,16 +343,28 @@ export function AIChatButton() {
           </div>
         </motion.div>
 
-        {/* 状态指示器 */}
+        {/* 状态指示器 - 与卡片颜色一致 */}
         {isThinking && (
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
-            className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg"
+            className="absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-lg"
+            style={{
+              background: currentPlugin.color.includes('blue') ? '#3b82f6' :
+                         currentPlugin.color.includes('green') ? '#22c55e' :
+                         currentPlugin.color.includes('yellow') ? '#fbbf24' :
+                         '#ec4899'
+            }}
           >
             <motion.div
-              className="w-full h-full rounded-full bg-blue-400"
+              className="w-full h-full rounded-full"
+              style={{
+                background: currentPlugin.color.includes('blue') ? '#60a5fa' :
+                           currentPlugin.color.includes('green') ? '#4ade80' :
+                           currentPlugin.color.includes('yellow') ? '#fcd34d' :
+                           '#f472b6'
+              }}
               animate={{
                 scale: [1, 1.2, 1],
                 opacity: [1, 0.5, 1],
