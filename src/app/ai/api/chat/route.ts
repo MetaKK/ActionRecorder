@@ -3,6 +3,8 @@ import { getSystemPromptWithTime } from "@/lib/ai/prompts";
 import { getLanguageModel } from "@/lib/ai/providers";
 import { processModelRequest } from "@/lib/ai/model-handlers";
 import { getModelById } from "@/lib/ai/config";
+import { generateUserContext, formatUserContext } from "@/lib/ai/user-context";
+import { getStorage } from "@/lib/storage/simple";
 
 export async function POST(request: Request) {
   try {
@@ -43,9 +45,25 @@ export async function POST(request: Request) {
       );
     }
 
+    // 获取用户记录数据
+    let userContext = "";
+    try {
+      const storage = await getStorage();
+      const records = await storage.getAllRecords();
+      const context = generateUserContext(records);
+      userContext = formatUserContext(context);
+    } catch (error) {
+      console.warn("Failed to load user records for context:", error);
+      // 如果获取记录失败，继续执行但不包含用户上下文
+    }
+
     // 处理特殊模型需求（如o1、Perplexity等）
     const systemPrompt = getSystemPromptWithTime();
-    const processedRequest = processModelRequest(model, messages, systemPrompt);
+    const fullSystemPrompt = userContext 
+      ? `${systemPrompt}\n\n${userContext}`
+      : systemPrompt;
+    
+    const processedRequest = processModelRequest(model, messages, fullSystemPrompt);
 
     // 构建streamText参数
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
