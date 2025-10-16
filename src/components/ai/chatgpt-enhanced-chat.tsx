@@ -73,17 +73,40 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
     setCurrentAIMessage("");
 
     try {
-      // 模拟AI响应
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // 流式输出模拟
-      const aiResponse = "这是一个模拟的AI响应。在实际应用中，这里会连接到真实的AI API。";
+      // 调用真实的AI API
+      const response = await fetch('/ai/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map(msg => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('AI API request failed');
+      }
+
+      // 处理流式响应
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
       let currentText = "";
-      
-      for (let i = 0; i < aiResponse.length; i++) {
-        currentText += aiResponse[i];
-        setCurrentAIMessage(currentText);
-        await new Promise(resolve => setTimeout(resolve, 30));
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          
+          // 直接累加文本内容
+          currentText += chunk;
+          setCurrentAIMessage(currentText);
+        }
       }
 
       // 完成AI响应
