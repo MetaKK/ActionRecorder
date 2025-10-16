@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useRecords } from "@/lib/hooks/use-records";
+import { completePluginWithRecord } from "@/lib/plugins";
 
 type PomodoroMode = 'work' | 'shortBreak' | 'longBreak';
 
@@ -68,10 +69,20 @@ export function PomodoroTimerOptimized() {
             setCompletedPomodoros(newPomodoros);
 
             const taskText = currentTask.trim() || '专注工作';
-            const durationText = formatDuration(POMODORO_CONFIG.work);
-            const recordContent = `🍅 完成第 ${newPomodoros} 个番茄钟${currentTask ? `：${taskText}` : ''}\n⏱️ 专注时长：${durationText}`;
             
-            addRecord(recordContent);
+            // 使用新的插件完成系统
+            completePluginWithRecord(
+              {
+                pluginId: "focus",
+                duration: POMODORO_CONFIG.work,
+                content: `完成第 ${newPomodoros} 个番茄钟${currentTask ? `：${taskText}` : ''}`,
+                customData: {
+                  task: currentTask,
+                  pomodoros: newPomodoros,
+                },
+              },
+              addRecord
+            );
 
             showNotification('🎉 番茄钟完成！', `完成第 ${newPomodoros} 个番茄钟`);
 
