@@ -4,7 +4,6 @@ import React, { memo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
   ArrowLeft, 
-  Settings, 
   Download, 
   Share2, 
   MoreHorizontal,
@@ -26,11 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuGroup,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
   DropdownMenuShortcut,
-  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
@@ -112,9 +107,13 @@ export const AIChatHeader = memo(function AIChatHeader({
   // 过滤会话
   const filteredSessions = sessions.filter(session =>
     session.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    session.messages.some(msg => 
-      msg.content.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    session.messages.some(msg => {
+      const content = typeof msg.content === 'string' ? msg.content : 
+        Array.isArray(msg.content) ? msg.content.map(c => 
+          typeof c === 'string' ? c : c.content || ''
+        ).join(' ') : '';
+      return content.toLowerCase().includes(searchQuery.toLowerCase());
+    })
   );
 
   const handleNewChat = () => {
@@ -191,9 +190,6 @@ export const AIChatHeader = memo(function AIChatHeader({
                   <h1 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                     {currentSession?.title || "新对话"}
                   </h1>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                    {modelName}
-                  </p>
                 </div>
               </div>
             </div>
@@ -384,7 +380,7 @@ export const AIChatHeader = memo(function AIChatHeader({
                         "border border-gray-200/50 dark:border-gray-700/50",
                         "hover:border-gray-300 dark:hover:border-gray-600",
                         "hover:shadow-sm",
-                        currentChatId === session.id && [
+                        chatId === session.id && [
                           "bg-blue-50/50 dark:bg-blue-950/20",
                           "border-blue-200 dark:border-blue-800",
                           "shadow-sm"
@@ -439,7 +435,15 @@ export const AIChatHeader = memo(function AIChatHeader({
                             </h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400 truncate mb-2">
                               {truncateText(
-                                session.messages.find(m => m.role === "user")?.content || "",
+                                (() => {
+                                  const userMessage = session.messages.find(m => m.role === "user");
+                                  if (!userMessage) return "";
+                                  return typeof userMessage.content === 'string' 
+                                    ? userMessage.content 
+                                    : userMessage.content.map(c => 
+                                        typeof c === 'string' ? c : c.content || ''
+                                      ).join(' ');
+                                })(),
                                 60
                               )}
                             </p>

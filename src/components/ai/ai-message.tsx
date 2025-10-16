@@ -12,7 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AIMultimodalMessage } from "./ai-multimodal-message";
 
 // 定义消息内容类型
 interface MessageContent {
@@ -125,9 +124,53 @@ export function AIMessage({
               <Skeleton className="h-4 w-1/2" />
             </div>
           ) : isAssistant ? (
-            <AIMultimodalMessage content={message.content} />
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              {typeof message.content === 'string' ? (
+                <p className="whitespace-pre-wrap">{message.content}</p>
+              ) : (
+                <div className="space-y-2">
+                  {message.content.map((item, index) => (
+                    <div key={index}>
+                      {item.type === 'text' && (
+                        <p className="whitespace-pre-wrap">{item.content}</p>
+                      )}
+                      {item.type === 'image' && (
+                        <img src={item.url || item.content} alt="Image" className="max-w-full rounded" />
+                      )}
+                      {item.type === 'file' && (
+                        <div className="flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                          <span className="text-sm">📎 {item.content}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           ) : (
-            <AIMultimodalMessage content={message.content} />
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              {typeof message.content === 'string' ? (
+                <p className="whitespace-pre-wrap">{message.content}</p>
+              ) : (
+                <div className="space-y-2">
+                  {message.content.map((item, index) => (
+                    <div key={index}>
+                      {item.type === 'text' && (
+                        <p className="whitespace-pre-wrap">{item.content}</p>
+                      )}
+                      {item.type === 'image' && (
+                        <img src={item.url || item.content} alt="Image" className="max-w-full rounded" />
+                      )}
+                      {item.type === 'file' && (
+                        <div className="flex items-center gap-2 p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                          <span className="text-sm">📎 {item.content}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           {/* Message Actions - Notion风格优化 */}

@@ -5,9 +5,6 @@ import { Bot, Paperclip, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAIChat } from "@/lib/hooks/use-ai-chat";
 import { AIChatHeader } from "./ai-chat-header";
-import { AIModelSelector } from "./ai-model-selector";
-import { StorageStatus } from "./storage-status";
-import { useStorageInit } from "@/lib/storage/init-storage";
 import { ChatGPTMessage } from "./chatgpt-message";
 import { AIInputMinimal } from "./ai-input-minimal";
 
@@ -28,7 +25,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentAIMessage, setCurrentAIMessage] = useState("");
-  const [selectedModel, setSelectedModel] = useState("gpt-4o-mini");
+  const [selectedModel] = useState("gpt-4o-mini");
   const [showSettings, setShowSettings] = useState(false);
   const [previewFiles, setPreviewFiles] = useState<{file: File, preview: string, type: 'image' | 'file'}[]>([]);
   
@@ -36,8 +33,6 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 初始化存储配置
-  useStorageInit();
 
   // 使用现有的AI聊天Hook
   const {
@@ -58,10 +53,6 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
   }, [messages, currentAIMessage, scrollToBottom]);
 
 
-  // 处理输入变化
-  const handleInputChange = useCallback((value: string) => {
-    setInput(value);
-  }, []);
 
 
   // 处理提交
@@ -196,11 +187,9 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
       {/* Settings Panel */}
       {showSettings && (
         <div className="border-b bg-muted/50 px-4 py-3 space-y-4">
-          <AIModelSelector
-            selectedModel={selectedModel}
-            onModelChange={setSelectedModel}
-          />
-          <StorageStatus className="max-w-md" />
+          <div className="text-sm text-muted-foreground">
+            设置面板 - 模型选择功能已简化
+          </div>
         </div>
       )}
 
