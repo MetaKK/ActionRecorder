@@ -121,6 +121,35 @@ export const memoryPlugin: Plugin = {
   },
 };
 
+/**
+ * 窗口旅行插件
+ */
+export const windowPlugin: Plugin = {
+  metadata: {
+    id: "window",
+    name: "放空一下",
+    description: "透过窗口观看旅行风景，放松心情",
+    version: "1.0.0",
+    category: PluginCategory.ENTERTAINMENT,
+    icon: "✈️",
+    color: "from-sky-400 to-blue-600",
+    enabled: true,
+    weight: 55,
+  },
+  config: {
+    type: PluginType.IMMERSIVE,
+    route: "/window",
+  },
+  hooks: {
+    onBeforeActivate: async (context: PluginHookContext) => {
+      pluginLogger.info("准备启动窗口旅行", context.pluginId);
+      return true;
+    },
+    onAfterNavigate: async (context: PluginHookContext) => {
+      pluginLogger.info("窗口旅行页面已加载", context.pluginId);
+    },
+  },
+};
 
 /**
  * 维基百科插件
@@ -173,6 +202,7 @@ export const presetPlugins: Plugin[] = [
   analyzePlugin,
   insightPlugin,
   memoryPlugin,
+  windowPlugin,
   wikipediaPlugin,
   hackerNewsPlugin,
 ];

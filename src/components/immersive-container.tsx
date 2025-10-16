@@ -74,35 +74,23 @@ export function ImmersiveContainer({
         {children}
       </div>
 
-      {/* 返回按钮 */}
+      {/* 返回按钮 - 极简沉浸式 */}
       <AnimatePresence>
         {showBackButton && !fullImmersive && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.6 }}
+            exit={{ opacity: 0 }}
+            whileHover={{ opacity: 1, scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={handleBack}
-            className={`fixed ${getBackButtonPosition()} z-50 
-              flex items-center gap-2 px-4 py-2.5 
-              bg-white/90 dark:bg-gray-900/90 
-              backdrop-blur-xl backdrop-saturate-150
-              border border-gray-200/50 dark:border-gray-700/50
-              rounded-full shadow-lg 
-              hover:bg-white dark:hover:bg-gray-900
-              transition-all duration-300
-              group`}
+            className={`fixed ${getBackButtonPosition()} z-[9999]
+              flex items-center justify-center
+              w-10 h-10
+              transition-all duration-300`}
             aria-label="返回"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-300 
-              group-hover:text-gray-900 dark:group-hover:text-white
-              transition-colors" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300
-              group-hover:text-gray-900 dark:group-hover:text-white
-              transition-colors">
-              返回
-            </span>
+            <ArrowLeft className="w-6 h-6 text-white drop-shadow-lg" />
           </motion.button>
         )}
       </AnimatePresence>
