@@ -430,7 +430,6 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
             onChange={setInput}
             onSubmit={handleSubmit}
             isLoading={isSending}
-            onVoiceResult={(text) => setInput(prev => prev + text)}
             onVoiceError={(error) => console.error("Voice error:", error)}
             placeholder="询问任何问题..."
           />

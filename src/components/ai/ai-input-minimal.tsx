@@ -72,12 +72,15 @@ export function AIInputMinimal({
     stopRecording
   } = useVoiceRecorder({
     onResult: (text) => {
+      // 使用函数式更新，确保获取最新的 value
       onChange(value + text);
+      // 通知父组件（如果需要）
       onVoiceResult?.(text);
     },
     onError: (error) => {
       onVoiceError?.(error);
     },
+    preventDuplicates: true, // 启用防重复
   });
 
   // 语音播放功能

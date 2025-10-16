@@ -6,6 +6,8 @@ interface UseVoiceRecorderOptions {
   onResult?: (text: string) => void;
   onError?: (error: string) => void;
   language?: string;
+  /** 是否自动去重（防止重复添加相同文本） */
+  preventDuplicates?: boolean;
 }
 
 interface UseVoiceRecorderReturn {
@@ -20,10 +22,12 @@ export function useVoiceRecorder({
   onResult,
   onError,
   language = "zh-CN",
+  preventDuplicates = true,
 }: UseVoiceRecorderOptions = {}): UseVoiceRecorderReturn {
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<unknown>(null);
+  const lastResultRef = useRef<string>("");
 
   const isSupported = typeof window !== "undefined" && 
     ("webkitSpeechRecognition" in window || "SpeechRecognition" in window);
@@ -38,6 +42,7 @@ export function useVoiceRecorder({
 
     setError(null);
     setIsRecording(true);
+    lastResultRef.current = ""; // 重置上次结果
 
     try {
       // 使用 Web Speech API 进行实时语音识别
@@ -65,6 +70,13 @@ export function useVoiceRecorder({
         }
 
         if (finalTranscript) {
+          // 防重复逻辑：检查是否与上次结果相同
+          if (preventDuplicates && finalTranscript === lastResultRef.current) {
+            console.log("跳过重复的语音识别结果:", finalTranscript);
+            return;
+          }
+          
+          lastResultRef.current = finalTranscript;
           onResult?.(finalTranscript);
         }
       };
@@ -80,6 +92,7 @@ export function useVoiceRecorder({
 
       recognition.onend = () => {
         setIsRecording(false);
+        lastResultRef.current = ""; // 清空上次结果
       };
 
       recognitionRef.current = recognition;
@@ -90,7 +103,7 @@ export function useVoiceRecorder({
       onError?.(errorMsg);
       setIsRecording(false);
     }
-  }, [isSupported, language, onResult, onError]);
+  }, [isSupported, language, onResult, onError, preventDuplicates]);
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
@@ -98,6 +111,7 @@ export function useVoiceRecorder({
       recognitionRef.current = null;
     }
     setIsRecording(false);
+    lastResultRef.current = ""; // 清空上次结果
   }, []);
 
   return {

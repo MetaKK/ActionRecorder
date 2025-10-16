@@ -82,17 +82,13 @@ export function RecordInput() {
   } = useVoiceRecorder({
     language: 'zh-CN',
     onResult: (text) => {
-      setInputText(prev => {
-        // 避免重复添加
-        if (prev.endsWith(text)) {
-          return prev;
-        }
-        return prev + text;
-      });
+      // Hook 已内置防重复逻辑，直接添加即可
+      setInputText(prev => prev + text);
     },
     onError: (error) => {
       toast.error(error);
     },
+    preventDuplicates: true, // 启用防重复（默认已启用，这里显式声明）
   });
   
   const isDesktop = useIsDesktop();
