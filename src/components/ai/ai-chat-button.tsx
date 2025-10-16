@@ -59,6 +59,22 @@ const AI_PLUGINS: AIPlugin[] = [
     color: "from-cyan-500 to-blue-600",
     type: "immersive",
   },
+  {
+    id: "wikipedia",
+    emoji: "📚",
+    label: "查维基",
+    route: "/iframe?url=" + encodeURIComponent("https://zh.wikipedia.org") + "&title=" + encodeURIComponent("维基百科"),
+    color: "from-slate-600 to-gray-700",
+    type: "immersive",
+  },
+  {
+    id: "hackernews",
+    emoji: "🔥",
+    label: "科技资讯",
+    route: "/iframe?url=" + encodeURIComponent("https://news.ycombinator.com") + "&title=" + encodeURIComponent("Hacker News"),
+    color: "from-orange-500 to-red-600",
+    type: "immersive",
+  },
 ];
 
 export function AIChatButton() {
