@@ -19,15 +19,6 @@ export function AIChatButton() {
   return (
     <div className="fixed bottom-6 right-6 z-50">
       <div className="flex flex-col items-end gap-3">
-        {/* 关闭按钮 */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsVisible(false)}
-          className="h-8 w-8 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg hover:bg-white dark:hover:bg-gray-800"
-        >
-          <X className="h-4 w-4" />
-        </Button>
         
         {/* AI聊天按钮 */}
         <Button
