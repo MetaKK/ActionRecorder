@@ -59,6 +59,12 @@ export function AIInputMinimal({
   const [isFocused, setIsFocused] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [interimText, setInterimText] = useState(""); // 临时识别文本
+  
+  // ⭐ 使用 ref 追踪最新的 value，避免闭包陷阱
+  const valueRef = useRef(value);
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
 
   // 确保客户端渲染一致性
   useEffect(() => {
@@ -73,13 +79,8 @@ export function AIInputMinimal({
     stopRecording
   } = useVoiceRecorder({
     onResult: (text) => {
-      // ⭐ 最终确认的文本 - 使用 textarea ref 获取最新值，避免闭包陷阱
-      const latestValue = textareaRef.current?.value || '';
-      // 移除临时识别文本（如果存在）
-      const confirmedText = interimText && latestValue.endsWith(interimText)
-        ? latestValue.slice(0, -interimText.length)
-        : latestValue;
-      onChange(confirmedText + text);
+      // ⭐ 使用 valueRef 获取最新的已确认文本，避免闭包陷阱和重复
+      onChange(valueRef.current + text);
       // 清空临时文本
       setInterimText("");
       // 通知父组件（如果需要）

@@ -110,7 +110,7 @@ export const memoryPlugin: Plugin = {
     description: "回顾和重温你的珍贵记忆",
     version: "1.0.0",
     category: PluginCategory.AI,
-    icon: "🧠",
+    icon: "💭",
     color: "from-pink-500 to-rose-600",
     enabled: true,
     weight: 60,
