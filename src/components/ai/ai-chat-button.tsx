@@ -112,7 +112,16 @@ export function AIChatButton() {
               </div>
 
               {/* 泡泡尾巴 */}
-              <div 
+              <motion.div 
+                animate={{
+                  y: [0, -2, 0],
+                  opacity: [0.8, 1, 0.8],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
                 className={`absolute -bottom-2 right-8 w-4 h-4 bg-gradient-to-br ${currentPlugin.metadata.color} rotate-45 rounded-full`}
                 style={{
                   maskImage: 'linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,1))',

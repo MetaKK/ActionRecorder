@@ -315,7 +315,7 @@ export function AIInputMinimal({
                   "text-gray-900 dark:text-gray-50",
                   "placeholder:text-gray-400/70 dark:placeholder:text-gray-500/70",
                   "focus:outline-none focus:ring-0",
-                  "leading-6 text-[14.5px] font-normal antialiased",
+                  "leading-6 text-base font-normal antialiased",
                   "overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300/60 dark:scrollbar-thumb-gray-600/60 scrollbar-track-transparent",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
                   "selection:bg-blue-100/80 dark:selection:bg-blue-900/30",
