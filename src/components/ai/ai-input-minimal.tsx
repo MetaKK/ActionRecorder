@@ -57,6 +57,12 @@ export function AIInputMinimal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isComposing, setIsComposing] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // 确保客户端渲染一致性
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // 语音录制功能
   const { 
@@ -277,7 +283,7 @@ export function AIInputMinimal({
             {/* 工具栏 - 精致设计 */}
             <div className="flex items-center gap-2 pb-1">
               {/* 语音播放按钮 */}
-              {lastMessage && (
+              {isClient && lastMessage && (
                 <button
                   type="button"
                   onClick={handlePlayLastMessage}
@@ -305,7 +311,7 @@ export function AIInputMinimal({
               )}
 
               {/* 语音录制按钮 */}
-              {isVoiceSupported && (
+              {isClient && isVoiceSupported && (
                 <button
                   type="button"
                   onClick={handleVoiceToggle}
