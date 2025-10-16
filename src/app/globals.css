@@ -42,6 +42,11 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   
+  /* Notion AI Button 样式变量 */
+  --c-assCorButBac: #ffffff;
+  --c-shaSM: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --c-shaMD: 0 2px 8px rgba(0, 0, 0, 0.15);
+  
   /* 自定义动画 - 科技感背景 */
   --animate-pulse-slow: pulse-slow 8s ease-in-out infinite;
   
@@ -198,4 +203,17 @@
   .scrollbar-none::-webkit-scrollbar {
     display: none;  /* Chrome, Safari and Opera */
   }
+}
+
+/* Notion AI Button 交互效果 */
+.notion-ai-button {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.notion-ai-button:hover {
+  transform: scale(1.05);
+}
+
+.notion-ai-button:active {
+  transform: scale(0.95);
 }
