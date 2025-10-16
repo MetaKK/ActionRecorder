@@ -55,6 +55,7 @@ export function AIInputMinimal({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isComposing, setIsComposing] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -115,6 +116,93 @@ export function AIInputMinimal({
     }
   }, [value]);
 
+  // 📱 移动端滚动优化 - 确保输入框始终可见
+  const scrollInputIntoView = useCallback((options: { immediate?: boolean } = {}) => {
+    if (!isClient) return;
+    
+    const scroll = () => {
+      const container = containerRef.current;
+      const textarea = textareaRef.current;
+      
+      if (!container || !textarea) return;
+
+      // 使用 scrollIntoView 确保输入框可见
+      container.scrollIntoView({
+        behavior: options.immediate ? 'auto' : 'smooth',
+        block: 'nearest',
+        inline: 'nearest'
+      });
+    };
+
+    // iOS Safari 需要延迟执行，等待键盘动画
+    if (options.immediate) {
+      scroll();
+    } else {
+      setTimeout(scroll, 100);
+      // 双保险：再次确认
+      setTimeout(scroll, 300);
+    }
+  }, [isClient]);
+
+  // 处理 focus - 键盘弹起
+  const handleFocus = useCallback(() => {
+    setIsFocused(true);
+    // 延迟滚动，等待键盘弹起
+    scrollInputIntoView();
+  }, [scrollInputIntoView]);
+
+  // 处理 blur - 键盘收起
+  const handleBlur = useCallback(() => {
+    setIsFocused(false);
+    // 键盘收起后确保输入框可见
+    scrollInputIntoView();
+  }, [scrollInputIntoView]);
+
+  // 监听窗口 resize 和 visualViewport（键盘弹起/收起会触发）
+  useEffect(() => {
+    if (!isClient) return;
+
+    let resizeTimer: NodeJS.Timeout;
+    
+    const handleViewportChange = () => {
+      // 防抖处理
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        // 只在输入框 focused 或刚 blur 时滚动
+        if (isFocused || document.activeElement === textareaRef.current) {
+          scrollInputIntoView({ immediate: true });
+        }
+      }, 150);
+    };
+
+    // 标准 resize 事件
+    window.addEventListener('resize', handleViewportChange, { passive: true });
+    
+    // Visual Viewport API - 更精确的键盘检测（iOS Safari 和现代浏览器）
+    const visualViewport = window.visualViewport;
+    if (visualViewport) {
+      visualViewport.addEventListener('resize', handleViewportChange);
+      visualViewport.addEventListener('scroll', handleViewportChange);
+    }
+    
+    return () => {
+      window.removeEventListener('resize', handleViewportChange);
+      if (visualViewport) {
+        visualViewport.removeEventListener('resize', handleViewportChange);
+        visualViewport.removeEventListener('scroll', handleViewportChange);
+      }
+      clearTimeout(resizeTimer);
+    };
+  }, [isClient, isFocused, scrollInputIntoView]);
+
+  // 触摸优化 - 点击输入框时确保可见
+  const handleTouchStart = useCallback(() => {
+    // 预先滚动，提升体验
+    setTimeout(() => {
+      scrollInputIntoView({ immediate: false });
+    }, 50);
+  }, [scrollInputIntoView]);
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey && !isComposing) {
       e.preventDefault();
@@ -172,15 +260,18 @@ export function AIInputMinimal({
   }, [onFileUpload]);
 
   return (
-    <div className={cn(
-      "flex-shrink-0 relative",
-      "bg-gradient-to-b from-white/50 via-white/70 to-white/90",
-      "dark:from-gray-950/50 dark:via-gray-950/70 dark:to-gray-950/90",
-      "backdrop-blur-xl",
-      "border-t border-gray-200/30 dark:border-gray-800/30",
-      "py-3 px-3 sm:px-4",
-      className
-    )}>
+    <div 
+      ref={containerRef}
+      className={cn(
+        "flex-shrink-0 relative",
+        "bg-gradient-to-b from-white/50 via-white/70 to-white/90",
+        "dark:from-gray-950/50 dark:via-gray-950/70 dark:to-gray-950/90",
+        "backdrop-blur-xl",
+        "border-t border-gray-200/30 dark:border-gray-800/30",
+        "py-3 px-3 sm:px-4",
+        className
+      )}
+    >
       {/* 顶部光效 */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-200/40 dark:via-gray-700/40 to-transparent" />
       
@@ -282,8 +373,9 @@ export function AIInputMinimal({
                 onKeyDown={handleKeyDown}
                 onCompositionStart={() => setIsComposing(true)}
                 onCompositionEnd={() => setIsComposing(false)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onTouchStart={handleTouchStart}
                 placeholder={placeholder}
                 disabled={disabled}
                 rows={1}
