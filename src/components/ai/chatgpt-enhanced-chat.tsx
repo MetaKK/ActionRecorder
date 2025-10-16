@@ -32,6 +32,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
   const [previewFiles, setPreviewFiles] = useState<{file: File, preview: string, type: 'image' | 'file'}[]>([]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -92,8 +93,16 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
   } = useAIChat({ chatId, selectedModel });
 
   // 自动滚动到最新消息
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = useCallback((immediate = false) => {
+    // 方法1: 使用容器的 scrollTop (更可靠)
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: immediate ? 'auto' : 'smooth'
+      });
+    }
+    // 方法2: 备用方案
+    messagesEndRef.current?.scrollIntoView({ behavior: immediate ? 'auto' : 'smooth' });
   }, []);
 
   useEffect(() => {
@@ -240,7 +249,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
 
 
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-gray-900">
+    <div className="flex flex-col h-screen bg-white dark:bg-gray-900" style={{ height: '100dvh' }}>
       {/* Header */}
       <AIChatHeader
         chatId={chatId}
@@ -333,6 +342,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
 
       {/* Messages Container */}
       <div 
+        ref={messagesContainerRef}
         className="flex-1 overflow-y-auto px-4 py-6"
         style={{ scrollBehavior: "smooth" }}
       >
@@ -431,6 +441,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
             onSubmit={handleSubmit}
             isLoading={isSending}
             onVoiceError={(error) => console.error("Voice error:", error)}
+            onInputFocus={scrollToBottom}
             onInputBlur={scrollToBottom}
             placeholder="询问任何问题..."
           />

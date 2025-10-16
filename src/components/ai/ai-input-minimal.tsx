@@ -36,6 +36,7 @@ interface AIInputMinimalProps {
   className?: string;
   onImageUpload?: (file: File) => void;
   onFileUpload?: (file: File) => void;
+  onInputFocus?: () => void;
   onInputBlur?: () => void;
 }
 
@@ -52,6 +53,7 @@ export function AIInputMinimal({
   className,
   onImageUpload,
   onFileUpload,
+  onInputFocus,
   onInputBlur
 }: AIInputMinimalProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -117,13 +119,21 @@ export function AIInputMinimal({
     }
   }, [value]);
 
-  // 📱 简单策略：blur 时触发父组件滚动
+  // 📱 移动端滚动处理
+  const handleFocus = useCallback(() => {
+    setIsFocused(true);
+    // 键盘弹起时也滚动，确保输入框可见
+    setTimeout(() => {
+      onInputFocus?.();
+    }, 300);
+  }, [onInputFocus]);
+
   const handleBlur = useCallback(() => {
     setIsFocused(false);
-    // 延迟执行，等待键盘完全收起
+    // 延迟执行，等待键盘完全收起（iOS 需要更长延迟）
     setTimeout(() => {
       onInputBlur?.();
-    }, 100);
+    }, 300);
   }, [onInputBlur]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -295,7 +305,7 @@ export function AIInputMinimal({
                 onKeyDown={handleKeyDown}
                 onCompositionStart={() => setIsComposing(true)}
                 onCompositionEnd={() => setIsComposing(false)}
-                onFocus={() => setIsFocused(true)}
+                onFocus={handleFocus}
                 onBlur={handleBlur}
                 placeholder={placeholder}
                 disabled={disabled}

@@ -197,6 +197,11 @@
     text-rendering: optimizeLegibility;
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
     font-variant-ligatures: common-ligatures;
+    
+    /* 📱 移动端优化 - 防止Chrome地址栏导致的黑色区域 */
+    height: 100%;
+    height: 100dvh; /* 动态视口高度 */
+    overflow: hidden;
   }
   
   body {
@@ -206,6 +211,15 @@
     font-weight: 400;
     line-height: 1.6;
     letter-spacing: -0.011em; /* 微调字间距，Geist 最佳实践 */
+    
+    /* 📱 移动端优化 - 与html保持一致 */
+    height: 100%;
+    height: 100dvh;
+    overflow: auto;
+    /* 防止橡皮筋效果（iOS） */
+    overscroll-behavior-y: none;
+    /* 防止点击延迟（移动端） */
+    touch-action: manipulation;
   }
   
   /* 标题字体优化 */
