@@ -431,6 +431,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
             onSubmit={handleSubmit}
             isLoading={isSending}
             onVoiceError={(error) => console.error("Voice error:", error)}
+            onInputBlur={scrollToBottom}
             placeholder="询问任何问题..."
           />
         </div>
