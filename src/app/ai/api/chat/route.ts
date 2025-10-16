@@ -1,5 +1,5 @@
 import { streamText } from "ai";
-import { AI_SYSTEM_PROMPT } from "@/lib/ai/prompts";
+import { getSystemPromptWithTime } from "@/lib/ai/prompts";
 import { getLanguageModel } from "@/lib/ai/providers";
 import { processModelRequest } from "@/lib/ai/model-handlers";
 import { getModelById } from "@/lib/ai/config";
@@ -44,7 +44,8 @@ export async function POST(request: Request) {
     }
 
     // 处理特殊模型需求（如o1、Perplexity等）
-    const processedRequest = processModelRequest(model, messages, AI_SYSTEM_PROMPT);
+    const systemPrompt = getSystemPromptWithTime();
+    const processedRequest = processModelRequest(model, messages, systemPrompt);
 
     // 构建streamText参数
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
