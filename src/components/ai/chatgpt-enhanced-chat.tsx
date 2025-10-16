@@ -25,13 +25,60 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentAIMessage, setCurrentAIMessage] = useState("");
-  const [selectedModel] = useState("gpt-4o-mini");
+  const [selectedModel, setSelectedModel] = useState("gpt-4o-mini");
+  const [apiKey, setApiKey] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [previewFiles, setPreviewFiles] = useState<{file: File, preview: string, type: 'image' | 'file'}[]>([]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 从本地存储加载聊天历史
+  useEffect(() => {
+    const savedMessages = localStorage.getItem(`chat_${chatId}`);
+    const savedModel = localStorage.getItem(`chat_model_${chatId}`);
+    const savedApiKey = sessionStorage.getItem(`api_key`);
+    
+    if (savedMessages) {
+      try {
+        const parsed = JSON.parse(savedMessages);
+        setMessages(parsed.map((msg: Message) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        })));
+      } catch (e) {
+        console.error('Failed to parse saved messages:', e);
+      }
+    }
+    
+    if (savedModel) {
+      setSelectedModel(savedModel);
+    }
+    
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+    }
+  }, [chatId]);
+
+  // 保存聊天历史到本地存储
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(`chat_${chatId}`, JSON.stringify(messages));
+    }
+  }, [messages, chatId]);
+
+  // 保存模型选择
+  useEffect(() => {
+    localStorage.setItem(`chat_model_${chatId}`, selectedModel);
+  }, [selectedModel, chatId]);
+
+  // 保存API Key到sessionStorage
+  useEffect(() => {
+    if (apiKey) {
+      sessionStorage.setItem(`api_key`, apiKey);
+    }
+  }, [apiKey]);
 
 
   // 使用现有的AI聊天Hook
@@ -58,6 +105,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
   // 处理提交
   const handleSubmit = useCallback(async () => {
     if (!input.trim() || isSending) return;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -78,12 +126,14 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(apiKey && { 'X-API-Key': apiKey }), // 如果有自定义API Key，添加到header
         },
         body: JSON.stringify({
           messages: [...messages, userMessage].map(msg => ({
             role: msg.role,
             content: msg.content,
           })),
+          model: selectedModel,
         }),
       });
 
@@ -207,11 +257,76 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
         hasMessages={messages.length > 0}
       />
 
-      {/* Settings Panel */}
+      {/* Settings Panel - Apple Design */}
       {showSettings && (
-        <div className="border-b bg-muted/50 px-4 py-3 space-y-4">
-          <div className="text-sm text-muted-foreground">
-            设置面板 - 模型选择功能已简化
+        <div className="border-b bg-gradient-to-b from-gray-50/80 to-gray-100/40 dark:from-gray-900/80 dark:to-gray-800/40 backdrop-blur-xl px-4 py-3">
+          {/* 关闭按钮 */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowSettings(false)}
+              className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-200/60 dark:bg-gray-700/60 hover:bg-gray-300/80 dark:hover:bg-gray-600/80 transition-all duration-200 group"
+            >
+              <svg className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-gray-200 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* 内容区域 */}
+          <div className="space-y-4">
+            {/* 模型选择 - Apple风格 */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-800 dark:text-gray-200 tracking-wide">
+                选择模型
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedModel}
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200/60 dark:border-gray-600/60 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 shadow-sm hover:shadow-md appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 10px center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '14px'
+                  }}
+                >
+                  <option value="gpt-4o">GPT-4o (最新)</option>
+                  <option value="gpt-4o-mini">GPT-4o Mini (推荐)</option>
+                  <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                </select>
+              </div>
+            </div>
+
+            {/* API Key 输入 - Apple风格 */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-800 dark:text-gray-200 tracking-wide">
+                自定义 API Key
+              </label>
+              <div className="relative">
+                <input
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="留空则使用环境变量中的key"
+                  className="w-full px-3 py-2.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200/60 dark:border-gray-600/60 rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 shadow-sm hover:shadow-md"
+                />
+                {apiKey && (
+                  <button
+                    onClick={() => setApiKey("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-200/80 dark:bg-gray-600/80 hover:bg-gray-300/90 dark:hover:bg-gray-500/90 flex items-center justify-center transition-all duration-200"
+                  >
+                    <svg className="w-2.5 h-2.5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                仅保存在浏览器会话中，刷新后需重新输入
+              </p>
+            </div>
           </div>
         </div>
       )}
