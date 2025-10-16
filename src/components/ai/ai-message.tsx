@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { MarkdownRenderer } from "./markdown-renderer";
 
 // 定义消息内容类型
 interface MessageContent {
@@ -113,7 +114,6 @@ export function AIMessage({
           className={cn(
             "rounded-2xl px-4 py-3 text-sm relative group/message transition-all duration-200",
             "shadow-sm border border-border/10",
-            "[&_*]:!m-0 [&_p]:!m-0", // 强制移除所有元素的margin
             isUser
               ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/20"
               : "bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 text-foreground shadow-gray-500/10"
@@ -126,15 +126,23 @@ export function AIMessage({
               <Skeleton className="h-4 w-1/2" />
             </div>
           ) : (
-            <div className="whitespace-pre-wrap leading-relaxed">
+            <div className="leading-relaxed">
               {typeof message.content === 'string' ? (
-                message.content
+                isAssistant ? (
+                  <MarkdownRenderer content={message.content} />
+                ) : (
+                  <div className="whitespace-pre-wrap">{message.content}</div>
+                )
               ) : (
                 <div className="space-y-2">
                   {message.content.map((item, index) => (
                     <div key={index}>
                       {item.type === 'text' && (
-                        <span className="whitespace-pre-wrap">{item.content}</span>
+                        isAssistant ? (
+                          <MarkdownRenderer content={item.content} />
+                        ) : (
+                          <span className="whitespace-pre-wrap">{item.content}</span>
+                        )
                       )}
                       {item.type === 'image' && (
                         <Image 
