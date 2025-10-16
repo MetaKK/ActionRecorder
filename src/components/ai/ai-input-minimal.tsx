@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
 import { 
   Send, 
   Mic, 
@@ -9,8 +8,18 @@ import {
   Plus,
   Loader2,
   Volume2,
-  VolumeX
+  VolumeX,
+  Image as ImageIcon,
+  Camera,
+  Paperclip
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useVoiceRecorder, useVoicePlayer } from "@/lib/hooks/use-voice-recorder";
 
@@ -25,6 +34,8 @@ interface AIInputMinimalProps {
   onVoiceError?: (error: string) => void;
   lastMessage?: string;
   className?: string;
+  onImageUpload?: (file: File) => void;
+  onFileUpload?: (file: File) => void;
 }
 
 export function AIInputMinimal({
@@ -37,9 +48,13 @@ export function AIInputMinimal({
   onVoiceResult,
   onVoiceError,
   lastMessage,
-  className
+  className,
+  onImageUpload,
+  onFileUpload
 }: AIInputMinimalProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isComposing, setIsComposing] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
@@ -109,6 +124,28 @@ export function AIInputMinimal({
     }
   }, [lastMessage, isPlaying, playText, stopPlaying]);
 
+  const handleImageSelect = useCallback(() => {
+    imageInputRef.current?.click();
+  }, []);
+
+  const handleFileSelect = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onImageUpload) {
+      onImageUpload(file);
+    }
+  }, [onImageUpload]);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onFileUpload) {
+      onFileUpload(file);
+    }
+  }, [onFileUpload]);
+
   return (
     <div className={cn(
       "flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4",
@@ -124,19 +161,56 @@ export function AIInputMinimal({
           isVoiceRecording && "border-red-300 dark:border-red-600 shadow-red-100 dark:shadow-red-900/20"
         )}>
           <form onSubmit={handleSubmit} className="flex items-center gap-2 p-3">
-            {/* 添加按钮 */}
-            <button
-              type="button"
-              className={cn(
-                "flex-shrink-0 w-8 h-8 rounded-full transition-all duration-200",
-                "bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600",
-                "flex items-center justify-center",
-                "hover:scale-105 active:scale-95"
-              )}
-              tabIndex={0}
-            >
-              <Plus className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-            </button>
+            {/* 添加附件菜单 */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className={cn(
+                    "flex-shrink-0 w-8 h-8 rounded-full transition-all duration-200",
+                    "bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600",
+                    "flex items-center justify-center",
+                    "hover:scale-105 active:scale-95"
+                  )}
+                  tabIndex={0}
+                >
+                  <Plus className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                side="top" 
+                align="start"
+                className={cn(
+                  "w-52 rounded-2xl shadow-2xl",
+                  "border border-gray-200/80 dark:border-gray-700/50",
+                  "bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl"
+                )}
+                sideOffset={12}
+              >
+                <DropdownMenuItem 
+                  onClick={handleImageSelect}
+                  className="rounded-lg py-2.5 px-3 cursor-pointer"
+                >
+                  <Camera className="mr-2.5 h-4 w-4" />
+                  <span>拍照</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={handleFileSelect}
+                  className="rounded-lg py-2.5 px-3 cursor-pointer"
+                >
+                  <Paperclip className="mr-2.5 h-4 w-4" />
+                  <span>添加文件</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="my-1.5" />
+                <DropdownMenuItem 
+                  onClick={handleImageSelect}
+                  className="rounded-lg py-2.5 px-3 cursor-pointer"
+                >
+                  <ImageIcon className="mr-2.5 h-4 w-4" />
+                  <span>添加图片</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* 输入框 - 单行设计 */}
             <div className="flex-1 relative">
@@ -235,6 +309,23 @@ export function AIInputMinimal({
             <div className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-red-500 animate-pulse shadow-lg" />
           )}
         </div>
+
+        {/* 隐藏的文件输入 */}
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="hidden"
+          disabled={disabled}
+        />
+        <input
+          ref={fileInputRef}
+          type="file"
+          onChange={handleFileChange}
+          className="hidden"
+          disabled={disabled}
+        />
       </div>
     </div>
   );
