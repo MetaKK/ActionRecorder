@@ -17,10 +17,12 @@ import {
   TimelineItem,
   TimelineItemType,
   ItemStatus,
+  SyncStatus,
   // FilterOptions,
   // PaginationOptions,
   AddItemData,
   GroupedItems,
+  TimelineItemContent,
 } from './types';
 
 // ============================================
@@ -230,7 +232,7 @@ export const useTimelineStore = create<TimelineState>()(
         createdAt: now,
         updatedAt: now,
         timestamp: now.getTime(),
-        content: data.content as Record<string, unknown>,
+        content: data.content as unknown as TimelineItemContent<T>,
         metadata: {
           title: data.title,
           excerpt: data.excerpt || '',
@@ -243,7 +245,7 @@ export const useTimelineStore = create<TimelineState>()(
         tags: data.tags || [],
         searchText: '',
         version: 1,
-        syncStatus: 'local_only' as const,
+        syncStatus: SyncStatus.LOCAL_ONLY,
         deviceId: '',
       };
       
@@ -262,7 +264,7 @@ export const useTimelineStore = create<TimelineState>()(
         set(state => {
           delete state.entities[tempId];
           state.entities[savedItem.id] = savedItem;
-          state.ids = state.ids.map(id => (id === tempId ? savedItem.id : id));
+          state.ids = state.ids.map((id: string) => (id === tempId ? savedItem.id : id));
         });
         
         return savedItem;
@@ -272,7 +274,7 @@ export const useTimelineStore = create<TimelineState>()(
         // 回滚：移除临时项
         set(state => {
           delete state.entities[tempId];
-          state.ids = state.ids.filter(id => id !== tempId);
+          state.ids = state.ids.filter((id: string) => id !== tempId);
           state.pagination.total -= 1;
           state.error = error as Error;
         });
@@ -338,7 +340,7 @@ export const useTimelineStore = create<TimelineState>()(
       // 乐观更新：立即从状态移除
       set(state => {
         delete state.entities[id];
-        state.ids = state.ids.filter(itemId => itemId !== id);
+        state.ids = state.ids.filter((itemId: string) => itemId !== id);
         state.pagination.total -= 1;
       });
       
@@ -354,7 +356,7 @@ export const useTimelineStore = create<TimelineState>()(
           state.ids.push(id);
           // 重新排序
           state.ids.sort(
-            (a, b) => state.entities[b].timestamp - state.entities[a].timestamp
+            (a: string, b: string) => state.entities[b].timestamp - state.entities[a].timestamp
           );
           state.pagination.total += 1;
           state.error = error as Error;

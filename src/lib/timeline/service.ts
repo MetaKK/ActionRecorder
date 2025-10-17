@@ -23,7 +23,9 @@ import {
   RecordContent,
   DiaryContent,
   TimelineItemMetadata,
+  TimelineItemContent,
 } from './types';
+import { TiptapDocument } from '@/lib/ai/diary/types';
 
 /**
  * Timeline 服务类
@@ -360,13 +362,13 @@ export class TimelineService extends EventEmitter {
     
     if (content && typeof content === 'object') {
       // Record 类型
-      if ('text' in content && content.text) {
+      if ('text' in content && content.text && typeof content.text === 'string') {
         return content.text.slice(0, 100);
       }
       
       // Diary 类型
       if ('document' in content && content.document) {
-        return this.extractTextFromTiptap(content.document).slice(0, 100);
+        return this.extractTextFromTiptap(content.document as TiptapDocument).slice(0, 100);
       }
     }
     
@@ -378,7 +380,7 @@ export class TimelineService extends EventEmitter {
    */
   private buildSearchText<T extends TimelineItemType>(
     type: T,
-    data: AddItemData<T> | (TimelineItem & { content: Record<string, unknown> })
+    data: AddItemData<T> | (TimelineItem & { content: unknown })
   ): string {
     const parts: string[] = [];
     

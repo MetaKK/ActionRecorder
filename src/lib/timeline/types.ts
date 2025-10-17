@@ -337,14 +337,14 @@ export interface BatchResult {
  * 检查是否为 Record 内容
  */
 export function isRecordContent(content: unknown): content is RecordContent {
-  return typeof content === 'object' && 'text' in content;
+  return content !== null && typeof content === 'object' && 'text' in content;
 }
 
 /**
  * 检查是否为 Diary 内容
  */
 export function isDiaryContent(content: unknown): content is DiaryContent {
-  return typeof content === 'object' && 'document' in content;
+  return content !== null && typeof content === 'object' && 'document' in content;
 }
 
 /**

@@ -69,11 +69,10 @@ export async function uploadToIndexedDB(file: File): Promise<string> {
 
   // 对图片进行压缩
   if (fileType === 'image') {
-    const compressedBlob = await compressImage(file, {
-      maxWidth: 1920,
-      maxHeight: 1920,
-      quality: 0.85,
-    });
+    const compressed = await compressImage(file, 1920, 1920, 0.85);
+    // 将 base64 数据转换为 Blob
+    const response = await fetch(compressed.data);
+    const compressedBlob = await response.blob();
     return await saveToIndexedDB(compressedBlob, file.name, file.type);
   }
 
@@ -174,11 +173,10 @@ export async function uploadToBase64(file: File): Promise<string> {
 
   // 压缩图片
   if (fileType === 'image') {
-    const compressedBlob = await compressImage(file, {
-      maxWidth: 1200,
-      maxHeight: 1200,
-      quality: 0.8,
-    });
+    const compressed = await compressImage(file, 1200, 1200, 0.8);
+    // 将 base64 数据转换为 Blob
+    const response = await fetch(compressed.data);
+    const compressedBlob = await response.blob();
     return await blobToBase64(compressedBlob);
   }
 
@@ -222,11 +220,10 @@ export async function generateThumbnail(file: File, maxSize = 200): Promise<stri
     throw new Error('只能为图片生成缩略图');
   }
 
-  const compressedBlob = await compressImage(file, {
-    maxWidth: maxSize,
-    maxHeight: maxSize,
-    quality: 0.7,
-  });
+  const compressed = await compressImage(file, maxSize, maxSize, 0.7);
+  // 将 base64 数据转换为 Blob
+  const response = await fetch(compressed.data);
+  const compressedBlob = await response.blob();
 
   return await blobToBase64(compressedBlob);
 }
