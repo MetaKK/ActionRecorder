@@ -45,6 +45,9 @@
   background: #f8f9fa;
   border: 1px solid #e5e7eb;
   outline: none;
+  /* 拖动优化 */
+  cursor: move;
+  transition: all 0.2s ease;
   /* 移动端音频优化 */
   touch-action: manipulation;
   -webkit-appearance: none;
@@ -52,6 +55,18 @@
   /* 防止长度溢出 */
   box-sizing: border-box;
   overflow: hidden;
+}
+
+/* 拖动时的视觉反馈 */
+.diary-audio:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+  transform: translateY(-1px);
+}
+
+.diary-audio:active {
+  transform: scale(0.98);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
 /* 音频播放器内部控件优化 */
@@ -129,6 +144,16 @@
     min-width: 0;
     box-sizing: border-box;
     overflow: hidden;
+    /* 移动端拖动优化 */
+    cursor: move;
+    touch-action: manipulation;
+  }
+  
+  /* 移动端拖动反馈 */
+  .diary-audio:active {
+    transform: scale(0.95);
+    background: #e0f2fe;
+    border-color: #0ea5e9;
   }
   
   /* 移动端音频控件优化 */

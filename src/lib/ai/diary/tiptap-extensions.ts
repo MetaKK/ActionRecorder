@@ -218,7 +218,7 @@ export const Audio = Node.create({
   name: 'audio',
   group: 'block',
   atom: true,
-  draggable: false, // 禁用拖动，防止意外移动
+  draggable: true, // 恢复拖动功能
 
   addAttributes() {
     return {
@@ -270,7 +270,7 @@ export const Audio = Node.create({
   renderHTML({ HTMLAttributes }) {
     const { src, title, controls, autoplay, loop, muted, preload, ...rest } = HTMLAttributes;
     
-    // 移动端优化的样式
+    // 移动端优化的样式，支持拖动
     const audioAttrs = {
       src,
       title,
@@ -286,7 +286,10 @@ export const Audio = Node.create({
         outline: none;
         -webkit-appearance: none;
         appearance: none;
+        cursor: move;
+        transition: all 0.2s ease;
       `,
+      draggable: 'true',
       ...(controls && { controls: 'true' }),
       ...(autoplay && { autoplay: 'true' }),
       ...(loop && { loop: 'true' }),
