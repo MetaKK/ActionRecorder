@@ -32,7 +32,7 @@ export function DiaryRenderer({
     mood: item.metadata.mood || '',
     excerpt: item.metadata.excerpt || '',
     wordCount: item.metadata.wordCount || 0,
-    type: 'auto' as any,
+    type: 'auto' as const,
     generatedAt: item.updatedAt,
     isPinned: item.metadata.isPinned || false,
   };

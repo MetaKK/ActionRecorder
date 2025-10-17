@@ -351,7 +351,10 @@ export default function DiaryGeneratePage() {
                   </div>
                   <div className="text-center p-3 rounded-lg bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200/50 dark:border-blue-800/30">
                     <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-0.5">
-                      {records.reduce((acc, r) => acc + (r.text?.length || 0), 0)}
+                      {records.reduce((acc, r) => {
+                        const content = r.content as { text?: string };
+                        return acc + (content.text?.length || 0);
+                      }, 0)}
                     </div>
                     <div className="text-xs text-gray-600 dark:text-gray-400">
                       文字数量

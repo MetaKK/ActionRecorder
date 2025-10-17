@@ -57,8 +57,8 @@ export async function migrateAllData(): Promise<MigrationResult> {
 /**
  * 迁移 Records
  */
-async function migrateRecords(): Promise<{ success: number; errors: any[] }> {
-  const errors: any[] = [];
+async function migrateRecords(): Promise<{ success: number; errors: Error[] }> {
+  const errors: Error[] = [];
   let success = 0;
   
   try {
@@ -93,8 +93,8 @@ async function migrateRecords(): Promise<{ success: number; errors: any[] }> {
 /**
  * 迁移 Diaries
  */
-async function migrateDiaries(): Promise<{ success: number; errors: any[] }> {
-  const errors: any[] = [];
+async function migrateDiaries(): Promise<{ success: number; errors: Error[] }> {
+  const errors: Error[] = [];
   let success = 0;
   
   try {

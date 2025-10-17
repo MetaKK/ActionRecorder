@@ -154,7 +154,10 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
       }
       
       if (type === 'image') {
-        editor.chain().focus().setImage({ src: dataUrl }).run();
+        editor.chain().focus().insertContent({
+          type: 'image',
+          attrs: { src: dataUrl }
+        }).run();
         toast.success('图片已插入');
       } else if (type === 'video') {
         editor.chain().focus().insertContent({

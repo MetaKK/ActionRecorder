@@ -47,20 +47,33 @@ export default function DiaryEditPage() {
       const dateStr = today.toISOString().split('T')[0];
       
       const newDiary: Diary = {
-        content: { type: 'doc', content: [] },
+        content: {
+          format: 'tiptap-json',
+          version: '1.0',
+          document: { type: 'doc', content: [] }
+        },
         metadata: {
           id: diaryId,
           date: dateStr,
-          createdAt: today.toISOString(),
-          updatedAt: today.toISOString(),
+          createdAt: today,
+          generatedAt: today,
+          style: DiaryStyle.NARRATIVE,
           mood: '😊',
           wordCount: 0,
+          tags: [],
+          sources: {
+            recordsCount: 0,
+            chatsCount: 0,
+            filesCount: 0,
+          },
+          version: 1,
           type: DiaryType.MANUAL,
         },
+        citations: [],
       };
       
       setDiary(newDiary);
-      setEditedContent(newDiary.content);
+      setEditedContent(newDiary.content.document);
     } else {
       // 加载已有日记
       loadDiary();
@@ -72,7 +85,7 @@ export default function DiaryEditPage() {
       const loadedDiary = await getDiaryById(diaryId);
       if (loadedDiary) {
         setDiary(loadedDiary);
-        setEditedContent(loadedDiary.content);
+        setEditedContent(loadedDiary.content.document);
         setSelectedMood(loadedDiary.metadata.mood);
       }
     } catch (error) {
@@ -86,11 +99,14 @@ export default function DiaryEditPage() {
     try {
       const updatedDiary: Diary = {
         ...diary,
-        content: editedContent,
+        content: {
+          format: 'tiptap-json',
+          version: '1.0',
+          document: editedContent
+        },
         metadata: {
           ...diary.metadata,
           mood: selectedMood,
-          updatedAt: new Date().toISOString(),
           wordCount: JSON.stringify(editedContent).length,
         },
       };
@@ -144,7 +160,7 @@ export default function DiaryEditPage() {
         
         await saveDiary(updatedDiary);
         setDiary(updatedDiary);
-        setEditedContent(updatedDiary.content);
+        setEditedContent(updatedDiary.content.document);
       }
     } catch (error) {
       console.error('重新生成失败:', error);
@@ -247,7 +263,7 @@ export default function DiaryEditPage() {
         {/* 编辑器 - 最大化空间 */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           <DiaryEditor
-            initialContent={editedContent || diary.content}
+            content={editedContent || diary.content.document}
             onChange={setEditedContent}
           />
         </div>

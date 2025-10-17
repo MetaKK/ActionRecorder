@@ -176,7 +176,7 @@ export function Timeline() {
                   const dayDiaries = diaryMap.get(dateKey) || [];
                   
                   // 创建混合数组：日记 + 记录
-                  const mixedItems = [];
+                  const mixedItems: Array<{ type: 'diary' | 'record'; id: string; data: unknown; createdAt: Date }> = [];
                   
                   // 添加所有日记
                   dayDiaries.forEach(diary => {
@@ -209,7 +209,7 @@ export function Timeline() {
                       return (
                         <DiaryCard
                           key={`diary-${item.id}`}
-                          diary={item.data}
+                          diary={item.data as DiaryPreview}
                           onEdit={handleEditDiary}
                           onShare={handleShareDiary}
                           onExport={handleExportDiary}

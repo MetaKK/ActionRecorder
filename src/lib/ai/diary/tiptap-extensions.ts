@@ -54,14 +54,12 @@ export const EnhancedImage = Node.create({
 
   addCommands() {
     return {
-      setImage:
-        (options) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: options,
-          });
-        },
+      setImage: (options: any) => ({ commands }: any) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: options,
+        });
+      },
     };
   },
 

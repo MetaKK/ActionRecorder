@@ -135,7 +135,7 @@ export class TimelineService extends EventEmitter {
         createdAt: now,
         updatedAt: now,
         timestamp: now.getTime(),
-        content: data.content as any,
+        content: data.content as Record<string, unknown>,
         metadata: {
           title: data.title,
           excerpt: data.excerpt || this.generateExcerpt(data.content),
@@ -354,7 +354,7 @@ export class TimelineService extends EventEmitter {
   /**
    * 生成摘要
    */
-  private generateExcerpt(content: any): string {
+  private generateExcerpt(content: unknown): string {
     if (typeof content === 'string') {
       return content.slice(0, 100);
     }
@@ -379,7 +379,7 @@ export class TimelineService extends EventEmitter {
    */
   private buildSearchText<T extends TimelineItemType>(
     type: T,
-    data: AddItemData<T> | (TimelineItem & { content: any })
+    data: AddItemData<T> | (TimelineItem & { content: Record<string, unknown> })
   ): string {
     const parts: string[] = [];
     
@@ -408,15 +408,19 @@ export class TimelineService extends EventEmitter {
    * 从 Tiptap 文档提取文本
    */
   private extractTextFromTiptap(doc: TiptapDocument): string {
-    const extractText = (node: any): string => {
+    const extractText = (node: unknown): string => {
       if (!node) return '';
       
-      if (node.text) {
-        return node.text;
-      }
-      
-      if (node.content && Array.isArray(node.content)) {
-        return node.content.map(extractText).join(' ');
+      if (typeof node === 'object' && node !== null) {
+        const nodeObj = node as { text?: string; content?: unknown[] };
+        
+        if (nodeObj.text) {
+          return nodeObj.text;
+        }
+        
+        if (nodeObj.content && Array.isArray(nodeObj.content)) {
+          return nodeObj.content.map(extractText).join(' ');
+        }
       }
       
       return '';

@@ -125,7 +125,7 @@ export interface TimelineItemMetadata {
   location?: Location;
   
   // 类型特定字段 (可选)
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // ============================================
@@ -138,7 +138,7 @@ export interface TimelineItemMetadata {
 export interface ItemRelation {
   type: 'reference' | 'derived' | 'grouped' | 'linked';
   targetId: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // ============================================
@@ -300,7 +300,7 @@ export type AddItemData<T extends TimelineItemType> =
   T extends TimelineItemType.RECORD ? AddRecordData :
   T extends TimelineItemType.DIARY ? AddDiaryData :
   {
-    content: any;
+    content: Record<string, unknown>;
     title?: string;
     excerpt?: string;
     mood?: string;
@@ -317,7 +317,7 @@ export type AddItemData<T extends TimelineItemType> =
  * 批量操作
  */
 export type BatchOperation = 
-  | { type: 'add'; itemType: TimelineItemType; data: AddItemData<any> }
+  | { type: 'add'; itemType: TimelineItemType; data: AddItemData<TimelineItemType> }
   | { type: 'update'; id: string; updates: Partial<TimelineItem> }
   | { type: 'delete'; id: string };
 
@@ -336,14 +336,14 @@ export interface BatchResult {
 /**
  * 检查是否为 Record 内容
  */
-export function isRecordContent(content: any): content is RecordContent {
+export function isRecordContent(content: unknown): content is RecordContent {
   return typeof content === 'object' && 'text' in content;
 }
 
 /**
  * 检查是否为 Diary 内容
  */
-export function isDiaryContent(content: any): content is DiaryContent {
+export function isDiaryContent(content: unknown): content is DiaryContent {
   return typeof content === 'object' && 'document' in content;
 }
 

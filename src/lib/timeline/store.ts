@@ -230,7 +230,7 @@ export const useTimelineStore = create<TimelineState>()(
         createdAt: now,
         updatedAt: now,
         timestamp: now.getTime(),
-        content: data.content as any,
+        content: data.content as Record<string, unknown>,
         metadata: {
           title: data.title,
           excerpt: data.excerpt || '',
@@ -243,7 +243,7 @@ export const useTimelineStore = create<TimelineState>()(
         tags: data.tags || [],
         searchText: '',
         version: 1,
-        syncStatus: 'local_only' as any,
+        syncStatus: 'local_only' as const,
         deviceId: '',
       };
       

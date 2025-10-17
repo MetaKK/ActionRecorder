@@ -250,7 +250,7 @@ export async function getDiaryList(
       mood: record.mood || '',
       excerpt: record.excerpt,
       wordCount: record.wordCount,
-      type: (record.type || 'auto') as any,
+      type: (record.type || 'auto') as const,
       generatedAt: new Date(record.createdAt),
       isPinned: record.isPinned,
     }));
@@ -288,7 +288,7 @@ export async function getAllDiaries(): Promise<DiaryPreview[]> {
       mood: record.mood || '',
       excerpt: record.excerpt,
       wordCount: record.wordCount,
-      type: (record.type || 'auto') as any,
+      type: (record.type || 'auto') as const,
       generatedAt: new Date(record.createdAt),
       isPinned: record.isPinned,
     }));
@@ -380,7 +380,7 @@ export async function searchDiaries(keyword: string): Promise<DiaryPreview[]> {
       mood: record.mood || '',
       excerpt: record.excerpt,
       wordCount: record.wordCount,
-      type: (record.type || 'auto') as any,
+      type: (record.type || 'auto') as const,
       generatedAt: new Date(record.createdAt),
       isPinned: record.isPinned,
     }));

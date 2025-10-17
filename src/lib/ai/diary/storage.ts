@@ -137,6 +137,8 @@ function createDiaryPreview(diary: Diary): DiaryPreview {
     excerpt,
     mood: diary.metadata.mood,
     wordCount: diary.metadata.wordCount,
+    createdAt: diary.metadata.createdAt,
+    type: diary.metadata.type,
   };
 }
 

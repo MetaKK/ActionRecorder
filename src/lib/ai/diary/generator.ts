@@ -11,6 +11,7 @@ import {
   Diary,
   DiaryContext,
   DiaryStyle,
+  DiaryType,
   DiaryGenerationOptions,
   DiaryGenerationProgress,
   DiaryGenerationStatus,
@@ -104,7 +105,7 @@ export async function generateDiary(
       createdAt: now,
       generatedAt: now,
       style: options.style,
-      type: 'auto' as any, // DiaryType.AUTO_GENERATED
+      type: DiaryType.AUTO_GENERATED,
       wordCount: countWords(diaryContent.document),
       mood: analysis.mood,
       tags: analysis.topics.slice(0, 5),

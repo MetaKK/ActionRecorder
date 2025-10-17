@@ -13,6 +13,7 @@
 'use client';
 
 import { useEffect, useRef, useMemo } from 'react';
+import { TimelineItem } from '@/lib/timeline/types';
 import { Clock, Loader2 } from 'lucide-react';
 import { 
   useTimelineStore, 
@@ -128,12 +129,12 @@ export function TimelineOptimized() {
           
           {/* 项列表 */}
           <div className="space-y-3">
-            {items.map(item => (
+            {items.map((item: TimelineItem) => (
               <TimelineItemRenderer
                 key={item.id}
                 item={item}
-                onUpdate={updateItem}
-                onDelete={deleteItem}
+                onUpdate={(item) => updateItem(item.id, item)}
+                onDelete={(id) => deleteItem(id)}
               />
             ))}
           </div>

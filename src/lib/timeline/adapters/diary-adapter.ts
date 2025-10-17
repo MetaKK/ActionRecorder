@@ -174,16 +174,20 @@ function extractExcerpt(diary: Diary): string {
   return text.slice(0, 100);
 }
 
-function extractTextFromTiptap(doc: any): string {
-  const extractText = (node: any): string => {
+function extractTextFromTiptap(doc: unknown): string {
+  const extractText = (node: unknown): string => {
     if (!node) return '';
     
-    if (node.text) {
-      return node.text;
-    }
-    
-    if (node.content && Array.isArray(node.content)) {
-      return node.content.map(extractText).join(' ');
+    if (typeof node === 'object' && node !== null) {
+      const nodeObj = node as { text?: string; content?: unknown[] };
+      
+      if (nodeObj.text) {
+        return nodeObj.text;
+      }
+      
+      if (nodeObj.content && Array.isArray(nodeObj.content)) {
+        return nodeObj.content.map(extractText).join(' ');
+      }
     }
     
     return '';
