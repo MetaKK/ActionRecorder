@@ -1,0 +1,680 @@
+/**
+ * 日记编辑器样式
+ * 基于 Apple 设计原则 & 文档类产品最佳实践
+ * 完美支持 PC 和 Mobile Web
+ */
+
+/* ============================================
+   1. 全局变量和基础设置
+   ============================================ */
+:root {
+  --diary-max-width: 680px;
+  --diary-padding-x: 24px;
+  --diary-padding-y: 32px;
+  --diary-font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --diary-font-serif: 'SF Pro Display', 'New York', 'Georgia', 'Times New Roman', serif;
+  --diary-line-height: 1.6;
+  --diary-letter-spacing: -0.011em;
+}
+
+/* 移动端变量 */
+@media (max-width: 768px) {
+  :root {
+    --diary-padding-x: 16px;
+    --diary-padding-y: 20px;
+  }
+}
+
+/* ============================================
+   2. 编辑器容器 - 防止溢出
+   ============================================ */
+.diary-editor-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* 防止水平溢出 */
+  overflow-y: auto;
+  min-height: 500px;
+}
+
+/* ============================================
+   3. Tiptap 编辑器基础样式
+   ============================================ */
+.ProseMirror {
+  outline: none;
+  min-height: 500px;
+  max-width: var(--diary-max-width);
+  margin: 0 auto;
+  padding: var(--diary-padding-y) var(--diary-padding-x);
+  
+  /* Apple 排版系统 */
+  font-family: var(--diary-font-sans);
+  font-size: 17px;
+  line-height: var(--diary-line-height);
+  letter-spacing: var(--diary-letter-spacing);
+  color: #1d1d1f;
+  
+  /* 防止内容溢出 */
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  
+  /* 平滑滚动 */
+  -webkit-overflow-scrolling: touch;
+}
+
+.dark .ProseMirror {
+  color: #f5f5f7;
+}
+
+/* 移动端字体优化 */
+@media (max-width: 768px) {
+  .ProseMirror {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+}
+
+/* ============================================
+   4. 占位符
+   ============================================ */
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: #86868b;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  font-style: italic;
+}
+
+.dark .ProseMirror p.is-editor-empty:first-child::before {
+  color: #6e6e73;
+}
+
+/* ============================================
+   5. 标题层级 - Apple Typography Scale
+   ============================================ */
+.ProseMirror h1 {
+  font-size: 32px;
+  line-height: 1.125;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  margin: 48px 0 24px;
+  color: #1d1d1f;
+}
+
+.ProseMirror h2 {
+  font-size: 28px;
+  line-height: 1.14286;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  margin: 40px 0 20px;
+  color: #1d1d1f;
+}
+
+.ProseMirror h3 {
+  font-size: 24px;
+  line-height: 1.16667;
+  font-weight: 600;
+  letter-spacing: -0.014em;
+  margin: 32px 0 16px;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ProseMirror h4 {
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  margin: 24px 0 12px;
+  color: #1d1d1f;
+}
+
+/* 首个标题特殊处理 */
+.ProseMirror h1:first-child,
+.ProseMirror h2:first-child,
+.ProseMirror h3:first-child,
+.ProseMirror h4:first-child {
+  margin-top: 0;
+}
+
+.dark .ProseMirror h1,
+.dark .ProseMirror h2,
+.dark .ProseMirror h3,
+.dark .ProseMirror h4 {
+  color: #f5f5f7;
+}
+
+/* 移动端标题优化 */
+@media (max-width: 768px) {
+  .ProseMirror h1 {
+    font-size: 28px;
+    margin: 32px 0 20px;
+  }
+  
+  .ProseMirror h2 {
+    font-size: 24px;
+    margin: 28px 0 16px;
+  }
+  
+  .ProseMirror h3 {
+    font-size: 20px;
+    margin: 24px 0 12px;
+  }
+  
+  .ProseMirror h4 {
+    font-size: 18px;
+    margin: 20px 0 10px;
+  }
+}
+
+/* ============================================
+   6. 段落和正文
+   ============================================ */
+.ProseMirror p {
+  margin: 0 0 16px;
+  color: #1d1d1f;
+  line-height: 1.6;
+}
+
+.ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
+.dark .ProseMirror p {
+  color: #f5f5f7;
+}
+
+/* ============================================
+   7. 引用块 - Apple Notes 风格
+   ============================================ */
+.ProseMirror blockquote {
+  position: relative;
+  margin: 24px 0;
+  padding: 16px 20px;
+  border-left: 4px solid #f59e0b;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.06) 0%, rgba(245, 158, 11, 0.02) 100%);
+  border-radius: 0 8px 8px 0;
+  font-style: normal;
+}
+
+.ProseMirror blockquote p {
+  color: #1d1d1f;
+  margin-bottom: 8px;
+}
+
+.ProseMirror blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.dark .ProseMirror blockquote {
+  border-left-color: #d97706;
+  background: linear-gradient(90deg, rgba(217, 119, 6, 0.12) 0%, rgba(217, 119, 6, 0.04) 100%);
+}
+
+.dark .ProseMirror blockquote p {
+  color: #f5f5f7;
+}
+
+/* 移动端引用块 */
+@media (max-width: 768px) {
+  .ProseMirror blockquote {
+    margin: 20px 0;
+    padding: 12px 16px;
+  }
+}
+
+/* ============================================
+   8. 分隔线 - 优雅的渐变
+   ============================================ */
+.ProseMirror hr {
+  margin: 32px 0;
+  border: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(0, 0, 0, 0.1) 20%,
+    rgba(0, 0, 0, 0.1) 80%,
+    transparent
+  );
+}
+
+.dark .ProseMirror hr {
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0.1) 80%,
+    transparent
+  );
+}
+
+/* 移动端分隔线 */
+@media (max-width: 768px) {
+  .ProseMirror hr {
+    margin: 24px 0;
+  }
+}
+
+/* ============================================
+   9. 列表 - Apple 文档风格
+   ============================================ */
+.ProseMirror ul,
+.ProseMirror ol {
+  margin: 16px 0;
+  padding-left: 28px;
+}
+
+.ProseMirror ul {
+  list-style-type: disc;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+}
+
+.ProseMirror li {
+  margin: 8px 0;
+  padding-left: 8px;
+  color: #1d1d1f;
+  line-height: 1.6;
+}
+
+.ProseMirror li::marker {
+  color: #86868b;
+}
+
+.dark .ProseMirror li {
+  color: #f5f5f7;
+}
+
+.dark .ProseMirror li::marker {
+  color: #6e6e73;
+}
+
+.ProseMirror li > p {
+  margin: 0;
+}
+
+/* 嵌套列表 */
+.ProseMirror li > ul,
+.ProseMirror li > ol {
+  margin: 8px 0;
+}
+
+/* 移动端列表 */
+@media (max-width: 768px) {
+  .ProseMirror ul,
+  .ProseMirror ol {
+    padding-left: 24px;
+  }
+  
+  .ProseMirror li {
+    margin: 6px 0;
+    padding-left: 4px;
+  }
+}
+
+/* ============================================
+   10. 文本标记和格式
+   ============================================ */
+.ProseMirror strong {
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.dark .ProseMirror strong {
+  color: #f5f5f7;
+}
+
+.ProseMirror em {
+  font-style: italic;
+  color: #1d1d1f;
+}
+
+.dark .ProseMirror em {
+  color: #f5f5f7;
+}
+
+.ProseMirror u {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  text-decoration-color: currentColor;
+}
+
+.ProseMirror s {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  color: #86868b;
+}
+
+.dark .ProseMirror s {
+  color: #6e6e73;
+}
+
+.ProseMirror code {
+  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-size: 0.9em;
+  padding: 2px 6px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+  color: #c7254e;
+}
+
+.dark .ProseMirror code {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ff6b6b;
+}
+
+/* ============================================
+   11. 链接 - Apple 风格
+   ============================================ */
+.ProseMirror a {
+  color: #06c;
+  text-decoration: underline;
+  text-decoration-color: rgba(0, 102, 204, 0.3);
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.ProseMirror a:hover {
+  text-decoration-color: rgba(0, 102, 204, 1);
+}
+
+.dark .ProseMirror a {
+  color: #2997ff;
+  text-decoration-color: rgba(41, 151, 255, 0.3);
+}
+
+.dark .ProseMirror a:hover {
+  text-decoration-color: rgba(41, 151, 255, 1);
+}
+
+/* ============================================
+   12. 图片 - 响应式处理
+   ============================================ */
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin: 24px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: block;
+}
+
+.dark .ProseMirror img {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 移动端图片 */
+@media (max-width: 768px) {
+  .ProseMirror img {
+    margin: 20px 0;
+    border-radius: 8px;
+  }
+}
+
+/* ============================================
+   13. 高亮标记
+   ============================================ */
+.ProseMirror mark {
+  background: linear-gradient(
+    to bottom,
+    transparent 40%,
+    rgba(255, 235, 59, 0.4) 40%,
+    rgba(255, 235, 59, 0.4) 90%,
+    transparent 90%
+  );
+  padding: 0 2px;
+  border-radius: 2px;
+  color: inherit;
+}
+
+.dark .ProseMirror mark {
+  background: linear-gradient(
+    to bottom,
+    transparent 40%,
+    rgba(255, 193, 7, 0.3) 40%,
+    rgba(255, 193, 7, 0.3) 90%,
+    transparent 90%
+  );
+}
+
+/* ============================================
+   14. 选中文本
+   ============================================ */
+.ProseMirror ::selection {
+  background-color: rgba(0, 125, 250, 0.2);
+}
+
+.dark .ProseMirror ::selection {
+  background-color: rgba(10, 132, 255, 0.3);
+}
+
+/* ============================================
+   15. 代码块
+   ============================================ */
+.ProseMirror pre {
+  background: #f5f5f7;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 20px 0;
+  overflow-x: auto;
+  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1d1d1f;
+}
+
+.dark .ProseMirror pre {
+  background: #1c1c1e;
+  color: #f5f5f7;
+}
+
+.ProseMirror pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* 移动端代码块 - 防止溢出 */
+@media (max-width: 768px) {
+  .ProseMirror pre {
+    padding: 12px;
+    margin: 16px 0;
+    font-size: 13px;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ============================================
+   16. 表格 - 响应式设计
+   ============================================ */
+.ProseMirror table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  overflow-x: auto;
+  display: block;
+}
+
+.ProseMirror th,
+.ProseMirror td {
+  border: 1px solid #d2d2d7;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 15px;
+}
+
+.ProseMirror th {
+  background: #f5f5f7;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.dark .ProseMirror th {
+  background: #2c2c2e;
+  color: #f5f5f7;
+}
+
+.dark .ProseMirror th,
+.dark .ProseMirror td {
+  border-color: #3a3a3c;
+}
+
+/* 移动端表格 */
+@media (max-width: 768px) {
+  .ProseMirror table {
+    font-size: 14px;
+    margin: 20px 0;
+  }
+  
+  .ProseMirror th,
+  .ProseMirror td {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+}
+
+/* ============================================
+   17. 焦点和交互状态
+   ============================================ */
+.ProseMirror:focus {
+  outline: none;
+}
+
+.ProseMirror.ProseMirror-focused {
+  outline: none;
+}
+
+/* ============================================
+   18. 滚动条样式优化
+   ============================================ */
+.diary-editor-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.diary-editor-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.diary-editor-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.diary-editor-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dark .diary-editor-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark .diary-editor-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 移动端隐藏滚动条 */
+@media (max-width: 768px) {
+  .diary-editor-wrapper::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .diary-editor-wrapper {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* ============================================
+   19. 打印样式
+   ============================================ */
+@media print {
+  .ProseMirror {
+    max-width: none;
+    padding: 0;
+    color: black;
+    font-size: 12pt;
+  }
+  
+  .ProseMirror h1 {
+    font-size: 18pt;
+  }
+  
+  .ProseMirror h2 {
+    font-size: 16pt;
+  }
+  
+  .ProseMirror h3 {
+    font-size: 14pt;
+  }
+  
+  .ProseMirror h4 {
+    font-size: 13pt;
+  }
+  
+  .ProseMirror img {
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+  
+  .ProseMirror blockquote {
+    page-break-inside: avoid;
+  }
+}
+
+/* ============================================
+   20. 可访问性增强
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .ProseMirror *,
+  .ProseMirror *::before,
+  .ProseMirror *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .ProseMirror {
+    color: #000;
+  }
+  
+  .dark .ProseMirror {
+    color: #fff;
+  }
+  
+  .ProseMirror a {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+}
+
+/* ============================================
+   21. 性能优化
+   ============================================ */
+.ProseMirror {
+  /* 启用硬件加速 */
+  transform: translateZ(0);
+  will-change: contents;
+  
+  /* 优化文本渲染 */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

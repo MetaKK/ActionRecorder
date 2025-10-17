@@ -194,11 +194,33 @@ export const hackerNewsPlugin: Plugin = {
 };
 
 /**
+ * AI日记插件
+ */
+export const diaryPlugin: Plugin = {
+  metadata: {
+    id: "diary",
+    name: "今日日记",
+    description: "AI 为你生成今天的生活日记",
+    version: "1.0.0",
+    category: PluginCategory.AI,
+    icon: "📔",
+    color: "from-amber-500 to-orange-600",
+    enabled: true,
+    weight: 85,
+  },
+  config: {
+    type: PluginType.ROUTE,
+    route: "/ai/diary",
+  },
+};
+
+/**
  * 所有预设插件列表
  */
 export const presetPlugins: Plugin[] = [
   focusPlugin,
   chatPlugin,
+  diaryPlugin,
   analyzePlugin,
   insightPlugin,
   memoryPlugin,

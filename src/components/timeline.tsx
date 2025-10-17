@@ -1,19 +1,57 @@
 /**
  * 时间线展示组件
  * 性能优化：渐进式加载，一次只渲染部分记录
+ * 集成日记：在对应日期显示日记卡片
  */
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { Clock, Loader2 } from 'lucide-react';
 import { TimelineItem } from './timeline-item';
+import { DiaryCard, DiaryCardSkeleton } from './diary-card';
 import { useRecords } from '@/lib/hooks/use-records';
 import { useProgressiveLoading } from '@/lib/hooks/use-intersection-observer';
 import { groupByDate, formatDate, getDateLabel } from '@/lib/utils/date';
+import { getAllDiaries, debugDatabase, clearDatabase } from '@/lib/storage/diary-db';
+import { DiaryPreview } from '@/lib/ai/diary/types';
+import { useRouter } from 'next/navigation';
 
 export function Timeline() {
   const { records } = useRecords();
+  const router = useRouter();
+  const [diaries, setDiaries] = useState<DiaryPreview[]>([]);
+  const [isLoadingDiaries, setIsLoadingDiaries] = useState(true);
+  
+  // 加载日记列表
+  useEffect(() => {
+    loadDiaries();
+  }, []);
+
+  const loadDiaries = async () => {
+    setIsLoadingDiaries(true);
+    try {
+      // 先调试数据库状态
+      await debugDatabase();
+      
+      const allDiaries = await getAllDiaries();
+      setDiaries(allDiaries);
+    } catch (error) {
+      console.error('Failed to load diaries:', error);
+      
+      // 如果加载失败，尝试清理数据库
+      try {
+        console.log('🔄 Attempting to clear database and retry...');
+        await clearDatabase();
+        const retryDiaries = await getAllDiaries();
+        setDiaries(retryDiaries);
+      } catch (retryError) {
+        console.error('❌ Retry failed:', retryError);
+      }
+    } finally {
+      setIsLoadingDiaries(false);
+    }
+  };
   
   // 按日期分组
   // 渐进式加载：初始显示 15 条，每次加载 10 条
@@ -40,6 +78,19 @@ export function Timeline() {
       ([dateA], [dateB]) => dateB.localeCompare(dateA)
     );
   }, [visibleGroupedRecords]);
+
+  // 创建日期到日记的映射
+  const diaryMap = useMemo(() => {
+    const map = new Map<string, DiaryPreview>();
+    diaries.forEach(diary => {
+      map.set(diary.date, diary);
+    });
+    return map;
+  }, [diaries]);
+
+  const handleEditDiary = (id: string) => {
+    router.push(`/ai/diary/${id}`);
+  };
   
   // 空状态
   if (records.length === 0) {
@@ -87,6 +138,15 @@ export function Timeline() {
                   </div>
                 </div>
               </div>
+              
+              {/* 日记卡片（如果当天有日记） */}
+              {diaryMap.has(dateKey) && (
+                <DiaryCard
+                  diary={diaryMap.get(dateKey)!}
+                  onEdit={handleEditDiary}
+                  className="mb-3"
+                />
+              )}
               
               {/* 记录列表 */}
               <div className="space-y-3">
