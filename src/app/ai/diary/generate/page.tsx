@@ -315,22 +315,39 @@ export default function DiaryGeneratePage() {
                 />
               </div>
 
-              {/* 自定义风格入口 */}
+              {/* 自定义风格入口 - 紧凑统一版 */}
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="flex items-center justify-center gap-4"
+                className="flex items-center justify-center gap-3"
               >
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent" />
-                <button
+                {/* 左侧分隔线 */}
+                <div className="h-px flex-1 max-w-32 bg-gradient-to-r from-transparent to-gray-300/50 dark:to-gray-700/50" />
+                
+                {/* 自定义风格按钮 */}
+                <motion.button
                   onClick={() => setCurrentStep('custom-style')}
-                  className="group flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 hover:border-purple-500/50 hover:from-purple-500/20 hover:to-pink-500/20 transition-all"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="group relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-gray-200/80 dark:border-gray-700/80 shadow-lg hover:shadow-xl hover:border-purple-500/30 transition-all duration-300"
                 >
-                  <Palette className="w-5 h-5 text-purple-500 group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold text-gray-900 dark:text-white">创建自定义风格</span>
-                </button>
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent" />
+                  {/* 渐变图标背景 */}
+                  <div className="relative w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:shadow-purple-500/30 transition-all">
+                    <Palette className="w-4 h-4 text-white" />
+                  </div>
+                  
+                  {/* 文字 */}
+                  <span className="text-sm font-medium text-gray-900 dark:text-white pr-1">
+                    自定义风格
+                  </span>
+                  
+                  {/* 微妙的渐变光晕（hover时） */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500/0 via-pink-500/0 to-purple-500/0 group-hover:from-purple-500/5 group-hover:via-pink-500/5 group-hover:to-purple-500/5 transition-all duration-500" />
+                </motion.button>
+                
+                {/* 右侧分隔线 */}
+                <div className="h-px flex-1 max-w-32 bg-gradient-to-l from-transparent to-gray-300/50 dark:to-gray-700/50" />
               </motion.div>
 
               {/* 底部操作区 */}

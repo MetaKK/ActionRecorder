@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 
 export default function DiaryEntryPage() {
   const router = useRouter();
-
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50/50 via-orange-50/30 to-yellow-50/40 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 relative overflow-hidden">
       {/* 背景光效 */}
@@ -44,7 +44,7 @@ export default function DiaryEntryPage() {
           }}
           className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-tl from-yellow-400/20 to-amber-400/20 dark:from-yellow-600/10 dark:to-amber-600/10 rounded-full blur-3xl"
         />
-      </div>
+          </div>
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 py-8">
         {/* 返回按钮 */}
@@ -53,15 +53,15 @@ export default function DiaryEntryPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <Button
+              <Button 
             variant="ghost"
-            size="sm"
+                size="sm"
             onClick={() => router.push('/')}
             className="hover:bg-black/5 dark:hover:bg-white/5"
-          >
+              >
             <ArrowLeft className="w-4 h-4 mr-2" />
             返回首页
-          </Button>
+              </Button>
         </motion.div>
 
         {/* 主标题 - Apple 风格精简设计 */}
@@ -138,8 +138,8 @@ export default function DiaryEntryPage() {
                     <Sparkles className="w-3 h-3" />
                     情感理解
                   </span>
-                </div>
-              </div>
+            </div>
+          </div>
 
               {/* 箭头指示 */}
               <motion.div
@@ -212,9 +212,9 @@ export default function DiaryEntryPage() {
                     <PenTool className="w-3 h-3" />
                     即刻开始
                   </span>
-                </div>
               </div>
-
+            </div>
+            
               {/* 箭头指示 */}
               <motion.div
                 initial={{ x: 0 }}
@@ -237,7 +237,7 @@ export default function DiaryEntryPage() {
               </motion.div>
             </Card>
           </motion.div>
-        </div>
+            </div>
 
         {/* 底部提示 */}
         <motion.div
