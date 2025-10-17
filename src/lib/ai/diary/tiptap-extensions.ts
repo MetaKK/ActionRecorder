@@ -54,7 +54,7 @@ export const EnhancedImage = Node.create({
 
   addCommands() {
     return {
-      setImage: (options: any) => ({ commands }: any) => {
+      setImage: (options: Record<string, unknown>) => ({ commands }: { commands: any }) => {
         return commands.insertContent({
           type: this.name,
           attrs: options,
