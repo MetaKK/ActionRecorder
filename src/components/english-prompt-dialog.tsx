@@ -1,5 +1,5 @@
 /**
- * 英文学习Prompt导出对话框
+ * 口语练习Prompt导出对话框
  * 融合新概念英语教材与日常记录，生成AI学习Prompt
  */
 
@@ -320,7 +320,7 @@ export function EnglishPromptDialog() {
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/10 dark:focus-visible:ring-white/20",
             "active:scale-95"
           )}
-          aria-label="导出英文学习Prompt"
+          aria-label="导出口语练习Prompt"
         >
           <GraduationCap 
             className="h-[18px] w-[18px] text-foreground/70 transition-transform duration-200 group-hover:scale-105" 
@@ -331,16 +331,16 @@ export function EnglishPromptDialog() {
       <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col gap-0 p-0 bg-background/95 backdrop-blur-xl border border-border/20 shadow-2xl">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/10">
           <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            英文学习 Prompt 生成器
+            口语练习 Prompt 生成器
           </DialogTitle>
         </DialogHeader>
         
-        <div className="flex-1 overflow-hidden flex flex-col px-6 pb-6">
+        <div className="flex-1 overflow-hidden flex flex-col px-3 pb-6">
           {/* 顶部选项区 - Apple风格优化 */}
           <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-6 p-4 bg-muted/30 rounded-xl border border-border/20">
             {/* 教材选择 - Notion风格优化 */}
             <div className="flex items-center gap-3 relative z-10">
-              <label className="text-sm font-semibold text-foreground/80 whitespace-nowrap">教材</label>
+              <label className="text-m font-semibold text-foreground/80 whitespace-nowrap">教材</label>
               <div className="flex gap-2 overflow-x-auto scrollbar-none p-1">
                 {allBooks.map((book) => (
                   <button

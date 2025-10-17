@@ -9,7 +9,7 @@
 import { useMemo, useEffect, useState } from 'react';
 import { Clock, Loader2 } from 'lucide-react';
 import { TimelineItem } from './timeline-item';
-import { DiaryCard, DiaryCardSkeleton } from './diary-card';
+import { DiaryCard } from './diary-card';
 import { useRecords } from '@/lib/hooks/use-records';
 import { useProgressiveLoading } from '@/lib/hooks/use-intersection-observer';
 import { groupByDate, formatDate, getDateLabel } from '@/lib/utils/date';
@@ -21,7 +21,6 @@ export function Timeline() {
   const { records } = useRecords();
   const router = useRouter();
   const [diaries, setDiaries] = useState<DiaryPreview[]>([]);
-  const [isLoadingDiaries, setIsLoadingDiaries] = useState(true);
   
   // 加载日记列表
   useEffect(() => {
@@ -29,7 +28,6 @@ export function Timeline() {
   }, []);
 
   const loadDiaries = async () => {
-    setIsLoadingDiaries(true);
     try {
       // 先调试数据库状态
       await debugDatabase();
@@ -48,8 +46,6 @@ export function Timeline() {
       } catch (retryError) {
         console.error('❌ Retry failed:', retryError);
       }
-    } finally {
-      setIsLoadingDiaries(false);
     }
   };
   
@@ -90,6 +86,21 @@ export function Timeline() {
 
   const handleEditDiary = (id: string) => {
     router.push(`/ai/diary/${id}`);
+  };
+
+  const handleShareDiary = (id: string) => {
+    // TODO: 实现分享功能
+    console.log('Share diary:', id);
+  };
+
+  const handleExportDiary = (id: string) => {
+    // TODO: 实现导出功能
+    console.log('Export diary:', id);
+  };
+
+  const handleDeleteDiary = (id: string) => {
+    // TODO: 实现删除功能
+    console.log('Delete diary:', id);
   };
   
   // 空状态
@@ -139,22 +150,60 @@ export function Timeline() {
                 </div>
               </div>
               
-              {/* 日记卡片（如果当天有日记） */}
-              {diaryMap.has(dateKey) && (
-                <DiaryCard
-                  diary={diaryMap.get(dateKey)!}
-                  onEdit={handleEditDiary}
-                  className="mb-3"
-                />
-              )}
-              
-              {/* 记录列表 */}
+              {/* 混合内容：日记 + 记录，按时间排序 */}
               <div className="space-y-3">
-                {items
-                  .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-                  .map((record) => (
-                    <TimelineItem key={record.id} record={record} />
-                  ))}
+                {(() => {
+                  // 获取当天的日记
+                  const diary = diaryMap.get(dateKey);
+                  
+                  // 创建混合数组：日记 + 记录
+                  const mixedItems = [];
+                  
+                  // 添加日记（如果有）
+                  if (diary) {
+                    // 使用日记的实际生成时间，如果没有则使用当天晚上
+                    const diaryTime = diary.generatedAt || new Date(diary.date + 'T20:00:00');
+                    mixedItems.push({
+                      type: 'diary' as const,
+                      id: diary.id,
+                      createdAt: diaryTime,
+                      data: diary
+                    });
+                  }
+                  
+                  // 添加记录
+                  items.forEach(record => {
+                    mixedItems.push({
+                      type: 'record' as const,
+                      id: record.id,
+                      createdAt: record.createdAt,
+                      data: record
+                    });
+                  });
+                  
+                  // 按时间排序（最新的在前）
+                  mixedItems.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+                  
+                  // 渲染混合内容
+                  return mixedItems.map((item) => {
+                    if (item.type === 'diary') {
+                      return (
+                        <DiaryCard
+                          key={`diary-${item.id}`}
+                          diary={item.data}
+                          onEdit={handleEditDiary}
+                          onShare={handleShareDiary}
+                          onExport={handleExportDiary}
+                          onDelete={handleDeleteDiary}
+                        />
+                      );
+                    } else {
+                      return (
+                        <TimelineItem key={item.id} record={item.data} />
+                      );
+                    }
+                  });
+                })()}
               </div>
             </div>
           );

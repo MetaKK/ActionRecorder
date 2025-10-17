@@ -286,7 +286,7 @@ export default function DiaryDetailPage() {
               className="rounded-2xl bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
             >
               <DiaryEditor
-                content={editedContent}
+                content={editedContent || undefined}
                 onChange={setEditedContent}
                 editable={true}
                 className="min-h-[600px]"

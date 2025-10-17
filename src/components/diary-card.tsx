@@ -16,8 +16,15 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Edit3, Calendar, TrendingUp } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Edit3, MoreVertical, Share2, Download, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { DiaryPreview } from '@/lib/ai/diary/types';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -25,11 +32,13 @@ import Link from 'next/link';
 interface DiaryCardProps {
   diary: DiaryPreview;
   onEdit?: (id: string) => void;
+  onShare?: (id: string) => void;
+  onExport?: (id: string) => void;
+  onDelete?: (id: string) => void;
   className?: string;
 }
 
-export function DiaryCard({ diary, onEdit, className }: DiaryCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
+export function DiaryCard({ diary, onEdit, onShare, onExport, onDelete, className }: DiaryCardProps) {
 
   // 根据情绪选择颜色主题
   const getMoodTheme = (mood: string) => {
@@ -67,122 +76,128 @@ export function DiaryCard({ diary, onEdit, className }: DiaryCardProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
       className={cn('group relative', className)}
     >
-      {/* 特殊标识：渐变边框 */}
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 rounded-2xl opacity-20 group-hover:opacity-40 blur transition-all duration-300" />
-      
       <Link
         href={`/ai/diary/${diary.id}`}
         className="relative block"
       >
         <div className={cn(
-          'relative rounded-2xl p-4 sm:p-6 transition-all duration-300',
-          'border-2 border-transparent',
-          'shadow-sm hover:shadow-xl',
-          theme.bg,
-          'backdrop-blur-xl',
-          'transform hover:scale-[1.02] active:scale-[0.98]'
+          'relative rounded-xl border border-gray-200/60 dark:border-gray-700/60',
+          'bg-[#faf9f7] dark:bg-[#1a1a1a]',
+          'shadow-sm hover:shadow-md transition-all duration-200',
+          'hover:border-amber-200 dark:hover:border-amber-800/40',
+          'group-hover:bg-[#f8f6f3] dark:group-hover:bg-[#1f1f1f]'
         )}>
-          {/* 日记标识 - 左上角 */}
-          <div className="absolute -top-3 -left-3 sm:-top-4 sm:-left-4">
-            <motion.div
-              animate={{
-                rotate: isHovered ? [0, -5, 5, -5, 0] : 0,
-              }}
-              transition={{ duration: 0.5 }}
-              className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg"
-            >
-              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </motion.div>
-          </div>
-
-          {/* 装饰性微光效果 */}
-          <motion.div
-            animate={{
-              opacity: isHovered ? [0.3, 0.6, 0.3] : 0,
-              scale: isHovered ? [1, 1.1, 1] : 1,
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className={cn(
-              'absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl',
-              `bg-gradient-to-br ${theme.gradient}`,
-              'pointer-events-none'
-            )}
-          />
-
           {/* 内容区域 */}
-          <div className="relative space-y-3 sm:space-y-4">
-            {/* 标题行 */}
-            <div className="flex items-start justify-between gap-3">
+          <div className="p-4 sm:p-5">
+            {/* 头部信息 */}
+            <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-xl sm:text-2xl">{theme.icon}</span>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
-                    今日日记
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">{theme.icon}</span>
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                    日记
                   </h3>
                 </div>
                 
-                <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                  <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                   <time>{formatDate(diary.date)}</time>
                   <span className="text-gray-300 dark:text-gray-600">•</span>
-                  <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
                   <span>{diary.wordCount} 字</span>
                 </div>
               </div>
 
-              {/* 编辑按钮 */}
-              {onEdit && (
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onEdit(diary.id);
-                  }}
-                  className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-700 transition-colors shadow-sm"
-                  title="编辑日记"
-                >
-                  <Edit3 className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-300" />
-                </motion.button>
-              )}
+              {/* 操作菜单 */}
+              <div className="flex-shrink-0 transition-all duration-200 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 relative z-10">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 rounded-lg hover:bg-muted active:scale-95 transition-all duration-200"
+                      title="更多操作"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-32 z-50">
+                    {onEdit && (
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.preventDefault();
+                          onEdit(diary.id);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        编辑
+                      </DropdownMenuItem>
+                    )}
+                    {onShare && (
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.preventDefault();
+                          onShare(diary.id);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <Share2 className="h-4 w-4 mr-2" />
+                        分享
+                      </DropdownMenuItem>
+                    )}
+                    {onExport && (
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.preventDefault();
+                          onExport(diary.id);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        导出
+                      </DropdownMenuItem>
+                    )}
+                    {onDelete && (
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.preventDefault();
+                          onDelete(diary.id);
+                        }}
+                        className="cursor-pointer text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        删除
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
 
             {/* 摘要内容 */}
-            <div className="relative">
-              <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 line-clamp-3 leading-relaxed">
+            <div className="mb-3">
+              <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 leading-relaxed">
                 {diary.excerpt}
               </p>
-              
-              {/* 渐变遮罩 */}
-              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none" />
             </div>
 
-            {/* 底部装饰 */}
-            <div className="flex items-center justify-between pt-3 border-t border-gray-200/50 dark:border-gray-700/50">
+            {/* 底部信息 */}
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="px-2.5 py-1 rounded-lg bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm">
-                  <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                <div className="px-2 py-1 rounded-md bg-amber-100 dark:bg-amber-900/30">
+                  <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
                     {diary.mood}
                   </span>
                 </div>
               </div>
 
-              <motion.div
-                animate={{ x: isHovered ? 4 : 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-xs sm:text-sm font-medium text-amber-600 dark:text-amber-400"
-              >
-                查看详情 →
-              </motion.div>
+              <div className="text-xs text-gray-400 dark:text-gray-500 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                查看 →
+              </div>
             </div>
           </div>
 
-          {/* 书籍装订线装饰 */}
-          <div className="absolute left-0 top-4 bottom-4 w-1 bg-gradient-to-b from-amber-300 via-orange-400 to-yellow-300 rounded-r-full opacity-30" />
         </div>
       </Link>
     </motion.div>
@@ -194,24 +209,30 @@ export function DiaryCard({ diary, onEdit, className }: DiaryCardProps) {
  */
 export function DiaryCardSkeleton() {
   return (
-    <div className="relative">
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-gray-300 to-gray-400 rounded-2xl opacity-10 blur" />
-      <div className="relative rounded-2xl p-4 sm:p-6 bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800">
-        <div className="space-y-3 sm:space-y-4 animate-pulse">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 space-y-2">
-              <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-32" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-48" />
+    <div className="relative rounded-xl border border-gray-200/60 dark:border-gray-700/60 bg-[#faf9f7] dark:bg-[#1a1a1a] shadow-sm">
+      <div className="p-4 sm:p-5 animate-pulse">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="flex-1 space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12" />
             </div>
-            <div className="w-10 h-10 bg-gray-200 dark:bg-gray-800 rounded-lg" />
+            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24" />
           </div>
-          <div className="space-y-2">
-            <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-full" />
-            <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-5/6" />
-            <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-4/6" />
-          </div>
+          <div className="w-7 h-7 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+        </div>
+        
+        <div className="mb-3 space-y-2">
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/5" />
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div className="w-16 h-6 bg-gray-200 dark:bg-gray-700 rounded-md" />
+          <div className="w-12 h-3 bg-gray-200 dark:bg-gray-700 rounded" />
         </div>
       </div>
+      
     </div>
   );
 }

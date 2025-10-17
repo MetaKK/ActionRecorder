@@ -126,11 +126,13 @@ export interface HistoricalContext {
  * 日记预览
  */
 export interface DiaryPreview {
-  date: string;
-  title: string;
-  excerpt: string;
-  mood: string;
-  wordCount: number;
+  id: string;                    // 日记ID
+  date: string;                  // 日期
+  title?: string;                // 标题（可选）
+  excerpt: string;               // 摘要
+  mood: string;                  // 情绪
+  wordCount: number;             // 字数
+  generatedAt?: Date;            // 生成时间
 }
 
 /**
