@@ -178,22 +178,47 @@ export function WriterStyleCarousel({
                   transformStyle: 'preserve-3d',
                 }}
               >
+                {/* 光晕层 - 使用伪元素模拟，移动端效果更好 */}
+                {normalizedOffset === 0 && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div 
+                      className="absolute w-full max-w-md h-[450px] sm:h-[550px] rounded-3xl"
+                      style={{
+                        background: `radial-gradient(ellipse at center, ${style.color.accent}25 0%, ${style.color.accent}15 30%, transparent 70%)`,
+                        filter: 'blur(40px)',
+                        transform: 'scale(1.15)',
+                        willChange: 'transform',
+                        // 强制硬件加速
+                        WebkitTransform: 'translateZ(0)',
+                        WebkitBackfaceVisibility: 'hidden',
+                        WebkitPerspective: 1000,
+                      }}
+                    />
+                  </div>
+                )}
+                
                 <div
                   className={cn(
                     'relative w-full max-w-md h-[450px] sm:h-[550px] rounded-3xl overflow-hidden',
                     'cursor-pointer transition-all duration-500',
                     normalizedOffset === 0 
-                      ? 'shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] ring-1 ring-white/10 mobile-glow-optimized' 
+                      ? 'shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] ring-1 ring-white/10' 
                       : 'shadow-lg pointer-events-none',
                   )}
                   onClick={() => normalizedOffset === 0 && handleSelect(style.id)}
                   onMouseEnter={() => normalizedOffset === 0 && setShowDetails(true)}
                   onMouseLeave={() => setShowDetails(false)}
                   style={{
-                    // 动态设置accent颜色变量
+                    // 优化后的阴影 - 移动端友好
                     ...(normalizedOffset === 0 && {
-                      '--accent-color': style.color.accent,
-                    } as React.CSSProperties),
+                      filter: `drop-shadow(0 20px 40px rgba(0, 0, 0, 0.3))`,
+                      willChange: 'transform, filter',
+                      // 强制硬件加速和高质量渲染
+                      WebkitTransform: 'translateZ(0)',
+                      WebkitBackfaceVisibility: 'hidden',
+                      WebkitPerspective: 1000,
+                      WebkitFontSmoothing: 'antialiased',
+                    }),
                   }}
                 >
                   {/* 背景图/渐变 */}
