@@ -4,10 +4,6 @@ import { getLanguageModel } from "@/lib/ai/providers";
 import { processModelRequest } from "@/lib/ai/model-handlers";
 import { getModelById } from "@/lib/ai/config";
 
-// 静态导出配置
-export const dynamic = 'force-static';
-export const revalidate = false;
-
 export async function POST(request: Request) {
   try {
     const { messages, model = "gpt-4o-mini", userContext } = await request.json();

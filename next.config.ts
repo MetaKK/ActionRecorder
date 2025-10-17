@@ -22,19 +22,11 @@ const nextConfig: NextConfig = {
   // React严格模式
   reactStrictMode: true,
   
-  // Cloudflare Pages 支持 - 条件性静态导出
-  ...(process.env.CF_PAGES === '1' ? {
-    output: 'export',
-    trailingSlash: true,
-    skipTrailingSlashRedirect: true,
-    distDir: 'out',
-    // 排除有问题的动态路由
-    experimental: {
-      ...(process.env.CF_PAGES === '1' ? {
-        skipTrailingSlashRedirect: true,
-      } : {}),
-    },
-  } : {}),
+  // Cloudflare Pages 支持 - 暂时禁用静态导出以支持AI聊天API
+  // output: 'export',
+  // trailingSlash: true,
+  // skipTrailingSlashRedirect: true,
+  // distDir: 'out',
   
   // 实验性功能
   experimental: {
