@@ -183,21 +183,17 @@ export function WriterStyleCarousel({
                     'relative w-full max-w-md h-[450px] sm:h-[550px] rounded-3xl overflow-hidden',
                     'cursor-pointer transition-all duration-500',
                     normalizedOffset === 0 
-                      ? 'shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] ring-1 ring-white/10' 
+                      ? 'shadow-[0_20px_60px_-15px_rgba(0,0,0,0.4)] ring-1 ring-white/10 mobile-glow-optimized' 
                       : 'shadow-lg pointer-events-none',
                   )}
                   onClick={() => normalizedOffset === 0 && handleSelect(style.id)}
                   onMouseEnter={() => normalizedOffset === 0 && setShowDetails(true)}
                   onMouseLeave={() => setShowDetails(false)}
                   style={{
-                    // 为中心卡片添加发光效果
+                    // 动态设置accent颜色变量
                     ...(normalizedOffset === 0 && {
-                      boxShadow: `
-                        0 20px 60px -15px rgba(0, 0, 0, 0.4),
-                        0 0 0 1px rgba(255, 255, 255, 0.1),
-                        0 0 40px -10px ${style.color.accent}40
-                      `,
-                    }),
+                      '--accent-color': style.color.accent,
+                    } as React.CSSProperties),
                   }}
                 >
                   {/* 背景图/渐变 */}

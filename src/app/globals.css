@@ -124,6 +124,84 @@
   text-decoration: underline;
 }
 
+/* 移动端卡片光晕优化 */
+.mobile-glow-optimized {
+  /* 桌面端保持原有效果 */
+  box-shadow: 
+    0 20px 60px -15px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 40px -10px var(--accent-color, #3b82f6)40;
+}
+
+@media (max-width: 768px) {
+  .mobile-glow-optimized {
+    /* 移动端简化光晕，减少GPU负担 */
+    box-shadow: 
+      0 8px 32px -8px rgba(0, 0, 0, 0.3),
+      0 0 0 1px rgba(255, 255, 255, 0.1);
+    
+    /* 移动端额外优化 */
+    will-change: transform;
+    transform: translateZ(0); /* 启用硬件加速 */
+    backface-visibility: hidden;
+    position: relative;
+  }
+  
+  /* 移动端使用伪元素创建更自然的光晕 */
+  .mobile-glow-optimized::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    bottom: -8px;
+    background: radial-gradient(
+      ellipse at center,
+      var(--accent-color, #3b82f6)20 0%,
+      var(--accent-color, #3b82f6)10 30%,
+      transparent 70%
+    );
+    border-radius: inherit;
+    z-index: -1;
+    opacity: 0.8;
+    animation: mobile-glow-pulse 3s ease-in-out infinite;
+  }
+  
+  /* 移动端光晕呼吸动画 */
+  @keyframes mobile-glow-pulse {
+    0%, 100% {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+  }
+  
+  /* 低端设备优化 - 禁用动画 */
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-glow-optimized::before {
+      animation: none;
+      opacity: 0.7;
+    }
+  }
+  
+  /* 低性能设备检测 - 基于设备像素比 */
+  @media (max-width: 768px) and (max-resolution: 1.5dppx) {
+    .mobile-glow-optimized {
+      /* 超低端设备：使用最简单的阴影 */
+      box-shadow: 
+        0 4px 16px -4px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+    
+    .mobile-glow-optimized::before {
+      display: none; /* 禁用伪元素光晕 */
+    }
+  }
+}
+
 /* 移动端工具栏优化 */
 @media (max-width: 640px) {
   .diary-editor-wrapper {
