@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "export": "CF_PAGES=1 next build",
+    "build:cloudflare": "CF_PAGES=1 next build",
     "deploy": "npm run build && wrangler pages deploy out",
     "preview": "wrangler pages dev out"
   },
