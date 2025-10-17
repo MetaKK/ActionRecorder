@@ -152,6 +152,29 @@ export async function getDiary(date: string): Promise<Diary | null> {
 }
 
 /**
+ * 根据 ID 获取日记
+ */
+export async function getDiaryById(id: string): Promise<Diary | null> {
+  try {
+    // 参数验证
+    if (!id || typeof id !== 'string') {
+      throw new Error('ID 参数无效');
+    }
+
+    const record = await db.diaries
+      .where('id')
+      .equals(id)
+      .and(item => !item.isDeleted)
+      .first();
+
+    return record ? record.diary : null;
+  } catch (error) {
+    console.error(`❌ Failed to get diary by ID ${id}:`, error);
+    return null;
+  }
+}
+
+/**
  * 获取今日日记（返回最新的一篇）
  */
 export async function getTodayDiary(): Promise<Diary | null> {

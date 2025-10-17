@@ -250,7 +250,7 @@ export function RecordInput() {
       if (currentLocation) {
         const locationText = currentLocation.city 
           ? `${currentLocation.city}${currentLocation.district ? `, ${currentLocation.district}` : ''}`
-          : '位置已记录';
+          : currentLocation.district || currentLocation.province || '未知位置';
         message += ` 📍 ${locationText}`;
       }
       toast.success(message);
@@ -449,7 +449,7 @@ export function RecordInput() {
                 disabled={isLocationLoading}
                 title={
                   isLocationEnabled 
-                    ? (location ? `📍 已启用 - ${location.city || '位置已记录'}${location.district ? `, ${location.district}` : ''}\n精度: ${location.accuracy.toFixed(0)}米${location.altitude ? `\n海拔: ${location.altitude.toFixed(0)}米` : ''}` : '获取位置中...') 
+                    ? (location ? `📍 已启用 - ${location.city || location.district || location.province || '未知位置'}${location.district && location.city ? `, ${location.district}` : ''}\n精度: ${location.accuracy.toFixed(0)}米${location.altitude ? `\n海拔: ${location.altitude.toFixed(0)}米` : ''}` : '获取位置中...') 
                     : '点击启用位置记录'
                 }
               >

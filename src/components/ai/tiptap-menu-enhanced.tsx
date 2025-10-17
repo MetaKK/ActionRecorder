@@ -1,7 +1,12 @@
 /**
  * 增强的 Tiptap 编辑器菜单栏
- * 包含粘性工具栏和选中文本快捷菜单
- * 基于 Apple 设计原则和 Notion 最佳实践
+ * 基于 Apple 设计原则和 Notion 编辑器最佳实践
+ * 
+ * 设计理念：
+ * 1. 按使用频率排序：文本格式 > 段落格式 > 颜色 > 媒体 > 撤销/重做
+ * 2. 视觉分组：使用分隔符明确区分功能组
+ * 3. 直观反馈：活跃状态清晰可见
+ * 4. 响应式设计：移动端和桌面端都有良好体验
  */
 
 'use client';
@@ -12,21 +17,18 @@ import {
   Italic, 
   Underline as UnderlineIcon,
   Strikethrough,
+  Heading2,
   Heading3,
   List,
   ListOrdered,
   Quote,
-  Minus,
-  Undo,
-  Redo,
-  Palette,
   Highlighter,
   Image as ImageIcon,
   Video as VideoIcon,
   Music,
-  Link as LinkIcon,
-  MoreHorizontal,
-  Type,
+  Undo,
+  Redo,
+  Minus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
@@ -101,7 +103,6 @@ const MenuDivider = ({ variant = 'default' }: { variant?: 'default' | 'bubble' }
 );
 
 export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
-  const [showMoreTools, setShowMoreTools] = useState(false);
   const [isEditorReady, setIsEditorReady] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -118,13 +119,14 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
     return null;
   }
 
-  const colors = [
-    { name: '默认', value: null },
-    { name: '温暖', value: '#f59e0b' },
-    { name: '喜悦', value: '#10b981' },
-    { name: '平静', value: '#3b82f6' },
-    { name: '浪漫', value: '#ec4899' },
-    { name: '深沉', value: '#6366f1' },
+  // 颜色配置 - 基于情感和场景的颜色选择
+  const textColors = [
+    { name: '默认', value: null, bg: '#ffffff', border: '#e5e7eb' },
+    { name: '温暖橙', value: '#ea580c', bg: '#fed7aa', border: '#fdba74' },
+    { name: '活力红', value: '#dc2626', bg: '#fecaca', border: '#fca5a5' },
+    { name: '平静蓝', value: '#2563eb', bg: '#bfdbfe', border: '#93c5fd' },
+    { name: '清新绿', value: '#16a34a', bg: '#bbf7d0', border: '#86efac' },
+    { name: '优雅紫', value: '#9333ea', bg: '#e9d5ff', border: '#d8b4fe' },
   ];
 
   // 处理文件上传
@@ -140,9 +142,16 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
       return;
     }
 
+    let loadingToastId: string | number | undefined;
+    
     try {
-      toast.loading('正在上传...');
+      loadingToastId = toast.loading('正在处理...');
       const dataUrl = await uploadFileToIndexedDB(file);
+      
+      // 清除 loading toast
+      if (loadingToastId) {
+        toast.dismiss(loadingToastId);
+      }
       
       if (type === 'image') {
         editor.chain().focus().setImage({ src: dataUrl }).run();
@@ -179,214 +188,228 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
         toast.success('文件已插入');
       }
     } catch (error) {
-      console.error('上传失败:', error);
-      toast.error('上传失败，请重试');
+      console.error('处理失败:', error);
+      // 清除 loading toast
+      if (loadingToastId) {
+        toast.dismiss(loadingToastId);
+      }
+      toast.error('处理失败，请重试');
     }
   };
 
   return (
     <>
-      {/* 顶部粘性工具栏 */}
-      <div className="sticky top-0 z-10 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 p-2 sm:p-3 shadow-sm">
-        <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap overflow-x-auto">
-          {/* 基础格式 */}
-          <MenuButton
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            isActive={editor.isActive('bold')}
-            title="粗体 (Ctrl+B)"
-          >
-            <Bold className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </MenuButton>
-          
-          <MenuButton
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            isActive={editor.isActive('italic')}
-            title="斜体 (Ctrl+I)"
-          >
-            <Italic className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </MenuButton>
-          
-          <MenuButton
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-            isActive={editor.isActive('underline')}
-            title="下划线 (Ctrl+U)"
-          >
-            <UnderlineIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </MenuButton>
-          
-          <MenuButton
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-            isActive={editor.isActive('strike')}
-            title="删除线"
-          >
-            <Strikethrough className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </MenuButton>
-
-          <MenuDivider />
-
-          {/* 段落格式 */}
-          <MenuButton
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-            isActive={editor.isActive('heading', { level: 3 })}
-            title="标题"
-          >
-            <Heading3 className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </MenuButton>
-          
-          <MenuButton
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            isActive={editor.isActive('bulletList')}
-            title="无序列表"
-          >
-            <List className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </MenuButton>
-          
-          <MenuButton
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            isActive={editor.isActive('orderedList')}
-            title="有序列表"
-          >
-            <ListOrdered className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </MenuButton>
-          
-          <MenuButton
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-            isActive={editor.isActive('blockquote')}
-            title="引用"
-          >
-            <Quote className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </MenuButton>
-
-          <MenuDivider />
-
-          {/* 颜色和高亮 */}
-          <div className="relative group">
-            <MenuButton
-              onClick={() => setShowMoreTools(!showMoreTools)}
-              isActive={showMoreTools}
-              title="颜色"
-            >
-              <Palette className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            </MenuButton>
+      {/* 粘性工具栏 - 基于 Apple 和 Notion 设计原则 */}
+      <div className="sticky top-0 z-10 bg-white/98 dark:bg-gray-900/98 backdrop-blur-lg border-b border-gray-200/80 dark:border-gray-700/80 shadow-sm">
+        <div className="px-3 py-2 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center gap-0.5 min-w-max">
             
-            {showMoreTools && (
-              <div className="absolute top-full left-0 mt-1 p-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-20 min-w-[200px]">
-                <div className="space-y-2">
-                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2">文字颜色</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {colors.map((color) => (
-                      <button
-                        key={color.name}
-                        onClick={() => {
-                          if (color.value) {
-                            editor.chain().focus().setColor(color.value).run();
-                          } else {
-                            editor.chain().focus().unsetColor().run();
-                          }
-                        }}
-                        className={cn(
-                          'w-7 h-7 rounded-lg border-2 transition-all hover:scale-110',
-                          editor.isActive('textStyle', { color: color.value })
-                            ? 'border-blue-500'
-                            : 'border-gray-200 dark:border-gray-700'
-                        )}
-                        style={{ backgroundColor: color.value || '#ffffff' }}
-                        title={color.name}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* 第一组：文本样式（最高频） */}
+            <div className="flex items-center gap-0.5">
+              <MenuButton
+                onClick={() => editor.chain().focus().toggleBold().run()}
+                isActive={editor.isActive('bold')}
+                title="粗体 (⌘B)"
+              >
+                <Bold className="w-4 h-4" />
+              </MenuButton>
+              
+              <MenuButton
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+                isActive={editor.isActive('italic')}
+                title="斜体 (⌘I)"
+              >
+                <Italic className="w-4 h-4" />
+              </MenuButton>
+              
+              <MenuButton
+                onClick={() => editor.chain().focus().toggleUnderline().run()}
+                isActive={editor.isActive('underline')}
+                title="下划线 (⌘U)"
+              >
+                <UnderlineIcon className="w-4 h-4" />
+              </MenuButton>
+              
+              <MenuButton
+                onClick={() => editor.chain().focus().toggleStrike().run()}
+                isActive={editor.isActive('strike')}
+                title="删除线"
+              >
+                <Strikethrough className="w-4 h-4" />
+              </MenuButton>
+            </div>
+
+            <MenuDivider />
+
+            {/* 第二组：段落格式 */}
+            <div className="flex items-center gap-0.5">
+              <MenuButton
+                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                isActive={editor.isActive('heading', { level: 2 })}
+                title="大标题"
+              >
+                <Heading2 className="w-4 h-4" />
+              </MenuButton>
+              
+              <MenuButton
+                onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                isActive={editor.isActive('heading', { level: 3 })}
+                title="小标题"
+              >
+                <Heading3 className="w-4 h-4" />
+              </MenuButton>
+            </div>
+
+            <MenuDivider />
+
+            {/* 第三组：列表 */}
+            <div className="flex items-center gap-0.5">
+              <MenuButton
+                onClick={() => editor.chain().focus().toggleBulletList().run()}
+                isActive={editor.isActive('bulletList')}
+                title="无序列表"
+              >
+                <List className="w-4 h-4" />
+              </MenuButton>
+              
+              <MenuButton
+                onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                isActive={editor.isActive('orderedList')}
+                title="有序列表"
+              >
+                <ListOrdered className="w-4 h-4" />
+              </MenuButton>
+              
+              <MenuButton
+                onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                isActive={editor.isActive('blockquote')}
+                title="引用"
+              >
+                <Quote className="w-4 h-4" />
+              </MenuButton>
+            </div>
+
+            <MenuDivider />
+
+            {/* 第四组：文字颜色（精致的颜色选择器） */}
+            <div className="flex items-center gap-1 px-1">
+              {textColors.map((color) => (
+                <button
+                  key={color.name}
+                  onClick={() => {
+                    if (color.value) {
+                      editor.chain().focus().setColor(color.value).run();
+                    } else {
+                      editor.chain().focus().unsetColor().run();
+                    }
+                  }}
+                  className={cn(
+                    'relative w-5 h-5 rounded-md transition-all hover:scale-110 flex-shrink-0',
+                    'focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-400',
+                    editor.isActive('textStyle', { color: color.value })
+                      ? 'ring-2 ring-blue-500 ring-offset-1'
+                      : 'hover:ring-1 hover:ring-gray-300'
+                  )}
+                  style={{ 
+                    backgroundColor: color.bg,
+                    borderWidth: '1.5px',
+                    borderColor: color.border,
+                  }}
+                  title={color.name}
+                  aria-label={color.name}
+                >
+                  {/* 默认颜色显示一个小斜线 */}
+                  {!color.value && (
+                    <Minus className="w-3 h-3 text-gray-400 absolute inset-0 m-auto rotate-45" strokeWidth={2} />
+                  )}
+                </button>
+              ))}
+              
+              <MenuButton
+                onClick={() => editor.chain().focus().toggleHighlight().run()}
+                isActive={editor.isActive('highlight')}
+                title="高亮背景"
+              >
+                <Highlighter className="w-4 h-4" />
+              </MenuButton>
+            </div>
+
+            <MenuDivider />
+
+            {/* 第五组：媒体插入 */}
+            <div className="flex items-center gap-0.5">
+              {/* 隐藏的文件输入 */}
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileUpload(e.target.files, 'image')}
+                className="hidden"
+                aria-label="上传图片"
+              />
+              <input
+                ref={videoInputRef}
+                type="file"
+                accept="video/*"
+                onChange={(e) => handleFileUpload(e.target.files, 'video')}
+                className="hidden"
+                aria-label="上传视频"
+              />
+              <input
+                ref={audioInputRef}
+                type="file"
+                accept="audio/*"
+                onChange={(e) => handleFileUpload(e.target.files, 'audio')}
+                className="hidden"
+                aria-label="上传音频"
+              />
+
+              <MenuButton
+                onClick={() => imageInputRef.current?.click()}
+                title="插入图片"
+              >
+                <ImageIcon className="w-4 h-4" />
+              </MenuButton>
+
+              <MenuButton
+                onClick={() => videoInputRef.current?.click()}
+                title="插入视频"
+              >
+                <VideoIcon className="w-4 h-4" />
+              </MenuButton>
+
+              <MenuButton
+                onClick={() => audioInputRef.current?.click()}
+                title="插入音频"
+              >
+                <Music className="w-4 h-4" />
+              </MenuButton>
+            </div>
+
+            <MenuDivider />
+
+            {/* 第六组：撤销/重做（最后，低频操作） */}
+            <div className="flex items-center gap-0.5">
+              <MenuButton
+                onClick={() => editor.chain().focus().undo().run()}
+                disabled={!editor.can().undo()}
+                title="撤销 (⌘Z)"
+              >
+                <Undo className="w-4 h-4" />
+              </MenuButton>
+              
+              <MenuButton
+                onClick={() => editor.chain().focus().redo().run()}
+                disabled={!editor.can().redo()}
+                title="重做 (⌘⇧Z)"
+              >
+                <Redo className="w-4 h-4" />
+              </MenuButton>
+            </div>
+
           </div>
-          
-          <MenuButton
-            onClick={() => editor.chain().focus().toggleHighlight().run()}
-            isActive={editor.isActive('highlight')}
-            title="高亮"
-          >
-            <Highlighter className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </MenuButton>
-
-          <MenuDivider />
-
-          {/* 媒体插入 - 隐藏的文件输入 */}
-          <input
-            ref={imageInputRef}
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleFileUpload(e.target.files, 'image')}
-            className="hidden"
-          />
-          <input
-            ref={videoInputRef}
-            type="file"
-            accept="video/*"
-            onChange={(e) => handleFileUpload(e.target.files, 'video')}
-            className="hidden"
-          />
-          <input
-            ref={audioInputRef}
-            type="file"
-            accept="audio/*"
-            onChange={(e) => handleFileUpload(e.target.files, 'audio')}
-            className="hidden"
-          />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="*/*"
-            onChange={(e) => handleFileUpload(e.target.files, 'file')}
-            className="hidden"
-          />
-
-          {/* 图片 */}
-          <MenuButton
-            onClick={() => imageInputRef.current?.click()}
-            title="插入图片"
-          >
-            <ImageIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </MenuButton>
-
-          {/* 视频 */}
-          <MenuButton
-            onClick={() => videoInputRef.current?.click()}
-            title="插入视频"
-          >
-            <VideoIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </MenuButton>
-
-          {/* 音频 */}
-          <MenuButton
-            onClick={() => audioInputRef.current?.click()}
-            title="插入音频"
-          >
-            <Music className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </MenuButton>
-
-          <MenuDivider />
-
-          {/* 撤销/重做 */}
-          <MenuButton
-            onClick={() => editor.chain().focus().undo().run()}
-            disabled={!editor.can().undo()}
-            title="撤销 (Ctrl+Z)"
-          >
-            <Undo className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </MenuButton>
-          
-          <MenuButton
-            onClick={() => editor.chain().focus().redo().run()}
-            disabled={!editor.can().redo()}
-            title="重做 (Ctrl+Shift+Z)"
-          >
-            <Redo className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </MenuButton>
         </div>
       </div>
-
-      {/* Bubble Menu - 暂时禁用，等待正确的实现方式 */}
-      {/* 顶部粘性工具栏已提供所有必要功能 */}
     </>
   );
 }

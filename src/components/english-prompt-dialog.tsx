@@ -341,39 +341,39 @@ export function EnglishPromptDialog() {
             {/* 教材选择 - Notion风格优化 */}
             <div className="flex items-center gap-3 relative z-10">
               <label className="text-m font-semibold text-foreground/80 whitespace-nowrap">教材</label>
-              <div className="flex gap-2 overflow-x-auto scrollbar-none p-1">
+              <div className="flex gap-1.5 overflow-x-auto scrollbar-none p-1">
                 {allBooks.map((book) => (
                   <button
                     key={book.id}
                     onClick={() => setSelectedBook(book.id)}
                     className={cn(
-                      "relative flex items-center justify-center rounded-xl px-4 py-2.5 transition-all duration-300",
-                      "border backdrop-blur-sm shrink-0 shadow-sm",
+                      "relative flex items-center justify-center rounded-lg px-3 py-1.5 transition-all duration-300",
+                      "border backdrop-blur-sm shrink-0",
                       selectedBook === book.id
                         ? [
-                            "border-blue-400/50 bg-gradient-to-br from-blue-500/15 via-blue-400/15 to-blue-500/15",
-                            "shadow-lg shadow-blue-500/20",
-                            "scale-[1.05] ring-2 ring-blue-400/30",
+                            "border-cyan-400/40 bg-gradient-to-br from-sky-400/12 via-blue-400/12 to-cyan-400/12",
+                            "shadow-md shadow-cyan-400/10",
+                            "scale-[1.05]",
                           ]
                         : [
-                            "border-border/40 bg-background/80 hover:bg-background",
-                            "hover:border-blue-300/50 hover:bg-gradient-to-br hover:from-blue-400/8 hover:to-blue-500/8",
-                            "hover:scale-[1.02] hover:shadow-md",
+                            "border-border/30 bg-background/50",
+                            "hover:border-cyan-300/40 hover:bg-gradient-to-br hover:from-sky-400/5 hover:to-cyan-400/5",
+                            "hover:scale-[1.02]",
                           ]
                     )}
                   >
                     <span className={cn(
-                      "text-sm font-semibold transition-colors whitespace-nowrap",
+                      "text-xs font-semibold transition-colors whitespace-nowrap",
                       selectedBook === book.id 
-                        ? "text-blue-700 dark:text-blue-300" 
+                        ? "text-foreground" 
                         : "text-foreground/70"
                     )}>
                       {book.name}
                     </span>
                     
-                    {/* 选中指示器 */}
+                    {/* 选中下划线 */}
                     {selectedBook === book.id && (
-                      <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-blue-500 shadow-lg" />
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full bg-gradient-to-r from-sky-400 to-cyan-400" />
                     )}
                   </button>
                 ))}
@@ -383,16 +383,16 @@ export function EnglishPromptDialog() {
               <button
                 onClick={() => setIsAddingBook(!isAddingBook)}
                 className={cn(
-                  "relative flex items-center justify-center rounded-xl px-3 py-2.5 transition-all duration-300",
-                  "border backdrop-blur-sm shrink-0 shadow-sm",
-                  "border-dashed border-border/50 bg-background/60",
-                  "hover:border-blue-300/50 hover:bg-gradient-to-br hover:from-blue-400/8 hover:to-blue-500/8",
-                  "hover:scale-[1.02] hover:shadow-md",
-                  isAddingBook && "border-blue-400/50 bg-blue-50 dark:bg-blue-950/20"
+                  "relative flex items-center justify-center rounded-lg px-2 py-1.5 transition-all duration-300",
+                  "border backdrop-blur-sm shrink-0",
+                  "border-dashed border-border/40 bg-background/30",
+                  "hover:border-cyan-300/40 hover:bg-gradient-to-br hover:from-cyan-400/5 hover:to-cyan-400/5",
+                  "hover:scale-[1.02]",
+                  isAddingBook && "border-cyan-400/50 bg-cyan-50 dark:bg-cyan-950/20"
                 )}
                 title="添加自定义教材"
               >
-                <Plus className="h-4 w-4 text-muted-foreground" />
+                <Plus className="h-3 w-3 text-muted-foreground" />
               </button>
             </div>
 

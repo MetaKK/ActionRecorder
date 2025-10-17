@@ -109,17 +109,9 @@ export function Timeline() {
     console.log('Export diary:', id);
   };
 
-  const handleDeleteDiary = async (id: string) => {
-    try {
-      const { deleteDiary } = await import('@/lib/storage/diary-db');
-      await deleteDiary(id);
-      console.log('✅ Diary deleted:', id);
-      // 重新加载日记列表
-      await loadDiaries();
-    } catch (error) {
-      console.error('❌ Failed to delete diary:', error);
-      alert('删除日记失败，请重试');
-    }
+  const handleDeleteDiary = (id: string) => {
+    // TODO: 实现删除功能
+    console.log('Delete diary:', id);
   };
   
   // 空状态

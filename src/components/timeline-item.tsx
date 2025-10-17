@@ -249,8 +249,8 @@ const TimelineItemComponent = function TimelineItem({ record }: TimelineItemProp
                           className="font-medium text-blue-600/80 dark:text-blue-400/80"
                           title={formatLocation(record.location)}
                         >
-                          {record.location.city || '位置已记录'}
-                          {record.location.district && `, ${record.location.district}`}
+                          {record.location.city || record.location.district || record.location.province || '未知位置'}
+                          {record.location.district && record.location.city && `, ${record.location.district}`}
                         </span>
                       </div>
                     </>
