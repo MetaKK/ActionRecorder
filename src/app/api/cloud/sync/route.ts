@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { ChatSession } from "@/lib/hooks/use-ai-chat";
 
+// 静态导出配置
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 // 模拟数据库
 const mockDatabase = new Map<string, ChatSession>();
 

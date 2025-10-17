@@ -6,6 +6,10 @@ interface AIChatPageProps {
   params: Promise<{ id: string }>;
 }
 
+// 静态导出配置
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 // 为静态导出生成参数
 export async function generateStaticParams() {
   return [];
