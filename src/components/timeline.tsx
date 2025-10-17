@@ -15,6 +15,7 @@ import { useProgressiveLoading } from '@/lib/hooks/use-intersection-observer';
 import { groupByDate, formatDate, getDateLabel } from '@/lib/utils/date';
 import { getAllDiaries, debugDatabase, clearDatabase } from '@/lib/storage/diary-db';
 import { DiaryPreview } from '@/lib/ai/diary/types';
+import { Record } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 
 export function Timeline() {
@@ -199,7 +200,7 @@ export function Timeline() {
                       );
                     } else {
                       return (
-                        <TimelineItem key={item.id} record={item.data as any} />
+                        <TimelineItem key={item.id} record={item.data as unknown as Record} />
                       );
                     }
                   });

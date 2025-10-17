@@ -163,7 +163,7 @@ function selectKeyMoments(records: unknown[]): unknown[] {
   // 智能选择：优先选择内容丰富、情感强烈的记录
   const scored = records.map(record => {
     let score = 0;
-    const content = record.content || '';
+    const content = (record as any).content || '';
     
     // 长度分（20-100字最佳）
     const length = content.length;
