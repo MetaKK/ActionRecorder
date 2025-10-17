@@ -14,7 +14,7 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 export const EnhancedImage = Node.create({
   name: 'image',
   group: 'block',
-  atom: true,
+  atom: false, // 允许多个图片共存
   draggable: true,
 
   addAttributes() {
@@ -125,7 +125,7 @@ export const EnhancedImage = Node.create({
 export const Video = Node.create({
   name: 'video',
   group: 'block',
-  atom: true,
+  atom: false, // 允许多个视频共存
   draggable: true,
 
   addAttributes() {
@@ -217,7 +217,7 @@ export const Video = Node.create({
 export const Audio = Node.create({
   name: 'audio',
   group: 'block',
-  atom: true,
+  atom: false, // 允许多个音频共存
   draggable: true, // 恢复拖动功能
 
   addAttributes() {
@@ -321,7 +321,7 @@ export const Audio = Node.create({
 export const FileAttachment = Node.create({
   name: 'file',
   group: 'block',
-  atom: true,
+  atom: false, // 允许多个文件共存
 
   addAttributes() {
     return {
