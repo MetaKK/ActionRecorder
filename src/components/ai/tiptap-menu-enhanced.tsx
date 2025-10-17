@@ -55,9 +55,11 @@ const MenuButton = ({
   variant?: 'default' | 'bubble';
 }) => {
   const baseClasses = cn(
-    'p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0',
+    'p-2 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0',
     'disabled:opacity-30 disabled:cursor-not-allowed',
-    'active:scale-95 touch-manipulation'
+    'active:scale-95 touch-manipulation',
+    'min-h-[44px] min-w-[44px] flex items-center justify-center', // 移动端最小触摸区域
+    'select-none' // 防止文本选择
   );
 
   if (variant === 'bubble') {
@@ -127,7 +129,7 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
     { name: '优雅紫', value: '#9333ea', bg: '#e9d5ff', border: '#d8b4fe' },
   ];
 
-  // 处理文件上传
+  // 处理文件上传 - 移动端优化
   const handleFileUpload = async (files: FileList | null, type: MediaType) => {
     if (!files || files.length === 0) return;
 
@@ -144,6 +146,13 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
     
     try {
       loadingToastId = toast.loading('正在处理...');
+      
+      // 移动端优化：检查文件大小，大文件给出提示
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (isMobile && file.size > 10 * 1024 * 1024) { // 10MB
+        toast.info('文件较大，处理中请稍候...');
+      }
+      
       const dataUrl = await uploadFileToIndexedDB(file);
       
       // 清除 loading toast
@@ -209,10 +218,10 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
 
   return (
     <>
-      {/* 粘性工具栏 - 基于 Apple 和 Notion 设计原则 */}
+      {/* 粘性工具栏 - 基于 Apple 和 Notion 设计原则，移动端优化 */}
       <div className="sticky top-0 z-10 bg-white/98 dark:bg-gray-900/98 backdrop-blur-lg border-b border-gray-200/80 dark:border-gray-700/80 shadow-sm">
-        <div className="px-3 py-2 overflow-x-auto scrollbar-hide">
-          <div className="flex items-center gap-0.5 min-w-max">
+        <div className="px-2 sm:px-3 py-2 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center gap-1 sm:gap-0.5 min-w-max">
             
             {/* 第一组：文本样式（最高频） */}
             <div className="flex items-center gap-0.5">
@@ -346,9 +355,9 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
 
             <MenuDivider />
 
-            {/* 第五组：媒体插入 */}
+            {/* 第五组：媒体插入 - 移动端优化 */}
             <div className="flex items-center gap-0.5">
-              {/* 隐藏的文件输入 */}
+              {/* 隐藏的文件输入 - 移动端优化 */}
               <input
                 ref={imageInputRef}
                 type="file"
@@ -356,6 +365,7 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
                 onChange={(e) => handleFileUpload(e.target.files, 'image')}
                 className="hidden"
                 aria-label="上传图片"
+                capture="environment" // 移动端相机优化
               />
               <input
                 ref={videoInputRef}
@@ -364,6 +374,7 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
                 onChange={(e) => handleFileUpload(e.target.files, 'video')}
                 className="hidden"
                 aria-label="上传视频"
+                capture="environment" // 移动端相机优化
               />
               <input
                 ref={audioInputRef}
@@ -375,21 +386,36 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
               />
 
               <MenuButton
-                onClick={() => imageInputRef.current?.click()}
+                onClick={() => {
+                  // 移动端优化：确保文件选择器能正常打开
+                  if (imageInputRef.current) {
+                    imageInputRef.current.click();
+                  }
+                }}
                 title="插入图片"
               >
                 <ImageIcon className="w-4 h-4" />
               </MenuButton>
 
               <MenuButton
-                onClick={() => videoInputRef.current?.click()}
+                onClick={() => {
+                  // 移动端优化：确保文件选择器能正常打开
+                  if (videoInputRef.current) {
+                    videoInputRef.current.click();
+                  }
+                }}
                 title="插入视频"
               >
                 <VideoIcon className="w-4 h-4" />
               </MenuButton>
 
               <MenuButton
-                onClick={() => audioInputRef.current?.click()}
+                onClick={() => {
+                  // 移动端优化：确保文件选择器能正常打开
+                  if (audioInputRef.current) {
+                    audioInputRef.current.click();
+                  }
+                }}
                 title="插入音频"
               >
                 <Music className="w-4 h-4" />

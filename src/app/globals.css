@@ -1,17 +1,29 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* 日记编辑器媒体样式 */
+/* 日记编辑器媒体样式 - 移动端优化 */
 .diary-image {
   max-width: 100%;
   height: auto;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
+  /* 移动端优化 */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .diary-image:hover {
   transform: scale(1.02);
+}
+
+/* 移动端触摸优化 */
+@media (hover: none) and (pointer: coarse) {
+  .diary-image:hover {
+    transform: none;
+  }
 }
 
 .diary-video {
@@ -19,6 +31,9 @@
   height: auto;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* 移动端视频优化 */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
 }
 
 .diary-audio {
@@ -27,6 +42,8 @@
   border-radius: 8px;
   background: #f8f9fa;
   padding: 8px;
+  /* 移动端音频优化 */
+  touch-action: manipulation;
 }
 
 .file-attachment {
@@ -37,16 +54,53 @@
   border-radius: 8px;
   background: #f9fafb;
   margin: 8px 0;
+  /* 移动端触摸优化 */
+  touch-action: manipulation;
+  min-height: 44px; /* 移动端最小触摸区域 */
 }
 
 .file-link {
   color: #3b82f6;
   text-decoration: none;
   font-weight: 500;
+  /* 移动端触摸优化 */
+  touch-action: manipulation;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 8px;
 }
 
 .file-link:hover {
   text-decoration: underline;
+}
+
+/* 移动端工具栏优化 */
+@media (max-width: 640px) {
+  .diary-editor-wrapper {
+    /* 防止移动端键盘弹出时布局错乱 */
+    position: relative;
+  }
+  
+  .diary-editor-content {
+    /* 移动端编辑器内容优化 */
+    padding: 16px 12px;
+    font-size: 16px; /* 防止iOS缩放 */
+    line-height: 1.6;
+  }
+  
+  /* 移动端媒体元素优化 */
+  .diary-image,
+  .diary-video {
+    margin: 12px 0;
+    border-radius: 12px;
+  }
+  
+  .diary-audio {
+    margin: 12px 0;
+    border-radius: 12px;
+    padding: 12px;
+  }
 }
 
 @custom-variant dark (&:is(.dark *));

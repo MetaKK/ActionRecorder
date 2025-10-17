@@ -114,7 +114,9 @@ export function DiaryEditor({
   return (
     <div className="diary-editor-wrapper relative">
       {editable && <TiptapMenuEnhanced editor={editor} />}
-      <EditorContent editor={editor} />
+      <div className="diary-editor-content">
+        <EditorContent editor={editor} />
+      </div>
     </div>
   );
 }
