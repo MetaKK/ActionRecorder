@@ -139,7 +139,7 @@ export default function DiaryGeneratePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 relative overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 relative overflow-hidden">
       {/* 背景动画光效 - 更酷炫的效果 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -184,7 +184,7 @@ export default function DiaryGeneratePage() {
         />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-6">
+      <div className="relative z-10 h-full max-w-7xl mx-auto px-4 py-6 flex flex-col">
         {/* 顶部导航 */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -224,16 +224,17 @@ export default function DiaryGeneratePage() {
           </div>
         </motion.div>
 
-        <AnimatePresence mode="wait">
-          {/* API Key 配置 */}
-          {showApiKeyInput && (
-            <motion.div
-              key="api-key"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="max-w-md mx-auto"
-            >
+        <div className="flex-1 flex items-center justify-center">
+          <AnimatePresence mode="wait">
+            {/* API Key 配置 */}
+            {showApiKeyInput && (
+              <motion.div
+                key="api-key"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="max-w-md mx-auto"
+              >
               <div className="p-6 rounded-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-blue-200/50 dark:border-blue-800/30 shadow-xl">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
@@ -268,276 +269,278 @@ export default function DiaryGeneratePage() {
             </motion.div>
           )}
 
-          {/* 风格选择步骤 */}
-          {currentStep === 'style-select' && !showApiKeyInput && (
-            <motion.div
-              key="style-select"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="space-y-8"
-            >
-              {/* 主标题 */}
+            {/* 风格选择步骤 */}
+            {currentStep === 'style-select' && !showApiKeyInput && (
               <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                className="text-center"
+                key="style-select"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="w-full h-full flex flex-col"
               >
-                <motion.div
-                  animate={{
-                    scale: [1, 1.1, 1],
-                    rotate: [0, 5, -5, 0],
-                  }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                  className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 shadow-xl shadow-purple-500/30"
-                >
-                  <Sparkles className="w-8 h-8 text-white" />
-                </motion.div>
-                
-                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-3">
-                  选择写作风格
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400 text-base max-w-2xl mx-auto">
-                  从10位文学大师中选择你喜欢的风格，或上传文本/图片让AI为你定制独特风格
-                </p>
-              </motion.div>
-
-              {/* 3D卡片轮播 */}
-              <div className="mt-12">
-                <WriterStyleCarousel
-                  styles={writerStyles}
-                  selectedStyle={selectedStyleId === 'custom' ? null : selectedStyleId}
-                  onSelectStyle={handleSelectStyle}
-                />
-              </div>
-
-              {/* 自定义风格入口 - 紧凑统一版 */}
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="flex items-center justify-center gap-3"
-              >
-                {/* 左侧分隔线 */}
-                <div className="h-px flex-1 max-w-32 bg-gradient-to-r from-transparent to-gray-300/50 dark:to-gray-700/50" />
-                
-                {/* 自定义风格按钮 */}
-                <motion.button
-                  onClick={() => setCurrentStep('custom-style')}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="group relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-gray-200/80 dark:border-gray-700/80 shadow-lg hover:shadow-xl hover:border-purple-500/30 transition-all duration-300"
-                >
-                  {/* 渐变图标背景 */}
-                  <div className="relative w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:shadow-purple-500/30 transition-all">
-                    <Palette className="w-4 h-4 text-white" />
-                  </div>
-                  
-                  {/* 文字 */}
-                  <span className="text-sm font-medium text-gray-900 dark:text-white pr-1">
-                    自定义风格
-                  </span>
-                  
-                  {/* 微妙的渐变光晕（hover时） */}
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500/0 via-pink-500/0 to-purple-500/0 group-hover:from-purple-500/5 group-hover:via-pink-500/5 group-hover:to-purple-500/5 transition-all duration-500" />
-                </motion.button>
-                
-                {/* 右侧分隔线 */}
-                <div className="h-px flex-1 max-w-32 bg-gradient-to-l from-transparent to-gray-300/50 dark:to-gray-700/50" />
-              </motion.div>
-
-              {/* 底部操作区 */}
-              {selectedStyleId && (
+                {/* 主标题 */}
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
-                  className="max-w-2xl mx-auto"
+                  className="text-center mb-8"
                 >
-                  <div className="p-6 rounded-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                          {selectedStyleId === 'custom' ? '自定义风格' : writerStyles.find(s => s.id === selectedStyleId)?.name}
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          今日数据：{records.length} 个片段，
-                          {records.reduce((acc, r) => {
-                            const content = r.content as { text?: string };
-                            return acc + (content.text?.length || 0);
-                          }, 0)} 字
-                        </p>
-                      </div>
-                      <Button
-                        onClick={handleGenerate}
-                        disabled={records.length === 0}
-                        size="lg"
-                        className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg"
-                      >
-                        <Zap className="w-4 h-4 mr-2" />
-                        开始生成
-                      </Button>
-                    </div>
-                    
-                    {records.length === 0 && (
-                      <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded-lg">
-                        <AlertCircle className="w-4 h-4" />
-                        今天还没有记录，先去添加一些生活片段吧
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </motion.div>
-          )}
-
-          {/* 自定义风格步骤 */}
-          {currentStep === 'custom-style' && (
-            <motion.div
-              key="custom-style"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="max-w-4xl mx-auto"
-            >
-              {/* 标题 */}
-              <div className="text-center mb-8">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                  创建自定义风格
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400">
-                  上传文本或图片，AI 将为你分析并生成独特的写作风格
-                </p>
-              </div>
-
-              <CustomStyleCreator onStyleGenerated={handleCustomStyleGenerated} />
-
-              <div className="mt-6 text-center">
-                <Button
-                  variant="ghost"
-                  onClick={() => setCurrentStep('style-select')}
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  返回风格选择
-                </Button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* 生成中 */}
-          {currentStep === 'generating' && (
-            <motion.div
-              key="generating"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="max-w-2xl mx-auto"
-            >
-              {/* 进度卡片 */}
-              <div className="p-8 rounded-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl">
-                <div className="text-center mb-8">
                   <motion.div
                     animate={{
-                      rotate: 360,
+                      scale: [1, 1.1, 1],
+                      rotate: [0, 5, -5, 0],
                     }}
                     transition={{
-                      duration: 2,
+                      duration: 4,
                       repeat: Infinity,
-                      ease: "linear",
+                      ease: "easeInOut",
                     }}
-                    className="inline-block mb-4"
+                    className="inline-flex items-center justify-center w-12 h-12 mb-3 rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 shadow-xl shadow-purple-500/30"
                   >
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-xl">
-                      <Sparkles className="w-8 h-8 text-white" />
+                    <Sparkles className="w-6 h-6 text-white" />
+                  </motion.div>
+                  
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                    选择写作风格
+                  </h1>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm max-w-xl mx-auto">
+                    从10位文学大师中选择你喜欢的风格，或创建自定义风格
+                  </p>
+                </motion.div>
+
+                {/* 3D卡片轮播 - 包含自定义风格卡片 */}
+                <div className="flex-1 flex items-center justify-center">
+                  <WriterStyleCarousel
+                    styles={[
+                      ...writerStyles,
+                      {
+                        id: 'custom',
+                        name: '自定义风格',
+                        nameEn: 'Custom Style',
+                        era: '现代',
+                        genre: '个性化',
+                        description: '上传文本或图片，AI为你定制独特风格',
+                        characteristics: ['个性化', 'AI分析', '独特风格'],
+                        color: {
+                          from: '#8b5cf6',
+                          to: '#ec4899',
+                          accent: '#f59e0b',
+                        },
+                        prompt: '',
+                        icon: '🎨',
+                        famousQuotes: [
+                          '每个人都有自己独特的表达方式',
+                          '风格是内心的外在表现',
+                          '真正的艺术在于发现自己的声音',
+                          '个性化是最高级的表达',
+                          '让AI成为你的创作伙伴',
+                        ],
+                      }
+                    ]}
+                    selectedStyle={selectedStyleId}
+                    onSelectStyle={(styleId) => {
+                      if (styleId === 'custom') {
+                        setCurrentStep('custom-style');
+                      } else {
+                        handleSelectStyle(styleId);
+                      }
+                    }}
+                  />
+                </div>
+
+                {/* 底部操作区 */}
+                {selectedStyleId && selectedStyleId !== 'custom' && (
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="mt-0"
+                  >
+                    <div className="p-4 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
+                            {writerStyles.find(s => s.id === selectedStyleId)?.name}
+                          </h3>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            今日数据：{records.length} 个片段，
+                            {records.reduce((acc, r) => {
+                              const content = r.content as { text?: string };
+                              return acc + (content.text?.length || 0);
+                            }, 0)} 字
+                          </p>
+                        </div>
+                        <Button
+                          onClick={handleGenerate}
+                          disabled={records.length === 0}
+                          size="sm"
+                          className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg"
+                        >
+                          <Zap className="w-4 h-4 mr-2" />
+                          开始生成
+                        </Button>
+                      </div>
+                      
+                      {records.length === 0 && (
+                        <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded-lg mt-3">
+                          <AlertCircle className="w-4 h-4" />
+                          今天还没有记录，先去添加一些生活片段吧
+                        </div>
+                      )}
                     </div>
                   </motion.div>
-                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
-                    AI 正在创作中
+                )}
+              </motion.div>
+            )}
+
+            {/* 自定义风格步骤 */}
+            {currentStep === 'custom-style' && (
+              <motion.div
+                key="custom-style"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full h-full flex flex-col"
+              >
+                {/* 标题 */}
+                <div className="text-center mb-6">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    创建自定义风格
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {progress?.message || '准备开始...'}
+                    上传文本或图片，AI 将为你分析并生成独特的写作风格
                   </p>
                 </div>
 
-                {/* 进度条 */}
-                <div className="space-y-4 mb-8">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">进度</span>
-                    <span className="font-semibold text-blue-600 dark:text-blue-400">
-                      {progress?.progress || 0}%
-                    </span>
-                  </div>
-                  <div className="h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progress?.progress || 0}%` }}
-                      transition={{ duration: 0.3 }}
-                      className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
-                    />
-                  </div>
+                <div className="flex-1 flex items-center justify-center">
+                  <CustomStyleCreator onStyleGenerated={handleCustomStyleGenerated} />
                 </div>
 
-                {/* 步骤指示 */}
-                <div className="grid grid-cols-3 gap-4">
-                  {[
-                    { icon: Brain, label: '分析数据', step: 30 },
-                    { icon: Wand2, label: 'AI 创作', step: 60 },
-                    { icon: Heart, label: '完善细节', step: 90 },
-                  ].map((item, index) => (
-                    <div
-                      key={index}
-                      className={`text-center p-4 rounded-xl transition-all ${
-                        (progress?.progress || 0) >= item.step
-                          ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500'
-                          : 'bg-gray-50 dark:bg-gray-700/50 border-2 border-gray-200 dark:border-gray-700'
-                      }`}
-                    >
-                      <item.icon
-                        className={`w-6 h-6 mx-auto mb-2 ${
-                          (progress?.progress || 0) >= item.step
-                            ? 'text-blue-600 dark:text-blue-400'
-                            : 'text-gray-400 dark:text-gray-500'
-                        }`}
-                      />
-                      <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                        {item.label}
-                      </p>
-                    </div>
-                  ))}
+                <div className="mt-4 text-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentStep('style-select')}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    返回风格选择
+                  </Button>
                 </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* 生成完成 */}
-          {currentStep === 'complete' && (
-            <motion.div
-              key="complete"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="max-w-md mx-auto text-center p-10 rounded-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-green-200/50 dark:border-green-800/30 shadow-xl"
-            >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", duration: 0.6 }}
-                className="inline-flex items-center justify-center w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 shadow-xl"
-              >
-                <Check className="w-8 h-8 text-white" />
               </motion.div>
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
-                日记创作完成！
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                正在跳转到编辑页面...
-              </p>
-            </motion.div>
-          )}
+            )}
 
-        </AnimatePresence>
+            {/* 生成中 */}
+            {currentStep === 'generating' && (
+              <motion.div
+                key="generating"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="w-full h-full flex items-center justify-center"
+              >
+                {/* 进度卡片 */}
+                <div className="p-6 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl max-w-md w-full">
+                  <div className="text-center mb-6">
+                    <motion.div
+                      animate={{
+                        rotate: 360,
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="inline-block mb-3"
+                    >
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg">
+                        <Sparkles className="w-6 h-6 text-white" />
+                      </div>
+                    </motion.div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                      AI 正在创作中
+                    </h2>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      {progress?.message || '准备开始...'}
+                    </p>
+                  </div>
+
+                  {/* 进度条 */}
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-600 dark:text-gray-400">进度</span>
+                      <span className="font-semibold text-blue-600 dark:text-blue-400">
+                        {progress?.progress || 0}%
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress?.progress || 0}%` }}
+                        transition={{ duration: 0.3 }}
+                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 步骤指示 */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { icon: Brain, label: '分析数据', step: 30 },
+                      { icon: Wand2, label: 'AI 创作', step: 60 },
+                      { icon: Heart, label: '完善细节', step: 90 },
+                    ].map((item, index) => (
+                      <div
+                        key={index}
+                        className={`text-center p-2 rounded-lg transition-all ${
+                          (progress?.progress || 0) >= item.step
+                            ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-500'
+                            : 'bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700'
+                        }`}
+                      >
+                        <item.icon
+                          className={`w-4 h-4 mx-auto mb-1 ${
+                            (progress?.progress || 0) >= item.step
+                              ? 'text-blue-600 dark:text-blue-400'
+                              : 'text-gray-400 dark:text-gray-500'
+                          }`}
+                        />
+                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                          {item.label}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* 生成完成 */}
+            {currentStep === 'complete' && (
+              <motion.div
+                key="complete"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full h-full flex items-center justify-center"
+              >
+                <div className="text-center p-6 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-green-200/50 dark:border-green-800/30 shadow-xl max-w-sm w-full">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", duration: 0.6 }}
+                    className="inline-flex items-center justify-center w-12 h-12 mb-4 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg"
+                  >
+                    <Check className="w-6 h-6 text-white" />
+                  </motion.div>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    日记创作完成！
+                  </h2>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    正在跳转到编辑页面...
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );

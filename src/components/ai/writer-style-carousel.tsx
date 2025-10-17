@@ -466,22 +466,6 @@ export function WriterStyleCarousel({
                       )}
                     </AnimatePresence>
                   </div>
-
-                  {/* 选中指示器 - 精致的徽章样式 */}
-                  {selectedStyle === style.id && normalizedOffset === 0 && (
-                    <motion.div
-                      layoutId="selected-indicator"
-                      className="absolute top-5 right-5 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-xl shadow-lg shadow-black/20 border border-white/20"
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-yellow-500" />
-                        <span className="text-xs font-semibold text-gray-900 tracking-tight">已选</span>
-                      </div>
-                    </motion.div>
-                  )}
                 </div>
               </motion.div>
             );
