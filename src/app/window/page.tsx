@@ -9,7 +9,7 @@
 "use client";
 
 import { ImmersiveContainer } from "@/components/immersive-container";
-import { WindowTravelView, TravelContent, WindowFrame } from "@/components/window-travel-view";
+import { WindowTravelOptimized as WindowTravelView, TravelContent, WindowFrame } from "@/components/window-travel-optimized";
 
 /**
  * 沉浸式窗口旅行视频页面
