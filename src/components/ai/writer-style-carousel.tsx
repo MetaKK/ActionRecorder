@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Sparkles, Info, X } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
+import { Sparkles, Info, X } from 'lucide-react';
 import { WriterStyle } from '@/lib/ai/diary/writer-styles';
 import { cn } from '@/lib/utils';
 
@@ -21,13 +21,23 @@ export function WriterStyleCarousel({
   const [direction, setDirection] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [showDetails, setShowDetails] = useState(false);
-  const autoPlayRef = useRef<NodeJS.Timeout>();
+  const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+  const [dragX, setDragX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
+  const quoteIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const dragControls = useDragControls();
 
   const currentStyle = styles[currentIndex];
 
-  // 自动播放
+  const handleNext = useCallback(() => {
+    setDirection(1);
+    setCurrentIndex((prev) => (prev + 1) % styles.length);
+  }, [styles.length]);
+
+  // 自动播放 - 详情展开时暂停
   useEffect(() => {
-    if (isAutoPlay && !selectedStyle) {
+    if (isAutoPlay && !selectedStyle && !showDetails) {
       autoPlayRef.current = setInterval(() => {
         handleNext();
       }, 5000);
@@ -37,23 +47,62 @@ export function WriterStyleCarousel({
         clearInterval(autoPlayRef.current);
       }
     };
-  }, [currentIndex, isAutoPlay, selectedStyle]);
-
-  const handlePrevious = () => {
-    setDirection(-1);
-    setCurrentIndex((prev) => (prev - 1 + styles.length) % styles.length);
-    setIsAutoPlay(false);
-  };
-
-  const handleNext = () => {
-    setDirection(1);
-    setCurrentIndex((prev) => (prev + 1) % styles.length);
-  };
+  }, [isAutoPlay, selectedStyle, showDetails, handleNext]);
 
   const handleSelect = (styleId: string) => {
     onSelectStyle(styleId);
     setIsAutoPlay(false);
   };
+
+  // 手势处理函数
+  const handleDragStart = () => {
+    setIsDragging(true);
+    setIsAutoPlay(false); // 拖拽时暂停自动播放
+  };
+
+  const handleDrag = (event: any, info: any) => {
+    setDragX(info.offset.x);
+  };
+
+  const handleDragEnd = (event: any, info: any) => {
+    setIsDragging(false);
+    setDragX(0);
+    
+    const threshold = 100; // 拖拽阈值
+    const velocity = info.velocity.x;
+    
+    if (Math.abs(info.offset.x) > threshold || Math.abs(velocity) > 500) {
+      if (info.offset.x > 0 || velocity > 0) {
+        // 向右拖拽 - 上一张
+        setDirection(-1);
+        setCurrentIndex((prev) => (prev - 1 + styles.length) % styles.length);
+      } else {
+        // 向左拖拽 - 下一张
+        setDirection(1);
+        setCurrentIndex((prev) => (prev + 1) % styles.length);
+      }
+    }
+  };
+
+  // 名言自动滚动 - 每4秒切换
+  useEffect(() => {
+    if (showDetails) {
+      quoteIntervalRef.current = setInterval(() => {
+        setCurrentQuoteIndex((prev) => prev + 1);
+      }, 4000); // 停留4秒
+    }
+    
+    return () => {
+      if (quoteIntervalRef.current) {
+        clearInterval(quoteIntervalRef.current);
+      }
+    };
+  }, [showDetails]);
+
+  // 切换作家时重置名言索引
+  useEffect(() => {
+    setCurrentQuoteIndex(0);
+  }, [currentIndex]);
 
   // 卡片变体 - 优化后的位置和视觉效果
   const getCardPosition = (offset: number) => {
@@ -193,17 +242,22 @@ export function WriterStyleCarousel({
                         <span className="text-2xl">{style.icon}</span>
                         <span className="text-xs font-medium">{style.era}</span>
                       </div>
-                      {normalizedOffset === 0 && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowDetails(!showDetails);
-                          }}
-                          className="p-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 transition-colors"
-                        >
-                          <Info className="w-4 h-4" />
-                        </button>
-                      )}
+                       {normalizedOffset === 0 && (
+                         <button
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             const newState = !showDetails;
+                             setShowDetails(newState);
+                             // 点击详情按钮时也暂停自动播放
+                             if (newState) {
+                               setIsAutoPlay(false);
+                             }
+                           }}
+                           className="p-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 transition-colors"
+                         >
+                           <Info className="w-4 h-4" />
+                         </button>
+                       )}
                     </div>
 
                     {/* 主要信息 */}
@@ -269,54 +323,158 @@ export function WriterStyleCarousel({
                       )}
                     </motion.div>
 
-                    {/* 详细信息（悬浮显示）- 毛玻璃样式 */}
+                    {/* 详细信息（Apple风格）- 纵向滚动名言 */}
                     <AnimatePresence>
                       {showDetails && normalizedOffset === 0 && (
                         <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 20 }}
-                          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                          className="absolute inset-0 bg-black/98 backdrop-blur-2xl p-8 overflow-y-auto scrollbar-hide"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ 
+                            duration: 0.5, 
+                            ease: [0.32, 0.72, 0, 1]
+                          }}
+                          className="absolute inset-0 overflow-hidden"
                           onClick={(e) => e.stopPropagation()}
+                          style={{
+                            backgroundImage: 'url(/img/grain.bg.png), linear-gradient(180deg, rgba(0,0,0,0.96) 0%, rgba(10,10,10,0.98) 100%)',
+                            backgroundBlendMode: 'overlay',
+                          }}
                         >
-                          <div className="space-y-6">
-                            <div className="flex items-center justify-between">
-                              <h3 className="text-2xl font-bold tracking-tight">风格特征</h3>
-                              <button
-                                onClick={() => setShowDetails(false)}
-                                className="p-2 rounded-full hover:bg-white/10 transition-colors"
-                              >
-                                <X className="w-5 h-5" />
-                              </button>
-                            </div>
-                            
-                            <div className="space-y-3">
-                              <h4 className="text-xs font-semibold uppercase tracking-wider opacity-60">核心特点</h4>
-                              <div className="flex flex-wrap gap-2">
-                                {style.characteristics.map((char, i) => (
-                                  <span
-                                    key={i}
-                                    className="px-3 py-2 text-sm rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 font-medium"
-                                  >
-                                    {char}
-                                  </span>
-                                ))}
+                          {/* 顶部渐变遮罩 */}
+                          <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-black/90 via-black/50 to-transparent z-10 pointer-events-none" />
+                          
+                          {/* 底部渐变遮罩 */}
+                          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-10 pointer-events-none" />
+
+                          {/* 关闭按钮 */}
+                          <motion.button
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.2, type: 'spring', stiffness: 400, damping: 25 }}
+                            onClick={() => setShowDetails(false)}
+                            className="absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl border border-white/10 hover:bg-white/15 hover:border-white/20 transition-all duration-300 flex items-center justify-center"
+                          >
+                            <X className="w-5 h-5" />
+                          </motion.button>
+
+                          {/* 作家信息（顶部，固定） */}
+                          {/* <div className="absolute top-8 left-8 right-20 z-10">
+                            <motion.div
+                              initial={{ y: -10, opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              transition={{ delay: 0.1, duration: 0.5 }}
+                              className="flex items-center gap-3"
+                            >
+                              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br flex items-center justify-center text-2xl shadow-lg"
+                                   style={{
+                                     backgroundImage: `linear-gradient(135deg, ${style.color.from}, ${style.color.to})`,
+                                   }}>
+                                {style.icon}
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-semibold tracking-tight">{style.name}</h3>
+                                <p className="text-xs opacity-50 mt-0.5">{style.nameEn}</p>
+                              </div>
+                            </motion.div>
+                          </div> */}
+
+                          {/* 名言滚动容器 - iOS Picker 球状立体滚动 */}
+                          <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+                            <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: '1000px', perspectiveOrigin: 'center center' }}>
+                              <div className="relative h-[300px] flex items-center justify-center" style={{ transformStyle: 'preserve-3d' }}>
+                                {/* 渲染名言，形成球状循环 */}
+                                {[...Array(20)].map((_, i) => {
+                                  // 计算当前应该显示哪条名言（无限循环）
+                                  const adjustedIndex = currentQuoteIndex + i - 10; // 中心在索引10
+                                  const quoteIdx = ((adjustedIndex % style.famousQuotes.length) + style.famousQuotes.length) % style.famousQuotes.length;
+                                  const quote = style.famousQuotes[quoteIdx];
+                                  
+                                  // 计算相对于中心的偏移量
+                                  const offset = i - 10; // -10 到 +10
+                                  
+                                  // 球状3D变换计算
+                                  const radius = 400; // 球体半径
+                                  const angle = (offset * Math.PI) / 12; // 每项旋转15度
+                                  
+                                  // 计算Y轴位置（球面上的点）
+                                  const yPos = Math.sin(angle) * radius;
+                                  const zPos = Math.cos(angle) * radius - radius; // 向后偏移radius，让中心在0
+                                  
+                                  // 计算缩放和透明度
+                                  const distanceFromCenter = Math.abs(offset);
+                                  let scale, opacity;
+                                  
+                                  if (distanceFromCenter === 0) {
+                                    // 中心项
+                                    scale = 1;
+                                    opacity = 1;
+                                  } else if (distanceFromCenter === 1) {
+                                    // 上下各一项
+                                    scale = 0.85;
+                                    opacity = 0.3;
+                                  } else if (distanceFromCenter === 2) {
+                                    scale = 0.7;
+                                    opacity = 0.1;
+                                  } else {
+                                    // 其他项（不可见）
+                                    scale = 0.6;
+                                    opacity = 0;
+                                  }
+                                  
+                                  return (
+                                    <div
+                                      key={`quote-${adjustedIndex}-${i}`}
+                                      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-normal max-w-4xl"
+                                      style={{
+                                        transform: `translateY(${yPos}px) translateZ(${zPos}px) scale(${scale})`,
+                                        opacity,
+                                        transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // ease-out-quad
+                                        backfaceVisibility: 'hidden',
+                                      }}
+                                    >
+                                      {/* 名言文本 */}
+                                      <div className="text-center px-6 sm:px-10">
+                                        <p className="text-xl sm:text-2xl md:text-3xl font-light leading-relaxed tracking-wide"
+                                           style={{
+                                             textShadow: '0 4px 30px rgba(0,0,0,0.8)',
+                                             fontFamily: "'Noto Serif SC', 'Songti SC', 'PingFang SC', serif",
+                                             letterSpacing: '0.02em',
+                                             lineHeight: '1.6',
+                                             WebkitFontSmoothing: 'antialiased',
+                                           }}>
+                                          &ldquo;{quote}&rdquo;
+                                        </p>
+                                        
+                                        {/* 作家署名 - 仅中心项显示 */}
+                                        {distanceFromCenter === 0 && (
+                                          <div className="flex items-center justify-center gap-3 mt-4 opacity-60">
+                                            <div className="h-px w-8 bg-white/30" />
+                                            <span className="text-xs tracking-[0.15em] uppercase font-medium">{style.name}</span>
+                                            <div className="h-px w-8 bg-white/30" />
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
-
-                            <div className="space-y-3">
-                              <h4 className="text-xs font-semibold uppercase tracking-wider opacity-60">风格描述</h4>
-                              <p className="text-[15px] leading-relaxed opacity-90">
-                                {style.description}
-                              </p>
-                            </div>
-
-                            <div className="space-y-3">
-                              <h4 className="text-xs font-semibold uppercase tracking-wider opacity-60">流派</h4>
-                              <p className="text-sm opacity-80">{style.genre}</p>
-                            </div>
                           </div>
+
+                          {/* 音频播放器接口（预留） */}
+                          {/* <motion.div
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.4 }}
+                            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20"
+                          >
+                            <button className="px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 hover:bg-white/15 transition-all duration-200">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium">🎵 朗读名言</span>
+                              </div>
+                            </button>
+                          </motion.div> */}
                         </motion.div>
                       )}
                     </AnimatePresence>
