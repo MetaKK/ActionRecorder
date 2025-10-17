@@ -54,13 +54,14 @@ export const EnhancedImage = Node.create({
 
   addCommands() {
     return {
-      setImage: (options: Record<string, unknown>) => ({ commands }: { commands: any }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setImage: (options: Record<string, unknown>) => ({ commands }: any) => {
         return commands.insertContent({
           type: this.name,
           attrs: options,
         });
       },
-    };
+    } as any;
   },
 
   addInputRules() {
