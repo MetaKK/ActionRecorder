@@ -30,11 +30,11 @@ import {
   analyzeDailySources,
   analyzeHistoricalContext,
 } from './analyzer';
-import { generateDiaryPrompt } from './prompts';
+// import { generateDiaryPrompt } from './prompts';
 import { generateMasterDiaryPrompt } from './prompts-master';
 import { validateTiptapJSON, countWords } from './tiptap-config';
 import { formatDate } from '@/lib/utils/date';
-import { deepFixTiptapJSON, validateAndFixTiptapJSON } from './json-fixer';
+import { deepFixTiptapJSON } from './json-fixer';
 
 /**
  * 生成日记（主函数）

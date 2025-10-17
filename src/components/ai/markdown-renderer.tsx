@@ -12,6 +12,7 @@ import remarkMath from "remark-math";
 import remarkBreaks from "remark-breaks";
 import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import "katex/dist/katex.min.css";
 import "highlight.js/styles/github-dark.css";
@@ -218,9 +219,11 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           // 图片
           img: ({ src, alt }) => (
             <div className="my-4 overflow-hidden rounded-lg border border-border/20">
-              <img
-                src={src}
+              <Image
+                src={src as string || ''}
                 alt={alt || ''}
+                width={800}
+                height={600}
                 className="w-full object-contain bg-muted/20"
                 loading="lazy"
               />

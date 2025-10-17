@@ -7,11 +7,11 @@ import { toast } from "sonner";
 
 type PomodoroMode = 'work' | 'shortBreak' | 'longBreak';
 
-interface PomodoroSession {
-  mode: PomodoroMode;
-  duration: number;
-  completedAt: Date;
-}
+// interface PomodoroSession {
+//   mode: PomodoroMode;
+//   duration: number;
+//   completedAt: Date;
+// }
 
 interface PomodoroStats {
   completedPomodoros: number;
@@ -43,7 +43,7 @@ export function PomodoroTimer() {
   });
   
   // 历史记录
-  const [sessions, setSessions] = useState<PomodoroSession[]>([]);
+  // const [sessions, setSessions] = useState<PomodoroSession[]>([]);
   
   // 音效引用
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -58,45 +58,24 @@ export function PomodoroTimer() {
     loadStatsFromStorage();
   }, []);
 
-  // 计时器逻辑
-  useEffect(() => {
-    if (!isRunning) return;
-
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          handleTimerComplete();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isRunning, mode]);
-
-  // 从 localStorage 加载统计数据
-  const loadStatsFromStorage = () => {
-    try {
-      const savedStats = localStorage.getItem('pomodoro-stats');
-      if (savedStats) {
-        const parsed = JSON.parse(savedStats);
-        setStats(parsed);
-        setCompletedPomodoros(parsed.completedPomodoros);
-      }
-    } catch (error) {
-      console.error('Failed to load stats:', error);
+  // 获取模式时长
+  const getDurationForMode = useCallback((m: PomodoroMode): number => {
+    switch (m) {
+      case 'work':
+        return POMODORO_CONFIG.work;
+      case 'shortBreak':
+        return POMODORO_CONFIG.shortBreak;
+      case 'longBreak':
+        return POMODORO_CONFIG.longBreak;
     }
-  };
+  }, []);
 
-  // 保存统计数据到 localStorage
-  const saveStatsToStorage = (newStats: PomodoroStats) => {
-    try {
-      localStorage.setItem('pomodoro-stats', JSON.stringify(newStats));
-    } catch (error) {
-      console.error('Failed to save stats:', error);
-    }
-  };
+  // 切换模式
+  const switchMode = useCallback((newMode: PomodoroMode) => {
+    setMode(newMode);
+    setTimeLeft(getDurationForMode(newMode));
+    setIsRunning(false);
+  }, [getDurationForMode]);
 
   // 计时器完成处理
   const handleTimerComplete = useCallback(() => {
@@ -114,44 +93,90 @@ export function PomodoroTimer() {
     }
 
     // 记录完成的会话
-    const newSession: PomodoroSession = {
-      mode,
-      duration: getDurationForMode(mode),
-      completedAt: new Date(),
-    };
-    setSessions((prev) => [...prev, newSession]);
+    // const newSession: PomodoroSession = {
+    //   mode,
+    //   duration: getDurationForMode(mode),
+    //   completedAt: new Date(),
+    // };
 
     // 更新统计数据
-    if (mode === 'work') {
-      const newPomodoros = completedPomodoros + 1;
-      setCompletedPomodoros(newPomodoros);
+    setStats(prev => {
+      const newStats = { ...prev };
       
-      const newStats: PomodoroStats = {
-        completedPomodoros: stats.completedPomodoros + 1,
-        totalFocusTime: stats.totalFocusTime + POMODORO_CONFIG.work,
-        sessionsToday: stats.sessionsToday + 1,
-      };
-      setStats(newStats);
-      saveStatsToStorage(newStats);
+      if (mode === 'work') {
+        newStats.completedPomodoros += 1;
+        newStats.totalFocusTime += getDurationForMode(mode);
+        newStats.sessionsToday += 1;
+      }
+      
+      return newStats;
+    });
 
-      // 显示鼓励消息
-      toast.success(`🎉 完成第 ${newPomodoros} 个番茄钟！`, {
-        description: getEncouragementMessage(newPomodoros),
-      });
+    // 保存到 localStorage
+    try {
+      localStorage.setItem('pomodoro-stats', JSON.stringify(stats));
+    } catch (error) {
+      console.error('保存统计数据失败:', error);
+    }
 
-      // 自动切换到休息模式
-      const nextMode = newPomodoros % POMODORO_CONFIG.pomodorosUntilLongBreak === 0 
-        ? 'longBreak' 
-        : 'shortBreak';
+    // 显示完成消息
+    const message = mode === 'work' ? '工作时段完成！休息一下吧 ☕' : '休息结束！准备开始工作 💪';
+    toast('番茄钟完成', {
+      description: message,
+    });
+
+    // 自动切换到下一个模式
+    if (mode === 'work') {
+      const nextMode = (stats.completedPomodoros + 1) % 4 === 0 ? 'longBreak' : 'shortBreak';
       switchMode(nextMode);
     } else {
-      // 休息结束，返回工作模式
       toast('休息结束', {
         description: '准备好开始新的番茄钟了吗？',
       });
       switchMode('work');
     }
-  }, [mode, completedPomodoros, stats]);
+  }, [mode, stats, switchMode, getDurationForMode]);
+
+  // 计时器逻辑
+  useEffect(() => {
+    if (!isRunning) return;
+
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          handleTimerComplete();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isRunning, mode, handleTimerComplete]);
+
+  // 从 localStorage 加载统计数据
+  const loadStatsFromStorage = () => {
+    try {
+      const savedStats = localStorage.getItem('pomodoro-stats');
+      if (savedStats) {
+        const parsed = JSON.parse(savedStats);
+        setStats(parsed);
+        setCompletedPomodoros(parsed.completedPomodoros);
+      }
+    } catch (error) {
+      console.error('Failed to load stats:', error);
+    }
+  };
+
+  // 保存统计数据到 localStorage
+  // const saveStatsToStorage = (newStats: PomodoroStats) => {
+  //   try {
+  //     localStorage.setItem('pomodoro-stats', JSON.stringify(newStats));
+  //   } catch (error) {
+  //     console.error('Failed to save stats:', error);
+  //   }
+  // };
+
 
   // 播放完成音效
   const playCompletionSound = () => {
@@ -176,32 +201,14 @@ export function PomodoroTimer() {
   };
 
   // 获取鼓励消息
-  const getEncouragementMessage = (count: number): string => {
-    if (count === 1) return '很好的开始！继续保持专注 💪';
-    if (count === 4) return '完成一轮！你真棒！🌟';
-    if (count === 8) return '太厉害了！专注大师 🏆';
-    if (count % 4 === 0) return `完成 ${count / 4} 轮！你是专注冠军！🎯`;
-    return '继续保持这个节奏！';
-  };
+  // const getEncouragementMessage = (count: number): string => {
+  //   if (count === 1) return '很好的开始！继续保持专注 💪';
+  //   if (count === 4) return '完成一轮！你真棒！🌟';
+  //   if (count === 8) return '太厉害了！专注大师 🏆';
+  //   if (count % 4 === 0) return `完成 ${count / 4} 轮！你是专注冠军！🎯`;
+  //   return '继续保持这个节奏！';
+  // };
 
-  // 切换模式
-  const switchMode = useCallback((newMode: PomodoroMode) => {
-    setMode(newMode);
-    setTimeLeft(getDurationForMode(newMode));
-    setIsRunning(false);
-  }, []);
-
-  // 获取模式时长
-  const getDurationForMode = (m: PomodoroMode): number => {
-    switch (m) {
-      case 'work':
-        return POMODORO_CONFIG.work;
-      case 'shortBreak':
-        return POMODORO_CONFIG.shortBreak;
-      case 'longBreak':
-        return POMODORO_CONFIG.longBreak;
-    }
-  };
 
   // 开始/暂停
   const toggleTimer = () => {

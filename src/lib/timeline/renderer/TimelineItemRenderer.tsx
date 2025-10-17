@@ -21,7 +21,7 @@ interface Props {
  */
 export function TimelineItemRenderer({ item, onUpdate, onDelete }: Props) {
   // 获取对应类型的渲染器
-  const Renderer = rendererRegistry.get(item.type);
+  const Renderer = (rendererRegistry as unknown as Record<string, React.ComponentType<TimelineItemRendererProps>>)[item.type];
   
   if (!Renderer) {
     return <DefaultRenderer item={item} onUpdate={onUpdate} onDelete={onDelete} />;

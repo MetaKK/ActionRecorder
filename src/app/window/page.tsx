@@ -49,13 +49,7 @@ const DEFAULT_WINDOW_FRAMES: WindowFrame[] = [
     id: "window-1",
     imageUrl: "/img/window-frame-1.png",
     name: "飞机窗口",
-  },
-  {
-    id: "window-2",
-    imageUrl: "/img/window-frame-2.png",
-    name: "火车窗口",
-  },
-];
+  }];
 
 export default function WindowPage() {
   return (

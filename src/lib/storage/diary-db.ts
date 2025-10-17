@@ -15,7 +15,7 @@
  */
 
 import Dexie, { Table } from 'dexie';
-import { Diary, DiaryPreview } from '@/lib/ai/diary/types';
+import { Diary, DiaryPreview, DiaryType } from '@/lib/ai/diary/types';
 
 /**
  * 日记数据库表结构
@@ -250,7 +250,7 @@ export async function getDiaryList(
       mood: record.mood || '',
       excerpt: record.excerpt,
       wordCount: record.wordCount,
-      type: (record.type || 'auto') as const,
+      type: (record.type || 'auto') as DiaryType,
       generatedAt: new Date(record.createdAt),
       isPinned: record.isPinned,
     }));
@@ -288,7 +288,7 @@ export async function getAllDiaries(): Promise<DiaryPreview[]> {
       mood: record.mood || '',
       excerpt: record.excerpt,
       wordCount: record.wordCount,
-      type: (record.type || 'auto') as const,
+      type: (record.type || 'auto') as DiaryType,
       generatedAt: new Date(record.createdAt),
       isPinned: record.isPinned,
     }));
@@ -380,7 +380,7 @@ export async function searchDiaries(keyword: string): Promise<DiaryPreview[]> {
       mood: record.mood || '',
       excerpt: record.excerpt,
       wordCount: record.wordCount,
-      type: (record.type || 'auto') as const,
+      type: (record.type || 'auto') as DiaryType,
       generatedAt: new Date(record.createdAt),
       isPinned: record.isPinned,
     }));
@@ -507,7 +507,7 @@ function extractExcerpt(diary: Diary): string {
     }
 
     return '';
-  } catch (error) {
+  } catch {
     return '';
   }
 }

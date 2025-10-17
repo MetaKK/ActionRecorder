@@ -81,7 +81,7 @@ export function useEnhancedChatStorage() {
         }
       }
     }, 500),
-    [storage, cloudAdapter]
+    [storage, cloudAdapter, hybridStorage]
   );
 
   // 加载会话

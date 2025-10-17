@@ -17,8 +17,8 @@ import {
   TimelineItem,
   TimelineItemType,
   ItemStatus,
-  FilterOptions,
-  PaginationOptions,
+  // FilterOptions,
+  // PaginationOptions,
   AddItemData,
   GroupedItems,
 } from './types';
@@ -137,7 +137,7 @@ export const useTimelineStore = create<TimelineState>()(
      * 加载项
      */
     loadItems: async (options = {}) => {
-      const { skipCache = false, resetPagination = false } = options;
+      const { resetPagination = false } = options;
       
       // 如果正在加载，忽略
       if (get().loading) {

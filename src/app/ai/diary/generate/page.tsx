@@ -16,12 +16,10 @@ import {
   DiaryStyle,
   DiaryGenerationOptions,
   DiaryGenerationProgress,
-  DiaryGenerationStatus,
 } from '@/lib/ai/diary/types';
 import {
   Sparkles,
   ArrowLeft,
-  Zap,
   Heart,
   Brain,
   Wand2,
@@ -37,7 +35,6 @@ export default function DiaryGeneratePage() {
   const [apiKey, setApiKey] = useState<string>('');
   const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
   const [generationComplete, setGenerationComplete] = useState(false);
-  const [generatedDiaryId, setGeneratedDiaryId] = useState<string | null>(null);
 
   // 检查 API Key
   useEffect(() => {
@@ -82,7 +79,6 @@ export default function DiaryGeneratePage() {
       }
 
       await saveDiary(newDiary);
-      setGeneratedDiaryId(newDiary.metadata.id);
       setGenerationComplete(true);
 
       // 2秒后自动跳转到编辑页面

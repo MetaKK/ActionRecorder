@@ -84,7 +84,7 @@ export function DiaryEditor({
                 const reader = new FileReader();
                 reader.onload = () => {
                   const dataUrl = reader.result as string;
-                  const { selection } = view.state;
+                  // const { selection } = view.state;
                   view.dispatch(
                     view.state.tr.replaceSelectionWith(
                       view.state.schema.nodes.image.create({ src: dataUrl })

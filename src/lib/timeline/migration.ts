@@ -6,9 +6,9 @@
 
 import { getStorage } from '@/lib/storage/simple';
 import { getAllDiaries } from '@/lib/storage/diary-db';
-import { recordToTimelineItem, diaryToTimelineItem } from './adapters';
+import { recordToTimelineItem } from './adapters';
 import { timelineDB } from './db';
-import { TimelineItem } from './types';
+// import { TimelineItem } from './types';
 
 /**
  * 迁移结果
@@ -57,8 +57,8 @@ export async function migrateAllData(): Promise<MigrationResult> {
 /**
  * 迁移 Records
  */
-async function migrateRecords(): Promise<{ success: number; errors: Error[] }> {
-  const errors: Error[] = [];
+async function migrateRecords(): Promise<{ success: number; errors: Array<{ type: string; id: string; error: Error }> }> {
+  const errors: Array<{ type: string; id: string; error: Error }> = [];
   let success = 0;
   
   try {
@@ -74,7 +74,7 @@ async function migrateRecords(): Promise<{ success: number; errors: Error[] }> {
         errors.push({
           type: 'record',
           id: record.id,
-          error: error as Error,
+          error: error instanceof Error ? error : new Error(String(error)),
         });
       }
     }
@@ -83,7 +83,7 @@ async function migrateRecords(): Promise<{ success: number; errors: Error[] }> {
     errors.push({
       type: 'records',
       id: 'all',
-      error: error as Error,
+      error: error instanceof Error ? error : new Error(String(error)),
     });
   }
   
@@ -93,8 +93,8 @@ async function migrateRecords(): Promise<{ success: number; errors: Error[] }> {
 /**
  * 迁移 Diaries
  */
-async function migrateDiaries(): Promise<{ success: number; errors: Error[] }> {
-  const errors: Error[] = [];
+async function migrateDiaries(): Promise<{ success: number; errors: Array<{ type: string; id: string; error: Error }> }> {
+  const errors: Array<{ type: string; id: string; error: Error }> = [];
   let success = 0;
   
   try {
@@ -108,7 +108,7 @@ async function migrateDiaries(): Promise<{ success: number; errors: Error[] }> {
         errors.push({
           type: 'diary',
           id: diaryPreview.id,
-          error: error as Error,
+          error: error instanceof Error ? error : new Error(String(error)),
         });
       }
     }
@@ -117,7 +117,7 @@ async function migrateDiaries(): Promise<{ success: number; errors: Error[] }> {
     errors.push({
       type: 'diaries',
       id: 'all',
-      error: error as Error,
+      error: error instanceof Error ? error : new Error(String(error)),
     });
   }
   

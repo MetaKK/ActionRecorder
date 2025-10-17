@@ -23,7 +23,6 @@ import {
   RecordContent,
   DiaryContent,
   TimelineItemMetadata,
-  TiptapDocument,
 } from './types';
 
 /**
@@ -52,7 +51,7 @@ export class TimelineService extends EventEmitter {
   async getItems(options: GetItemsOptions = {}): Promise<PaginatedResult<TimelineItem>> {
     const {
       filters = {},
-      sort = { by: 'timestamp', order: 'desc' },
+      // sort = { by: 'timestamp', order: 'desc' },
       pagination = { page: 1, pageSize: 20 },
     } = options;
     
@@ -135,7 +134,7 @@ export class TimelineService extends EventEmitter {
         createdAt: now,
         updatedAt: now,
         timestamp: now.getTime(),
-        content: data.content as Record<string, unknown>,
+        content: data.content as unknown as TimelineItemContent<T>,
         metadata: {
           title: data.title,
           excerpt: data.excerpt || this.generateExcerpt(data.content),

@@ -54,14 +54,13 @@ export const EnhancedImage = Node.create({
 
   addCommands() {
     return {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setImage: (options: Record<string, unknown>) => ({ commands }: any) => {
+      setImage: (options: Record<string, unknown>) => ({ commands }: { commands: { insertContent: (content: { type: string; attrs: Record<string, unknown> }) => void } }) => {
         return commands.insertContent({
           type: this.name,
           attrs: options,
         });
       },
-    } as any;
+    } as Record<string, unknown>;
   },
 
   addInputRules() {
@@ -121,15 +120,14 @@ export const Video = Node.create({
 
   addCommands() {
     return {
-      setVideo:
-        (options) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: options,
-          });
-        },
-    };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setVideo: (options: Record<string, unknown>) => ({ commands }: any) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: options,
+        });
+      },
+    } as Record<string, unknown>;
   },
 });
 
@@ -170,15 +168,14 @@ export const Audio = Node.create({
 
   addCommands() {
     return {
-      setAudio:
-        (options) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: options,
-          });
-        },
-    };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setAudio: (options: Record<string, unknown>) => ({ commands }: any) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: options,
+        });
+      },
+    } as Record<string, unknown>;
   },
 });
 
@@ -233,15 +230,14 @@ export const FileAttachment = Node.create({
 
   addCommands() {
     return {
-      setFile:
-        (options) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: options,
-          });
-        },
-    };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setFile: (options: Record<string, unknown>) => ({ commands }: any) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: options,
+        });
+      },
+    } as Record<string, unknown>;
   },
 });
 
@@ -333,7 +329,7 @@ export function PasteImagePlugin(uploadFn: (file: File) => Promise<string>) {
 
           try {
             const url = await uploadFn(file);
-            const { schema, selection } = view.state;
+            const { schema } = view.state;
             const node = schema.nodes.image?.create({ src: url });
 
             if (node) {

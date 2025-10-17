@@ -31,7 +31,7 @@ import {
   Minus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { validateFile, uploadFileToIndexedDB, MediaType } from '@/lib/utils/media-upload-simple';
 import { toast } from 'sonner';
 
@@ -103,15 +103,13 @@ const MenuDivider = ({ variant = 'default' }: { variant?: 'default' | 'bubble' }
 );
 
 export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
-  const [isEditorReady, setIsEditorReady] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editor) {
-      setIsEditorReady(true);
+      // Editor is ready
     }
   }, [editor]);
 

@@ -18,11 +18,11 @@ import {
   Video, 
   Audio, 
   FileAttachment,
-  DragAndDropPlugin,
-  PasteImagePlugin,
-  UploadProgressPlugin
+  // DragAndDropPlugin,
+  // PasteImagePlugin,
+  // UploadProgressPlugin
 } from './tiptap-extensions';
-import { uploadToIndexedDB } from '@/lib/utils/media-upload';
+// import { uploadToIndexedDB } from '@/lib/utils/media-upload';
 
 /**
  * 日记编辑器扩展配置

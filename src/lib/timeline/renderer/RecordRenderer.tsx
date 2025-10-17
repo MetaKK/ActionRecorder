@@ -10,17 +10,16 @@
 import React from 'react';
 import { TimelineItem as TimelineItemComponent } from '@/components/timeline-item';
 import { TimelineItemRendererProps } from './registry';
-import { TimelineItemType } from '../types';
 import { timelineItemToRecord } from '../adapters';
 
 /**
  * Record 渲染器
  */
 export function RecordRenderer({ 
-  item, 
-  onUpdate, 
-  onDelete 
-}: TimelineItemRendererProps<TimelineItemType.RECORD>) {
+  item
+  // onUpdate, 
+  // onDelete 
+}: TimelineItemRendererProps) {
   // 将 TimelineItem 转换回 Record
   const record = timelineItemToRecord(item);
   

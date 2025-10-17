@@ -6,7 +6,7 @@
 'use client';
 
 import '../styles.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { DiaryEditor } from '@/components/ai/diary-editor';
@@ -18,7 +18,7 @@ import {
   DiaryStyle,
   DiaryType,
   DiaryGenerationOptions,
-  DiaryGenerationProgress,
+  // DiaryGenerationProgress,
   TiptapDocument,
 } from '@/lib/ai/diary/types';
 import { Sparkles, Save, Download, ArrowLeft, Plus } from 'lucide-react';
@@ -34,10 +34,22 @@ export default function DiaryEditPage() {
   
   const [diary, setDiary] = useState<Diary | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [progress, setProgress] = useState<DiaryGenerationProgress | null>(null);
   const [editedContent, setEditedContent] = useState<TiptapDocument | null>(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
   const [selectedMood, setSelectedMood] = useState<string>('😊');
+
+  const loadDiary = useCallback(async () => {
+    try {
+      const loadedDiary = await getDiaryById(diaryId);
+      if (loadedDiary) {
+        setDiary(loadedDiary);
+        setEditedContent(loadedDiary.content.document);
+        setSelectedMood(loadedDiary.metadata.mood);
+      }
+    } catch (error) {
+      console.error('加载日记失败:', error);
+    }
+  }, [diaryId]);
 
   // 加载日记数据
   useEffect(() => {
@@ -78,20 +90,7 @@ export default function DiaryEditPage() {
       // 加载已有日记
       loadDiary();
     }
-  }, [diaryId, isNewDiary]);
-
-  const loadDiary = async () => {
-    try {
-      const loadedDiary = await getDiaryById(diaryId);
-      if (loadedDiary) {
-        setDiary(loadedDiary);
-        setEditedContent(loadedDiary.content.document);
-        setSelectedMood(loadedDiary.metadata.mood);
-      }
-    } catch (error) {
-      console.error('加载日记失败:', error);
-    }
-  };
+  }, [diaryId, isNewDiary, loadDiary]);
 
   const handleSave = async () => {
     if (!diary || !editedContent) return;
@@ -138,7 +137,6 @@ export default function DiaryEditPage() {
     if (diary?.metadata.type !== DiaryType.AUTO_GENERATED) return;
 
     setIsGenerating(true);
-    setProgress(null);
 
     try {
       const options: DiaryGenerationOptions = {
@@ -147,7 +145,7 @@ export default function DiaryEditPage() {
         includeCitations: true,
       };
 
-      const newDiary = await generateDiary(records, options, setProgress);
+      const newDiary = await generateDiary(records, options);
       
       if (newDiary) {
         const updatedDiary = {
@@ -167,7 +165,6 @@ export default function DiaryEditPage() {
       alert('重新生成失败，请重试');
     } finally {
       setIsGenerating(false);
-      setProgress(null);
     }
   };
 

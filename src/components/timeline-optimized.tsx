@@ -17,10 +17,8 @@ import { TimelineItem } from '@/lib/timeline/types';
 import { Clock, Loader2 } from 'lucide-react';
 import { 
   useTimelineStore, 
-  selectGroupedByDate,
   TimelineItemRenderer,
 } from '@/lib/timeline';
-import { formatDate, getDateLabel } from '@/lib/utils/date';
 
 export function TimelineOptimized() {
   const loadItems = useTimelineStore(state => state.loadItems);
@@ -56,7 +54,7 @@ export function TimelineOptimized() {
   // 初始加载
   useEffect(() => {
     loadItems({ resetPagination: true });
-  }, []); // 移除 loadItems 依赖，只在组件挂载时执行一次
+  }, [loadItems]); // 添加 loadItems 依赖
   
   // 无限滚动
   useEffect(() => {
@@ -74,7 +72,7 @@ export function TimelineOptimized() {
     observer.observe(sentinelRef.current);
     
     return () => observer.disconnect();
-  }, [loading, hasMore]); // 移除 loadMore 依赖
+  }, [loading, hasMore, loadMore]); // 添加 loadMore 依赖
   
   // 错误状态
   if (error) {

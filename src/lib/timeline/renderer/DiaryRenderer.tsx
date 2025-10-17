@@ -10,17 +10,17 @@
 import React from 'react';
 import { DiaryCard } from '@/components/diary-card';
 import { TimelineItemRendererProps } from './registry';
-import { TimelineItemType } from '../types';
+import { DiaryType } from '@/lib/ai/diary/types';
 import { useRouter } from 'next/navigation';
 
 /**
  * Diary 渲染器
  */
 export function DiaryRenderer({ 
-  item, 
-  onUpdate, 
-  onDelete 
-}: TimelineItemRendererProps<TimelineItemType.DIARY>) {
+  item
+  // onUpdate, 
+  // onDelete 
+}: TimelineItemRendererProps) {
   const router = useRouter();
   
   // 将 TimelineItem 转换为 DiaryPreview 格式
@@ -32,7 +32,7 @@ export function DiaryRenderer({
     mood: item.metadata.mood || '',
     excerpt: item.metadata.excerpt || '',
     wordCount: item.metadata.wordCount || 0,
-    type: 'auto' as const,
+    type: DiaryType.AUTO_GENERATED,
     generatedAt: item.updatedAt,
     isPinned: item.metadata.isPinned || false,
   };
@@ -41,18 +41,18 @@ export function DiaryRenderer({
     router.push(`/ai/diary/${id}`);
   };
   
-  const handleShare = (id: string) => {
+  const handleShare = () => {
     // TODO: 实现分享功能
   };
   
-  const handleExport = (id: string) => {
+  const handleExport = () => {
     // TODO: 实现导出功能
   };
   
-  const handleDelete = (id: string) => {
-    if (onDelete) {
-      onDelete(id);
-    }
+  const handleDelete = () => {
+    // if (onDelete) {
+    //   onDelete(id);
+    // }
   };
   
   return (

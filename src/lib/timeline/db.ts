@@ -17,8 +17,8 @@ import {
   ItemStatus,
   SyncStatus,
   QueryOptions,
-  PaginatedResult,
-  PaginationOptions,
+  // PaginatedResult,
+  // PaginationOptions,
 } from './types';
 
 /**

@@ -8,12 +8,12 @@
 
 import { TimelineItemType } from '../types';
 import { rendererRegistry } from './registry';
-import RecordRenderer from './RecordRenderer';
-import DiaryRenderer from './DiaryRenderer';
+import { RecordRenderer } from './RecordRenderer';
+import { DiaryRenderer } from './DiaryRenderer';
 
-// 注册默认渲染器
-rendererRegistry.register(TimelineItemType.RECORD, RecordRenderer);
-rendererRegistry.register(TimelineItemType.DIARY, DiaryRenderer);
+// 更新渲染器注册
+rendererRegistry[TimelineItemType.RECORD] = RecordRenderer;
+rendererRegistry[TimelineItemType.DIARY] = DiaryRenderer;
 
 // 导出
 export * from './registry';
