@@ -39,11 +39,33 @@
 .diary-audio {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
+  height: 40px;
   border-radius: 8px;
   background: #f8f9fa;
-  padding: 8px;
+  border: 1px solid #e5e7eb;
+  outline: none;
   /* 移动端音频优化 */
   touch-action: manipulation;
+  -webkit-appearance: none;
+  appearance: none;
+  /* 防止长度溢出 */
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* 音频播放器内部控件优化 */
+.diary-audio::-webkit-media-controls-panel {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.diary-audio::-webkit-media-controls-play-button,
+.diary-audio::-webkit-media-controls-timeline,
+.diary-audio::-webkit-media-controls-current-time-display,
+.diary-audio::-webkit-media-controls-time-remaining-display {
+  /* 确保控件在容器内正确显示 */
+  max-width: 100%;
 }
 
 .file-attachment {
@@ -99,7 +121,44 @@
   .diary-audio {
     margin: 12px 0;
     border-radius: 12px;
-    padding: 12px;
+    padding: 8px;
+    height: 48px; /* 移动端更大的触摸区域 */
+    /* 移动端音频播放器优化 */
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  
+  /* 移动端音频控件优化 */
+  .diary-audio::-webkit-media-controls-panel {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 4px;
+  }
+  
+  .diary-audio::-webkit-media-controls-play-button {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #3b82f6;
+    color: white;
+  }
+  
+  .diary-audio::-webkit-media-controls-timeline {
+    flex: 1;
+    margin: 0 8px;
+    height: 4px;
+    border-radius: 2px;
+    background-color: #e5e7eb;
+  }
+  
+  .diary-audio::-webkit-media-controls-current-time-display,
+  .diary-audio::-webkit-media-controls-time-remaining-display {
+    font-size: 12px;
+    color: #6b7280;
+    min-width: 40px;
   }
 }
 

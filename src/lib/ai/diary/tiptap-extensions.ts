@@ -212,13 +212,13 @@ export const Video = Node.create({
 });
 
 /**
- * 音频扩展 - 支持音频播放和控制
+ * 音频扩展 - 支持音频播放和控制，移动端优化
  */
 export const Audio = Node.create({
   name: 'audio',
   group: 'block',
   atom: true,
-  draggable: true,
+  draggable: false, // 禁用拖动，防止意外移动
 
   addAttributes() {
     return {
@@ -270,11 +270,23 @@ export const Audio = Node.create({
   renderHTML({ HTMLAttributes }) {
     const { src, title, controls, autoplay, loop, muted, preload, ...rest } = HTMLAttributes;
     
+    // 移动端优化的样式
     const audioAttrs = {
       src,
       title,
       preload,
-      style: 'width: 100%; max-width: 100%;',
+      style: `
+        width: 100%; 
+        max-width: 100%; 
+        min-width: 0;
+        height: 40px;
+        border-radius: 8px;
+        background: #f8f9fa;
+        border: 1px solid #e5e7eb;
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+      `,
       ...(controls && { controls: 'true' }),
       ...(autoplay && { autoplay: 'true' }),
       ...(loop && { loop: 'true' }),
