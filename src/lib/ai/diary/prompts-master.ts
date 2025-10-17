@@ -163,7 +163,7 @@ function selectKeyMoments(records: unknown[]): unknown[] {
   // 智能选择：优先选择内容丰富、情感强烈的记录
   const scored = records.map(record => {
     let score = 0;
-    const content = (record as any).content || '';
+    const content = (record as { content?: string }).content || '';
     
     // 长度分（20-100字最佳）
     const length = content.length;
@@ -201,11 +201,12 @@ function formatKeyMoments(moments: unknown[]): string {
   
   return `**关键时刻**：
 ${moments.map((m, i) => {
-  const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('zh-CN', {
+  const moment = m as { timestamp?: string; content?: string };
+  const time = moment.timestamp ? new Date(moment.timestamp).toLocaleTimeString('zh-CN', {
     hour: '2-digit',
     minute: '2-digit'
   }) : '';
-  return `${i + 1}. ${time ? `[${time}] ` : ''}${m.content}`;
+  return `${i + 1}. ${time ? `[${time}] ` : ''}${moment.content || ''}`;
 }).join('\n')}`;
 }
 
@@ -220,9 +221,11 @@ function formatInnerThoughts(chats: unknown[]): string {
   
   return `\n**内心活动**：
 ${selected.map((chat, i) => {
-  const preview = chat.content.length > 80 
-    ? chat.content.substring(0, 80) + '...' 
-    : chat.content;
+  const chatData = chat as { content?: string };
+  const content = chatData.content || '';
+  const preview = content.length > 80 
+    ? content.substring(0, 80) + '...' 
+    : content;
   return `${i + 1}. ${preview}`;
 }).join('\n')}`;
 }

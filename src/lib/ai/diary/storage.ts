@@ -131,6 +131,7 @@ function createDiaryPreview(diary: Diary): DiaryPreview {
   const excerpt = extractExcerpt(diary.content.document);
   
   return {
+    id: diary.metadata.id,
     date: diary.metadata.date,
     title: `${diary.metadata.date} 的日记`,
     excerpt,
