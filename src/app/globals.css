@@ -1,6 +1,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* 3D perspective utilities for carousel */
+.perspective-\[2000px\] {
+  perspective: 2000px;
+}
+
+/* 保留3D效果 */
+[style*="preserve-3d"] {
+  transform-style: preserve-3d;
+}
+
 /* 日记编辑器媒体样式 - 移动端优化 */
 .diary-image {
   max-width: 100%;

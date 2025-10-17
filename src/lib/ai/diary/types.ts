@@ -250,6 +250,7 @@ export interface DiaryGenerationOptions {
     start: Date;
     end: Date;
   };
+  customPrompt?: string;  // 自定义写作风格prompt
 }
 
 /**
