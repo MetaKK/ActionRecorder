@@ -10,7 +10,7 @@ import { diaryExtensions, diaryEditorProps } from '@/lib/ai/diary/tiptap-config'
 import { TiptapDocument } from '@/lib/ai/diary/types';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
-import { TiptapMenu } from './tiptap-menu';
+import { TiptapMenuEnhanced } from './tiptap-menu-enhanced';
 
 interface DiaryEditorProps {
   content?: TiptapDocument;
@@ -48,6 +48,57 @@ export function DiaryEditor({
           className
         ),
       },
+      // 处理拖拽和粘贴
+      handleDrop: (view, event, slice, moved) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length) {
+          const files = Array.from(event.dataTransfer.files);
+          const pos = view.posAtCoords({ left: event.clientX, top: event.clientY });
+          
+          if (pos) {
+            files.forEach(async (file) => {
+              // 处理文件上传
+              if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  const dataUrl = reader.result as string;
+                  view.dispatch(
+                    view.state.tr.insert(pos.pos, view.state.schema.nodes.image.create({ src: dataUrl }))
+                  );
+                };
+                reader.readAsDataURL(file);
+              }
+            });
+          }
+          
+          return true;
+        }
+        return false;
+      },
+      handlePaste: (view, event) => {
+        const items = event.clipboardData?.items;
+        if (items) {
+          for (let i = 0; i < items.length; i++) {
+            if (items[i].type.startsWith('image/')) {
+              const file = items[i].getAsFile();
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  const dataUrl = reader.result as string;
+                  const { selection } = view.state;
+                  view.dispatch(
+                    view.state.tr.replaceSelectionWith(
+                      view.state.schema.nodes.image.create({ src: dataUrl })
+                    )
+                  );
+                };
+                reader.readAsDataURL(file);
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      },
     },
   });
 
@@ -62,7 +113,7 @@ export function DiaryEditor({
 
   return (
     <div className="diary-editor-wrapper relative">
-      {editable && <TiptapMenu editor={editor} />}
+      {editable && <TiptapMenuEnhanced editor={editor} />}
       <EditorContent editor={editor} />
     </div>
   );

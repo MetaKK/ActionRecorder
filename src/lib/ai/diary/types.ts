@@ -128,11 +128,14 @@ export interface HistoricalContext {
 export interface DiaryPreview {
   id: string;                    // 日记ID
   date: string;                  // 日期
+  createdAt: Date;               // 创建时间（用于排序）
   title?: string;                // 标题（可选）
   excerpt: string;               // 摘要
   mood: string;                  // 情绪
   wordCount: number;             // 字数
+  type: DiaryType;               // 日记类型
   generatedAt?: Date;            // 生成时间
+  isPinned?: boolean;            // 是否置顶
 }
 
 /**
@@ -191,13 +194,26 @@ export interface DiaryEdit {
 }
 
 /**
+ * 日记类型
+ */
+export enum DiaryType {
+  AUTO_GENERATED = 'auto', // AI 自动生成
+  MANUAL = 'manual',       // 手动创建
+  QUICK_NOTE = 'quick',    // 快速笔记
+  REFLECTION = 'reflection' // 反思总结
+}
+
+/**
  * 日记元数据
  */
 export interface DiaryMetadata {
   id: string;
-  date: string;
-  generatedAt: Date;
+  date: string;                  // 日期：YYYY-MM-DD
+  createdAt: Date;               // 创建时间（精确时间）
+  generatedAt: Date;             // 生成/编辑时间
   style: DiaryStyle;
+  type: DiaryType;               // 日记类型
+  title?: string;                // 日记标题（可选）
   wordCount: number;
   mood: string;
   tags: string[];
@@ -208,6 +224,8 @@ export interface DiaryMetadata {
   };
   editHistory?: DiaryEdit[];
   version: number;
+  isArchived?: boolean;          // 是否归档
+  isPinned?: boolean;            // 是否置顶
 }
 
 /**

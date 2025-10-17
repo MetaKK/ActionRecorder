@@ -76,11 +76,21 @@ export function Timeline() {
     );
   }, [visibleGroupedRecords]);
 
-  // 创建日期到日记的映射
+  // 创建日期到日记列表的映射（支持多篇日记）
   const diaryMap = useMemo(() => {
-    const map = new Map<string, DiaryPreview>();
+    const map = new Map<string, DiaryPreview[]>();
     diaries.forEach(diary => {
-      map.set(diary.date, diary);
+      const existingDiaries = map.get(diary.date) || [];
+      existingDiaries.push(diary);
+      map.set(diary.date, existingDiaries);
+    });
+    // 对每天的日记按创建时间排序，置顶的在前
+    map.forEach((dayDiaries) => {
+      dayDiaries.sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return b.createdAt.getTime() - a.createdAt.getTime();
+      });
     });
     return map;
   }, [diaries]);
@@ -154,23 +164,23 @@ export function Timeline() {
               {/* 混合内容：日记 + 记录，按时间排序 */}
               <div className="space-y-3">
                 {(() => {
-                  // 获取当天的日记
-                  const diary = diaryMap.get(dateKey);
+                  // 获取当天的所有日记
+                  const dayDiaries = diaryMap.get(dateKey) || [];
                   
                   // 创建混合数组：日记 + 记录
                   const mixedItems = [];
                   
-                  // 添加日记（如果有）
-                  if (diary) {
-                    // 使用日记的实际生成时间，如果没有则使用当天晚上
-                    const diaryTime = diary.generatedAt || new Date(diary.date + 'T20:00:00');
+                  // 添加所有日记
+                  dayDiaries.forEach(diary => {
+                    // 使用日记的实际创建时间
+                    const diaryTime = diary.createdAt || diary.generatedAt || new Date(diary.date + 'T20:00:00');
                     mixedItems.push({
                       type: 'diary' as const,
                       id: diary.id,
                       createdAt: diaryTime,
                       data: diary
                     });
-                  }
+                  });
                   
                   // 添加记录
                   items.forEach(record => {

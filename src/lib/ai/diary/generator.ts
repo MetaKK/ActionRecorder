@@ -97,11 +97,14 @@ export async function generateDiary(
       currentStep: '完成整理',
     });
 
+    const now = new Date();
     const metadata: DiaryMetadata = {
       id: `diary_${Date.now()}`,
       date: context.date,
-      generatedAt: new Date(),
+      createdAt: now,
+      generatedAt: now,
       style: options.style,
+      type: 'auto' as any, // DiaryType.AUTO_GENERATED
       wordCount: countWords(diaryContent.document),
       mood: analysis.mood,
       tags: analysis.topics.slice(0, 5),
@@ -111,6 +114,7 @@ export async function generateDiary(
         filesCount: groupedSources.files.length,
       },
       version: 1,
+      isPinned: false,
     };
 
     const citations: Citation[] = options.includeCitations

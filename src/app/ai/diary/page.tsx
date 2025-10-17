@@ -18,11 +18,12 @@ import { useRouter } from 'next/navigation';
 import {
   Diary,
   DiaryStyle,
+  DiaryType,
   DiaryGenerationOptions,
   DiaryGenerationProgress,
   TiptapDocument,
 } from '@/lib/ai/diary/types';
-import { Sparkles, Save, Download, Bug, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Sparkles, Save, Download, CheckCircle, ArrowLeft, PenTool, Wand2, Plus, X } from 'lucide-react';
 
 export default function DiaryPage() {
   const { records } = useRecords();
@@ -35,6 +36,8 @@ export default function DiaryPage() {
   const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
   const [selectedMood, setSelectedMood] = useState<string>('😊');
+  const [entryMode, setEntryMode] = useState<'ai' | 'manual' | null>(null);
+  const [isCreatingManual, setIsCreatingManual] = useState(false);
   
   // 固定使用最佳风格：叙事型（温暖、真实、生动）
   const BEST_DIARY_STYLE = DiaryStyle.NARRATIVE;
@@ -57,18 +60,24 @@ export default function DiaryPage() {
     };
     
     loadTodayDiary();
-    
-    // 检查是否有 API Key
-    const storedKey = sessionStorage.getItem('api_key') || localStorage.getItem('api_key');
-    if (!storedKey) {
-      setShowApiKeyInput(true);
-    }
   }, []);
   
   // 生成日记
   const handleGenerate = async () => {
+    // 检查API Key
+    if (!checkApiKey()) {
+      return;
+    }
+    
+    // 检查是否有记录
+    if (records.length === 0) {
+      alert('今天还没有记录，请先添加一些生活片段再生成日记');
+      return;
+    }
+    
     setIsGenerating(true);
     setProgress(null);
+    setShowSuccessMessage(false);
     
     try {
       const options: DiaryGenerationOptions = {
@@ -78,11 +87,24 @@ export default function DiaryPage() {
       };
       
       const newDiary = await generateDiary(records, options, setProgress);
+      
+      // 验证生成的日记
+      if (!newDiary || !newDiary.content || !newDiary.metadata) {
+        throw new Error('生成的日记数据无效');
+      }
+      
       setDiary(newDiary);
       setEditedContent(newDiary.content.document);
       
       // 自动保存到 IndexedDB
-      await saveDiary(newDiary);
+      try {
+        await saveDiary(newDiary);
+        console.log('✅ 日记已自动保存');
+      } catch (saveError) {
+        console.error('保存失败:', saveError);
+        // 即使保存失败，也显示日记内容
+        alert('警告：日记已生成但保存失败，请手动保存');
+      }
       
       // 显示成功消息
       setShowSuccessMessage(true);
@@ -91,7 +113,9 @@ export default function DiaryPage() {
       }, 3000);
     } catch (error) {
       console.error('Failed to generate diary:', error);
-      alert('生成日记失败：' + (error instanceof Error ? error.message : '未知错误'));
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      alert(`生成日记失败：${errorMessage}\n\n请检查API Key是否正确，或稍后重试。`);
+      setProgress(null);
     } finally {
       setIsGenerating(false);
     }
@@ -99,30 +123,44 @@ export default function DiaryPage() {
   
   // 保存日记
   const handleSave = async () => {
-    if (!diary || !editedContent) return;
+    if (!diary || !editedContent) {
+      alert('没有可保存的日记内容');
+      return;
+    }
     
-    const updatedDiary: Diary = {
-      ...diary,
-      content: {
-        ...diary.content,
-        document: editedContent,
-      },
-      metadata: {
-        ...diary.metadata,
-        editHistory: [
-          ...(diary.metadata.editHistory || []),
-          {
-            timestamp: new Date(),
-            type: 'manual',
-            changes: '用户编辑',
-          },
-        ],
-      },
-    };
-    
-    await saveDiary(updatedDiary);
-    setDiary(updatedDiary);
-    alert('日记已保存！');
+    try {
+      const updatedDiary: Diary = {
+        ...diary,
+        content: {
+          ...diary.content,
+          document: editedContent,
+        },
+        metadata: {
+          ...diary.metadata,
+          editHistory: [
+            ...(diary.metadata.editHistory || []),
+            {
+              timestamp: new Date(),
+              type: 'manual',
+              changes: '用户编辑',
+            },
+          ],
+        },
+      };
+      
+      await saveDiary(updatedDiary);
+      setDiary(updatedDiary);
+      
+      // 使用Toast而不是alert
+      setShowSuccessMessage(true);
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 2000);
+    } catch (error) {
+      console.error('保存失败:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      alert(`保存失败：${errorMessage}`);
+    }
   };
   
   // 导出日记
@@ -145,6 +183,16 @@ export default function DiaryPage() {
     alert('调试信息已输出到控制台，请查看开发者工具');
   };
   
+  // 检查API Key
+  const checkApiKey = () => {
+    const storedKey = sessionStorage.getItem('api_key') || localStorage.getItem('api_key');
+    if (!storedKey) {
+      setShowApiKeyInput(true);
+      return false;
+    }
+    return true;
+  };
+
   // 设置 API Key
   const handleSetApiKey = () => {
     if (apiKey.trim()) {
@@ -155,12 +203,103 @@ export default function DiaryPage() {
       alert('请输入有效的 API Key');
     }
   };
+
+  // 创建手动日记
+  const handleCreateManual = async () => {
+    setIsCreatingManual(true);
+    try {
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      
+      const newDiary: Diary = {
+        metadata: {
+          id: `diary_${Date.now()}_${Math.random().toString(36).substring(7)}`, // 确保ID唯一
+          date: today,
+          createdAt: now,
+          generatedAt: now,
+          style: DiaryStyle.NARRATIVE,
+          type: DiaryType.MANUAL,
+          wordCount: 0,
+          mood: selectedMood || '😊', // 默认值
+          tags: [],
+          sources: {
+            recordsCount: 0,
+            chatsCount: 0,
+            filesCount: 0,
+          },
+          version: 1,
+          isPinned: false,
+        },
+        content: {
+          format: 'tiptap-json',
+          version: '1.0',
+          document: {
+            type: 'doc',
+            content: [
+              {
+                type: 'paragraph',
+                content: [],
+              },
+            ],
+          },
+        },
+        citations: [],
+        images: [],
+      };
+
+      setDiary(newDiary);
+      setEditedContent(newDiary.content.document);
+      setEntryMode('manual');
+      
+      // 自动保存到 IndexedDB
+      try {
+        await saveDiary(newDiary);
+        console.log('✅ 空白日记已创建并保存');
+      } catch (saveError) {
+        console.error('保存空白日记失败:', saveError);
+        // 即使保存失败，也允许用户继续编辑
+        alert('警告：日记创建成功但保存失败，请在编辑后手动保存');
+      }
+    } catch (error) {
+      console.error('Failed to create manual diary:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      alert(`创建日记失败：${errorMessage}`);
+    } finally {
+      setIsCreatingManual(false);
+    }
+  };
+
+  // 重置到选择模式
+  const handleResetMode = () => {
+    setEntryMode(null);
+    setDiary(null);
+    setEditedContent(null);
+  };
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50/30 via-orange-50/20 to-yellow-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-x-hidden">
-      <div className="max-w-3xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
-        {/* Header - 更紧凑的设计 */}
-        <header className="mb-6 sm:mb-8 text-center">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50/30 via-orange-50/20 to-yellow-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-x-hidden relative">
+      {/* 背景装饰 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-200/10 dark:bg-amber-400/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-orange-200/10 dark:bg-orange-400/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-yellow-200/5 dark:bg-yellow-400/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
+      </div>
+      
+      <div className="max-w-3xl mx-auto px-3 sm:px-6 py-4 sm:py-8 relative z-10">
+        {/* 回退按钮 */}
+        <div className="mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push('/')}
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </Button>
+        </div>
+
+        {/* Header - 恢复原始样式 */}
+        <header className="mb-4 sm:mb-6 text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 mb-3 sm:mb-4 shadow-lg shadow-orange-500/25">
             <span className="text-xl sm:text-2xl">📖</span>
           </div>
@@ -172,106 +311,195 @@ export default function DiaryPage() {
           </p>
         </header>
         
-        {/* API Key 设置 - 移动端优化 */}
-        {showApiKeyInput && (
-          <div className="mb-4 p-3 sm:p-4 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/30 shadow-sm">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                <span className="text-xs sm:text-sm">🔑</span>
+        {/* API Key 设置 - 只在AI生成模式显示 */}
+        {showApiKeyInput && entryMode === 'ai' && (
+          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-50/80 to-orange-50/50 dark:from-amber-900/20 dark:to-orange-900/10 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/30 shadow-sm animate-fade-in-up">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 flex items-center justify-center">
+                <span className="text-sm">🔑</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">
-                  配置 API Key
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  配置 OpenAI API Key
                 </h3>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  需要 OpenAI API Key 来生成日记
+                  AI 生成功能需要您的 OpenAI API Key
                 </p>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="space-y-3">
               <input
                 type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="sk-..."
-                className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-600 transition-all text-sm"
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-600 transition-all text-sm"
               />
-              <Button 
-                onClick={handleSetApiKey} 
-                disabled={!apiKey.trim()}
-                size="sm"
-                className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white whitespace-nowrap"
-              >
-                设置
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleSetApiKey} 
+                  disabled={!apiKey.trim()}
+                  size="sm"
+                  className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white transition-all duration-200 hover:shadow-lg"
+                >
+                  确认设置
+                </Button>
+                <Button 
+                  onClick={handleResetMode}
+                  variant="outline"
+                  size="sm"
+                  className="px-4 py-2 rounded-lg border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  取消
+                </Button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Generate Button - 移动端优化设计 */}
-        {!diary && (
+        {/* 双入口选择界面 */}
+        {!diary && !entryMode && (
           <div className="text-center py-6 sm:py-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20 mb-4">
-              <span className="text-xl sm:text-2xl">✨</span>
-            </div>
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              还没有今日日记
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4 max-w-xs mx-auto">
-              让 AI 为你创作一篇温暖真实的生活日记
-            </p>
-            
+
             {/* 心情选择 */}
-            <div className="mb-4">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">选择今日心情</p>
-              <div className="flex justify-center gap-2 flex-wrap">
+            <div className="mb-8 animate-fade-in-up delay-300">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4 flex items-center justify-center gap-2">
+                <span className="text-base">💭</span>
+                今天的心情
+              </p>
+              <div className="flex justify-center gap-3 flex-wrap">
                 {[
-                  { emoji: '😊', label: '开心' },
-                  { emoji: '😌', label: '平静' },
-                  { emoji: '😔', label: '低落' },
-                  { emoji: '🤔', label: '思考' },
-                  { emoji: '😴', label: '疲惫' },
-                  { emoji: '😄', label: '兴奋' }
-                ].map((mood) => (
+                  { emoji: '😊', label: '开心', color: 'from-yellow-100 to-orange-100' },
+                  { emoji: '😌', label: '平静', color: 'from-blue-100 to-cyan-100' },
+                  { emoji: '😔', label: '低落', color: 'from-gray-100 to-slate-100' },
+                  { emoji: '🤔', label: '思考', color: 'from-purple-100 to-indigo-100' },
+                  { emoji: '😴', label: '疲惫', color: 'from-gray-100 to-zinc-100' },
+                  { emoji: '😄', label: '兴奋', color: 'from-pink-100 to-rose-100' }
+                ].map((mood, index) => (
                   <button
                     key={mood.emoji}
                     onClick={() => setSelectedMood(mood.emoji)}
-                    className={`w-10 h-10 rounded-lg border-2 transition-all duration-200 ${
+                    className={`w-12 h-12 rounded-xl border-2 transition-all duration-300 hover:scale-110 active:scale-95 ${
                       selectedMood === mood.emoji
-                        ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20 scale-110'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-amber-300 hover:bg-amber-50/50 dark:hover:bg-amber-900/10'
+                        ? 'border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 scale-110 shadow-lg shadow-amber-500/25'
+                        : `border-gray-200 dark:border-gray-700 hover:border-amber-300 bg-gradient-to-br ${mood.color} dark:from-gray-800 dark:to-gray-700 hover:shadow-md`
                     }`}
                     title={mood.label}
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <span className="text-lg">{mood.emoji}</span>
+                    <span className="text-xl transition-transform duration-200 hover:scale-110">{mood.emoji}</span>
                   </button>
                 ))}
               </div>
+              {selectedMood && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 animate-fade-in-up">
+                  已选择心情：{selectedMood}
+                </p>
+              )}
+            </div>
+
+            {/* 双入口选择卡片 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+              {/* AI 生成入口 */}
+              <div className="group relative animate-fade-in-up">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+                <Card className="relative p-6 rounded-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/30 hover:border-amber-300/60 dark:hover:border-amber-700/50 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/20 cursor-pointer group-hover:scale-[1.02] group-hover:-translate-y-1"
+                      onClick={() => {
+                        if (checkApiKey()) {
+                          setEntryMode('ai');
+                        }
+                      }}>
+                  <div className="text-center">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                      <Wand2 className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors duration-300">
+                      AI 智能生成
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      基于你的生活记录，AI 为你创作温暖真实的日记
+                    </p>
+                    <div className="flex items-center justify-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-900/20 px-3 py-1.5 rounded-full">
+                      <Sparkles className="w-4 h-4 animate-pulse" />
+                      <span>需要 API Key</span>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* 手动编写入口 */}
+              <div className="group relative animate-fade-in-up delay-150">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+                <Card className="relative p-6 rounded-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-blue-200/50 dark:border-blue-800/30 hover:border-blue-300/60 dark:hover:border-blue-700/50 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/20 cursor-pointer group-hover:scale-[1.02] group-hover:-translate-y-1"
+                      onClick={handleCreateManual}>
+                  <div className="text-center">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                      <PenTool className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-300">
+                      自由创作
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      用你的文字，记录内心最真实的想法和感受
+                    </p>
+                    <div className="flex items-center justify-center gap-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full">
+                      <PenTool className="w-4 h-4" />
+                      <span>立即开始</span>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* AI 生成模式 */}
+        {!diary && entryMode === 'ai' && (
+          <div className="text-center py-6 sm:py-8">
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                AI 智能生成
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                基于你的生活记录，AI 为你创作温暖真实的日记
+              </p>
             </div>
             
             <Button
               size="lg"
               onClick={handleGenerate}
               disabled={isGenerating || records.length === 0}
-              className="w-full max-w-xs px-6 py-3 text-sm rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-amber-500/35 active:scale-95 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-full max-w-sm px-6 py-3 text-sm rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-amber-500/35 active:scale-95 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {isGenerating ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  <span>生成中...</span>
+                  <span>AI 正在创作中...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 mr-2" />
-                  <span>生成今日日记</span>
+                  <span>开始 AI 生成</span>
                 </>
               )}
             </Button>
+            
             {records.length === 0 && (
               <p className="text-xs text-gray-500 dark:text-gray-600 mt-3">
                 今天还没有记录，先去记录一些生活片段吧~
               </p>
             )}
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetMode}
+              className="mt-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              <X className="w-4 h-4 mr-1" />
+              返回选择
+            </Button>
           </div>
         )}
         
@@ -321,7 +549,21 @@ export default function DiaryPage() {
                     <span className="text-base sm:text-lg">{getMoodEmoji(diary.metadata.mood)}</span>
                   </div>
                   <div className="min-w-0">
-                    <div className="font-semibold text-sm text-gray-900 dark:text-white truncate">{diary.metadata.date}</div>
+                    <div className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                      {diary.metadata.date}
+                      {diary.metadata.type === 'manual' && (
+                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                          <PenTool className="w-3 h-3 mr-1" />
+                          手动创作
+                        </span>
+                      )}
+                      {diary.metadata.type === 'auto' && (
+                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                          <Wand2 className="w-3 h-3 mr-1" />
+                          AI 生成
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       {diary.metadata.wordCount} 字
                     </div>
@@ -338,16 +580,18 @@ export default function DiaryPage() {
                     <span className="hidden sm:inline">返回首页</span>
                     <span className="sm:hidden">返回</span>
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleGenerate}
-                    className="flex-1 sm:flex-none rounded-lg border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs"
-                  >
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    <span className="hidden sm:inline">重新生成</span>
-                    <span className="sm:hidden">重新</span>
-                  </Button>
+                  {diary.metadata.type === 'auto' && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleGenerate}
+                      className="flex-1 sm:flex-none rounded-lg border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs"
+                    >
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      <span className="hidden sm:inline">重新生成</span>
+                      <span className="sm:hidden">重新</span>
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -366,6 +610,16 @@ export default function DiaryPage() {
                     <Download className="w-3 h-3 mr-1" />
                     <span className="hidden sm:inline">导出</span>
                     <span className="sm:hidden">导出</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleResetMode}
+                    className="flex-1 sm:flex-none rounded-lg border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    <span className="hidden sm:inline">新建日记</span>
+                    <span className="sm:hidden">新建</span>
                   </Button>
                 </div>
               </div>

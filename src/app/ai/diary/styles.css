@@ -398,26 +398,208 @@
 }
 
 /* ============================================
-   12. 图片 - 响应式处理
+   12. 动画效果
    ============================================ */
-.ProseMirror img {
+
+/* 淡入上升动画 */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.delay-150 {
+  animation-delay: 0.15s;
+}
+
+/* 温暖科技感背景动画 */
+@keyframes warm-glow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+.warm-glow {
+  animation: warm-glow 4s ease-in-out infinite;
+}
+
+/* 卡片悬停效果 */
+@keyframes card-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.card-float {
+  animation: card-float 3s ease-in-out infinite;
+}
+
+/* ============================================
+   13. 多媒体 - 图片、视频、音频
+   ============================================ */
+
+/* 图片 */
+.ProseMirror img,
+.ProseMirror .diary-image {
   max-width: 100%;
   height: auto;
   border-radius: 12px;
-  margin: 24px 0;
+  margin: 24px auto;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   display: block;
+  cursor: zoom-in;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.dark .ProseMirror img {
+.ProseMirror img:hover,
+.ProseMirror .diary-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.dark .ProseMirror img,
+.dark .ProseMirror .diary-image {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* 移动端图片 */
+.dark .ProseMirror img:hover,
+.dark .ProseMirror .diary-image:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* 视频 */
+.ProseMirror video,
+.ProseMirror .diary-video {
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin: 24px auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: block;
+  background: #000;
+}
+
+.dark .ProseMirror video,
+.dark .ProseMirror .diary-video {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 音频 */
+.ProseMirror audio,
+.ProseMirror .diary-audio {
+  width: 100%;
+  max-width: 500px;
+  margin: 20px auto;
+  display: block;
+  border-radius: 8px;
+  filter: sepia(20%) saturate(70%) grayscale(1) contrast(99%) invert(12%);
+}
+
+.dark .ProseMirror audio,
+.dark .ProseMirror .diary-audio {
+  filter: sepia(20%) saturate(70%) grayscale(1) contrast(99%) invert(88%);
+}
+
+/* 文件附件 */
+.ProseMirror .file-attachment {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin: 16px 0;
+  background: #f5f5f7;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.ProseMirror .file-attachment:hover {
+  background: #e8e8ed;
+  border-color: #b0b0b7;
+}
+
+.dark .ProseMirror .file-attachment {
+  background: #2c2c2e;
+  border-color: #3a3a3c;
+}
+
+.dark .ProseMirror .file-attachment:hover {
+  background: #3a3a3c;
+  border-color: #48484a;
+}
+
+.ProseMirror .file-link {
+  color: #06c;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.dark .ProseMirror .file-link {
+  color: #2997ff;
+}
+
+/* 上传进度指示器 */
+.ProseMirror .upload-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 125, 250, 0.1);
+  border-radius: 6px;
+  color: #007dfa;
+  font-size: 14px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* 移动端多媒体优化 */
 @media (max-width: 768px) {
-  .ProseMirror img {
+  .ProseMirror img,
+  .ProseMirror .diary-image {
     margin: 20px 0;
     border-radius: 8px;
+  }
+  
+  .ProseMirror video,
+  .ProseMirror .diary-video {
+    margin: 20px 0;
+    border-radius: 8px;
+  }
+  
+  .ProseMirror audio,
+  .ProseMirror .diary-audio {
+    margin: 16px 0;
+  }
+  
+  .ProseMirror .file-attachment {
+    margin: 12px 0;
+    padding: 10px 12px;
   }
 }
 

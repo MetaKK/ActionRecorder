@@ -10,11 +10,19 @@ import Typography from '@tiptap/extension-typography';
 import Color from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Underline from '@tiptap/extension-underline';
-import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import { TiptapDocument, TiptapNode } from './types';
-// import { customDiaryExtensions } from './tiptap-extensions';
+import { 
+  EnhancedImage, 
+  Video, 
+  Audio, 
+  FileAttachment,
+  DragAndDropPlugin,
+  PasteImagePlugin,
+  UploadProgressPlugin
+} from './tiptap-extensions';
+import { uploadToIndexedDB } from '@/lib/utils/media-upload';
 
 /**
  * 日记编辑器扩展配置
@@ -66,14 +74,27 @@ export const diaryExtensions = [
     closeSingleQuote: '\u2019',
   }),
   
-  // 图片
-  Image.configure({
-    inline: true,
+  // 增强媒体支持
+  EnhancedImage.configure({
+    inline: false,
     allowBase64: true,
     HTMLAttributes: {
       class: 'diary-image',
     },
   }),
+  Video.configure({
+    HTMLAttributes: {
+      class: 'diary-video',
+      controls: true,
+    },
+  }),
+  Audio.configure({
+    HTMLAttributes: {
+      class: 'diary-audio',
+      controls: true,
+    },
+  }),
+  FileAttachment,
   
   // 链接
   Link.configure({
@@ -128,7 +149,7 @@ export const diaryViewerExtensions = [
   }),
   Underline,
   Typography,
-  Image.configure({
+  EnhancedImage.configure({
     inline: true,
     HTMLAttributes: {
       class: 'diary-image',
