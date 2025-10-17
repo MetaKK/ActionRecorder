@@ -129,90 +129,103 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
     { name: '优雅紫', value: '#9333ea', bg: '#e9d5ff', border: '#d8b4fe' },
   ];
 
-  // 处理文件上传 - 移动端优化
+  // 处理文件上传 - 支持多文件上传
   const handleFileUpload = async (files: FileList | null, type: MediaType) => {
     if (!files || files.length === 0) return;
 
-    const file = files[0];
-    
-    // 验证文件
-    const validation = validateFile(file, type);
-    if (!validation.valid) {
-      toast.error(validation.error || '文件验证失败');
-      return;
+    // 支持多文件上传
+    const fileArray = Array.from(files);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const file of fileArray) {
+      // 验证文件
+      const validation = validateFile(file, type);
+      if (!validation.valid) {
+        toast.error(`${file.name}: ${validation.error || '文件验证失败'}`);
+        errorCount++;
+        continue;
+      }
+
+      let loadingToastId: string | number | undefined;
+      
+      try {
+        loadingToastId = toast.loading(`正在处理 ${file.name}...`);
+        
+        // 移动端优化：检查文件大小，大文件给出提示
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile && file.size > 10 * 1024 * 1024) { // 10MB
+          toast.info('文件较大，处理中请稍候...');
+        }
+        
+        const dataUrl = await uploadFileToIndexedDB(file);
+        
+        // 清除 loading toast
+        if (loadingToastId) {
+          toast.dismiss(loadingToastId);
+        }
+        
+        if (type === 'image') {
+          editor.chain().focus().insertContent({
+            type: 'image',
+            attrs: { 
+              src: dataUrl,
+              alt: file.name,
+              title: file.name,
+              scale: 1,
+              align: 'center'
+            }
+          }).run();
+        } else if (type === 'video') {
+          editor.chain().focus().insertContent({
+            type: 'video',
+            attrs: { 
+              src: dataUrl,
+              controls: true,
+              width: '100%',
+              height: 'auto'
+            }
+          }).run();
+        } else if (type === 'audio') {
+          editor.chain().focus().insertContent({
+            type: 'audio',
+            attrs: { 
+              src: dataUrl,
+              title: file.name,
+              controls: true,
+              preload: 'metadata'
+            }
+          }).run();
+        } else if (type === 'file') {
+          editor.chain().focus().insertContent({
+            type: 'file',
+            attrs: {
+              src: dataUrl,
+              fileName: file.name,
+              fileSize: file.size,
+              fileType: file.type
+            }
+          }).run();
+        }
+        
+        successCount++;
+      } catch (error) {
+        console.error('处理失败:', error);
+        // 清除 loading toast
+        if (loadingToastId) {
+          toast.dismiss(loadingToastId);
+        }
+        errorCount++;
+      }
     }
 
-    let loadingToastId: string | number | undefined;
-    
-    try {
-      loadingToastId = toast.loading('正在处理...');
-      
-      // 移动端优化：检查文件大小，大文件给出提示
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      if (isMobile && file.size > 10 * 1024 * 1024) { // 10MB
-        toast.info('文件较大，处理中请稍候...');
-      }
-      
-      const dataUrl = await uploadFileToIndexedDB(file);
-      
-      // 清除 loading toast
-      if (loadingToastId) {
-        toast.dismiss(loadingToastId);
-      }
-      
-      if (type === 'image') {
-        editor.chain().focus().insertContent({
-          type: 'image',
-          attrs: { 
-            src: dataUrl,
-            alt: file.name,
-            title: file.name,
-            scale: 1,
-            align: 'center'
-          }
-        }).run();
-        toast.success('图片已插入');
-      } else if (type === 'video') {
-        editor.chain().focus().insertContent({
-          type: 'video',
-          attrs: { 
-            src: dataUrl,
-            controls: true,
-            width: '100%',
-            height: 'auto'
-          }
-        }).run();
-        toast.success('视频已插入');
-      } else if (type === 'audio') {
-        editor.chain().focus().insertContent({
-          type: 'audio',
-          attrs: { 
-            src: dataUrl,
-            title: file.name,
-            controls: true,
-            preload: 'metadata'
-          }
-        }).run();
-        toast.success('音频已插入');
-      } else if (type === 'file') {
-        editor.chain().focus().insertContent({
-          type: 'file',
-          attrs: {
-            src: dataUrl,
-            fileName: file.name,
-            fileSize: file.size,
-            fileType: file.type
-          }
-        }).run();
-        toast.success('文件已插入');
-      }
-    } catch (error) {
-      console.error('处理失败:', error);
-      // 清除 loading toast
-      if (loadingToastId) {
-        toast.dismiss(loadingToastId);
-      }
-      toast.error('处理失败，请重试');
+    // 显示批量处理结果
+    if (successCount > 0 && errorCount === 0) {
+      toast.success(`成功插入 ${successCount} 个${type === 'image' ? '图片' : type === 'video' ? '视频' : type === 'audio' ? '音频' : '文件'}`);
+    } else if (successCount > 0 && errorCount > 0) {
+      toast.warning(`成功插入 ${successCount} 个，失败 ${errorCount} 个`);
+    } else if (errorCount > 0) {
+      toast.error(`所有文件处理失败`);
     }
   };
 
@@ -362,6 +375,7 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
                 ref={imageInputRef}
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={(e) => handleFileUpload(e.target.files, 'image')}
                 className="hidden"
                 aria-label="上传图片"
@@ -371,6 +385,7 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
                 ref={videoInputRef}
                 type="file"
                 accept="video/*"
+                multiple
                 onChange={(e) => handleFileUpload(e.target.files, 'video')}
                 className="hidden"
                 aria-label="上传视频"
@@ -380,6 +395,7 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
                 ref={audioInputRef}
                 type="file"
                 accept="audio/*"
+                multiple
                 onChange={(e) => handleFileUpload(e.target.files, 'audio')}
                 className="hidden"
                 aria-label="上传音频"

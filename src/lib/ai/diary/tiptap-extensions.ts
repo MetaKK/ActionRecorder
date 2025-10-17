@@ -270,14 +270,14 @@ export const Audio = Node.create({
   renderHTML({ HTMLAttributes }) {
     const { src, title, controls, autoplay, loop, muted, preload, ...rest } = HTMLAttributes;
     
-    // 移动端优化的样式，支持拖动
+    // 移动端优化的样式，支持拖动，宽度缩小20%
     const audioAttrs = {
       src,
       title,
       preload,
       style: `
-        width: 100%; 
-        max-width: 100%; 
+        width: 80%; 
+        max-width: 80%; 
         min-width: 0;
         height: 40px;
         border-radius: 8px;
@@ -288,6 +288,8 @@ export const Audio = Node.create({
         appearance: none;
         cursor: move;
         transition: all 0.2s ease;
+        margin: 0 auto;
+        display: block;
       `,
       draggable: 'true',
       ...(controls && { controls: 'true' }),

@@ -37,14 +37,16 @@
 }
 
 .diary-audio {
-  width: 100%;
-  max-width: 100%;
+  width: 80%;
+  max-width: 80%;
   min-width: 0;
   height: 40px;
   border-radius: 8px;
   background: #f8f9fa;
   border: 1px solid #e5e7eb;
   outline: none;
+  margin: 0 auto;
+  display: block;
   /* 拖动优化 */
   cursor: move;
   transition: all 0.2s ease;
@@ -134,19 +136,20 @@
   }
   
   .diary-audio {
-    margin: 12px 0;
+    margin: 12px auto;
     border-radius: 12px;
     padding: 8px;
     height: 48px; /* 移动端更大的触摸区域 */
-    /* 移动端音频播放器优化 */
-    width: 100%;
-    max-width: 100%;
+    /* 移动端音频播放器优化 - 缩小20% */
+    width: 80%;
+    max-width: 80%;
     min-width: 0;
     box-sizing: border-box;
     overflow: hidden;
     /* 移动端拖动优化 */
     cursor: move;
     touch-action: manipulation;
+    display: block;
   }
   
   /* 移动端拖动反馈 */
