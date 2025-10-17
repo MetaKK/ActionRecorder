@@ -9,7 +9,7 @@
 "use client";
 
 import { ImmersiveContainer } from "@/components/immersive-container";
-import { WindowTravelView, TravelContent, WindowFrame } from "@/components/window-travel-view";
+import { WindowTravelOptimized as WindowTravelView, TravelContent, WindowFrame } from "@/components/window-travel-optimized";
 
 /**
  * 沉浸式窗口旅行视频页面
@@ -49,7 +49,8 @@ const DEFAULT_WINDOW_FRAMES: WindowFrame[] = [
     id: "window-1",
     imageUrl: "/img/window-frame-1.png",
     name: "飞机窗口",
-  }];
+  }
+];
 
 export default function WindowPage() {
   return (
