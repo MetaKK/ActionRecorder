@@ -1,6 +1,54 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* 日记编辑器媒体样式 */
+.diary-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.diary-image:hover {
+  transform: scale(1.02);
+}
+
+.diary-video {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.diary-audio {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 8px;
+  background: #f8f9fa;
+  padding: 8px;
+}
+
+.file-attachment {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  margin: 8px 0;
+}
+
+.file-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.file-link:hover {
+  text-decoration: underline;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

@@ -154,37 +154,46 @@ export function TiptapMenuEnhanced({ editor }: TiptapMenuEnhancedProps) {
       if (type === 'image') {
         editor.chain().focus().insertContent({
           type: 'image',
-          attrs: { src: dataUrl }
+          attrs: { 
+            src: dataUrl,
+            alt: file.name,
+            title: file.name,
+            scale: 1,
+            align: 'center'
+          }
         }).run();
         toast.success('图片已插入');
       } else if (type === 'video') {
         editor.chain().focus().insertContent({
-          type: 'paragraph',
-          content: [{
-            type: 'text',
-            marks: [{ type: 'link', attrs: { href: dataUrl }}],
-            text: `🎬 ${file.name}`
-          }]
+          type: 'video',
+          attrs: { 
+            src: dataUrl,
+            controls: true,
+            width: '100%',
+            height: 'auto'
+          }
         }).run();
         toast.success('视频已插入');
       } else if (type === 'audio') {
         editor.chain().focus().insertContent({
-          type: 'paragraph',
-          content: [{
-            type: 'text',
-            marks: [{ type: 'link', attrs: { href: dataUrl }}],
-            text: `🎵 ${file.name}`
-          }]
+          type: 'audio',
+          attrs: { 
+            src: dataUrl,
+            title: file.name,
+            controls: true,
+            preload: 'metadata'
+          }
         }).run();
         toast.success('音频已插入');
       } else if (type === 'file') {
         editor.chain().focus().insertContent({
-          type: 'paragraph',
-          content: [{
-            type: 'text',
-            marks: [{ type: 'link', attrs: { href: dataUrl }}],
-            text: `📎 ${file.name}`
-          }]
+          type: 'file',
+          attrs: {
+            src: dataUrl,
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type
+          }
         }).run();
         toast.success('文件已插入');
       }

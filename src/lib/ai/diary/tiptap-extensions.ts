@@ -9,7 +9,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
 /**
- * 增强图片扩展 - 支持上传、调整大小、对齐
+ * 增强图片扩展 - 支持上传、调整大小、对齐、缩放
  */
 export const EnhancedImage = Node.create({
   name: 'image',
@@ -37,6 +37,9 @@ export const EnhancedImage = Node.create({
       align: {
         default: 'center',
       },
+      scale: {
+        default: 1,
+      },
     };
   },
 
@@ -44,12 +47,45 @@ export const EnhancedImage = Node.create({
     return [
       {
         tag: 'img[src]',
+        getAttrs: (element) => {
+          if (typeof element === 'string') return false;
+          const img = element as HTMLImageElement;
+          return {
+            src: img.getAttribute('src'),
+            alt: img.getAttribute('alt'),
+            title: img.getAttribute('title'),
+            width: img.getAttribute('width'),
+            height: img.getAttribute('height'),
+            align: img.getAttribute('data-align') || 'center',
+            scale: parseFloat(img.getAttribute('data-scale') || '1'),
+          };
+        },
       },
     ];
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['img', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)];
+    const { scale, align, ...rest } = HTMLAttributes;
+    const style = {
+      transform: `scale(${scale})`,
+      transformOrigin: 'center',
+      display: 'block',
+      margin: '0 auto',
+      maxWidth: '100%',
+      height: 'auto',
+    };
+    
+    if (align === 'left') {
+      style.margin = '0 auto 0 0';
+    } else if (align === 'right') {
+      style.margin = '0 0 0 auto';
+    }
+
+    return ['img', mergeAttributes(this.options.HTMLAttributes, rest, {
+      style: Object.entries(style).map(([key, value]) => `${key}: ${value}`).join('; '),
+      'data-align': align,
+      'data-scale': scale,
+    })];
   },
 
   addCommands() {
@@ -59,6 +95,12 @@ export const EnhancedImage = Node.create({
           type: this.name,
           attrs: options,
         });
+      },
+      setImageScale: (scale: number) => ({ commands }: { commands: { updateAttributes: (type: string, attrs: Record<string, unknown>) => void } }) => {
+        return commands.updateAttributes(this.name, { scale });
+      },
+      setImageAlign: (align: string) => ({ commands }: { commands: { updateAttributes: (type: string, attrs: Record<string, unknown>) => void } }) => {
+        return commands.updateAttributes(this.name, { align });
       },
     } as Record<string, unknown>;
   },
@@ -78,7 +120,7 @@ export const EnhancedImage = Node.create({
 });
 
 /**
- * 视频扩展 - 支持本地视频和视频链接
+ * 视频扩展 - 支持本地视频和视频链接，带预览功能
  */
 export const Video = Node.create({
   name: 'video',
@@ -103,6 +145,15 @@ export const Video = Node.create({
       height: {
         default: 'auto',
       },
+      autoplay: {
+        default: false,
+      },
+      loop: {
+        default: false,
+      },
+      muted: {
+        default: false,
+      },
     };
   },
 
@@ -110,12 +161,41 @@ export const Video = Node.create({
     return [
       {
         tag: 'video',
+        getAttrs: (element) => {
+          if (typeof element === 'string') return false;
+          const video = element as HTMLVideoElement;
+          return {
+            src: video.getAttribute('src'),
+            poster: video.getAttribute('poster'),
+            controls: video.hasAttribute('controls'),
+            width: video.getAttribute('width') || '100%',
+            height: video.getAttribute('height') || 'auto',
+            autoplay: video.hasAttribute('autoplay'),
+            loop: video.hasAttribute('loop'),
+            muted: video.hasAttribute('muted'),
+          };
+        },
       },
     ];
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['video', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)];
+    const { src, poster, controls, width, height, autoplay, loop, muted, ...rest } = HTMLAttributes;
+    
+    const videoAttrs = {
+      src,
+      poster,
+      width,
+      height,
+      style: `width: ${width}; height: ${height}; max-width: 100%;`,
+      ...(controls && { controls: 'true' }),
+      ...(autoplay && { autoplay: 'true' }),
+      ...(loop && { loop: 'true' }),
+      ...(muted && { muted: 'true' }),
+      ...rest,
+    };
+
+    return ['video', mergeAttributes(this.options.HTMLAttributes, videoAttrs)];
   },
 
   addCommands() {
@@ -132,7 +212,7 @@ export const Video = Node.create({
 });
 
 /**
- * 音频扩展
+ * 音频扩展 - 支持音频播放和控制
  */
 export const Audio = Node.create({
   name: 'audio',
@@ -151,6 +231,18 @@ export const Audio = Node.create({
       controls: {
         default: true,
       },
+      autoplay: {
+        default: false,
+      },
+      loop: {
+        default: false,
+      },
+      muted: {
+        default: false,
+      },
+      preload: {
+        default: 'metadata',
+      },
     };
   },
 
@@ -158,12 +250,39 @@ export const Audio = Node.create({
     return [
       {
         tag: 'audio',
+        getAttrs: (element) => {
+          if (typeof element === 'string') return false;
+          const audio = element as HTMLAudioElement;
+          return {
+            src: audio.getAttribute('src'),
+            title: audio.getAttribute('title'),
+            controls: audio.hasAttribute('controls'),
+            autoplay: audio.hasAttribute('autoplay'),
+            loop: audio.hasAttribute('loop'),
+            muted: audio.hasAttribute('muted'),
+            preload: audio.getAttribute('preload') || 'metadata',
+          };
+        },
       },
     ];
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['audio', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)];
+    const { src, title, controls, autoplay, loop, muted, preload, ...rest } = HTMLAttributes;
+    
+    const audioAttrs = {
+      src,
+      title,
+      preload,
+      style: 'width: 100%; max-width: 100%;',
+      ...(controls && { controls: 'true' }),
+      ...(autoplay && { autoplay: 'true' }),
+      ...(loop && { loop: 'true' }),
+      ...(muted && { muted: 'true' }),
+      ...rest,
+    };
+
+    return ['audio', mergeAttributes(this.options.HTMLAttributes, audioAttrs)];
   },
 
   addCommands() {
