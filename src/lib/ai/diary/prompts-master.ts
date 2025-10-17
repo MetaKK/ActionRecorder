@@ -10,7 +10,7 @@
  * - 富兰克林自传 - 自我反思与成长
  */
 
-import { DiaryContext, DiaryStyle } from './types';
+import { DiaryContext } from './types';
 
 /**
  * 世界级传记作家视角的日记创作 Prompt
@@ -157,7 +157,7 @@ ${sources.chats.length > 0 ? formatInnerThoughts(sources.chats) : ''}
 /**
  * 选择关键时刻（最有故事性的3-5个片段）
  */
-function selectKeyMoments(records: any[]): any[] {
+function selectKeyMoments(records: unknown[]): unknown[] {
   if (records.length === 0) return [];
   
   // 智能选择：优先选择内容丰富、情感强烈的记录
@@ -196,7 +196,7 @@ function selectKeyMoments(records: any[]): any[] {
 /**
  * 格式化关键时刻
  */
-function formatKeyMoments(moments: any[]): string {
+function formatKeyMoments(moments: unknown[]): string {
   if (moments.length === 0) return '（今日无特别记录）';
   
   return `**关键时刻**：
@@ -212,7 +212,7 @@ ${moments.map((m, i) => {
 /**
  * 格式化内心思考（从对话中提取）
  */
-function formatInnerThoughts(chats: any[]): string {
+function formatInnerThoughts(chats: unknown[]): string {
   if (chats.length === 0) return '';
   
   // 只选择前2个最相关的对话

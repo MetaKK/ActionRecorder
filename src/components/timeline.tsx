@@ -199,7 +199,7 @@ export function Timeline() {
                       );
                     } else {
                       return (
-                        <TimelineItem key={item.id} record={item.data} />
+                        <TimelineItem key={item.id} record={item.data as any} />
                       );
                     }
                   });

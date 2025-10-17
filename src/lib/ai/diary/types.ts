@@ -2,7 +2,7 @@
  * AI 日记系统 - 类型定义
  */
 
-import { Record, Location } from '@/lib/types';
+import { Location } from '@/lib/types';
 
 /**
  * 日记数据源类型
