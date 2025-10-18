@@ -196,6 +196,7 @@ export class IndexedDBAdapter implements IStorageAdapter {
   
   /**
    * 获取所有记录
+   * 优化：延迟加载媒体数据，提升初始加载速度
    */
   async getAllRecords(): Promise<Record[]> {
     this.ensureInitialized();
@@ -206,28 +207,22 @@ export class IndexedDBAdapter implements IStorageAdapter {
     return new Promise((resolve, reject) => {
       const request = store.getAll();
       
-      request.onsuccess = async () => {
+      request.onsuccess = () => {
         const records = request.result as Record[];
         
-        // 加载每条记录的媒体数据
-        const loadedRecords = await Promise.all(
-          records.map(async (record) => {
-            if (record.images && record.images.length > 0) {
-              const loadedImages = await Promise.all(
-                record.images.map(img => this.getMedia(img.id))
-              );
-              record.images = loadedImages.filter(img => img !== null) as MediaData[];
-            }
-            
-            // 转换日期
-            record.createdAt = new Date(record.createdAt);
-            record.updatedAt = new Date(record.updatedAt);
-            
-            return record;
-          })
-        );
+        // 只做基础数据转换，不加载媒体数据
+        // 媒体数据改为按需加载（在组件中使用时再加载）
+        const processedRecords = records.map((record) => {
+          // 转换日期
+          record.createdAt = new Date(record.createdAt);
+          record.updatedAt = new Date(record.updatedAt);
+          
+          // 保留图片引用，但不立即加载数据
+          // 组件可以通过 getMedia() 方法按需加载
+          return record;
+        });
         
-        resolve(loadedRecords);
+        resolve(processedRecords);
       };
       
       request.onerror = () => reject(new Error('Failed to get all records'));

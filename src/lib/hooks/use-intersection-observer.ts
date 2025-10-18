@@ -59,19 +59,31 @@ export function useIntersectionObserver(
 /**
  * 批量懒加载 Hook
  * 用于列表项的渐进式加载
+ * 优化：添加防抖，减少触发距离
  */
 export function useProgressiveLoading(totalItems: number, batchSize: number = 10) {
   const [visibleCount, setVisibleCount] = useState(batchSize);
+  const [isLoading, setIsLoading] = useState(false);
   const [sentinelRef, isVisible] = useIntersectionObserver({
-    rootMargin: '200px', // 提前 200px 开始加载
+    rootMargin: '100px', // 从200px减少到100px，减少提前加载
   });
 
   useEffect(() => {
-    if (isVisible && visibleCount < totalItems) {
-      // 批量加载更多项
-      setVisibleCount(prev => Math.min(prev + batchSize, totalItems));
+    if (isVisible && visibleCount < totalItems && !isLoading) {
+      // 防抖：避免频繁触发
+      setIsLoading(true);
+      
+      // 使用 requestAnimationFrame 优化性能
+      requestAnimationFrame(() => {
+        setVisibleCount(prev => Math.min(prev + batchSize, totalItems));
+        
+        // 300ms 后允许下次加载
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 300);
+      });
     }
-  }, [isVisible, visibleCount, totalItems, batchSize]);
+  }, [isVisible, visibleCount, totalItems, batchSize, isLoading]);
 
   return {
     visibleCount,
