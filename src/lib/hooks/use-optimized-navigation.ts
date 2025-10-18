@@ -40,7 +40,7 @@ export function useOptimizedNavigation(options: UseOptimizedNavigationOptions = 
   });
 
   const preloadedComponents = useRef<Set<string>>(new Set());
-  const transitionTimeoutRef = useRef<NodeJS.Timeout>();
+  const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // 预加载组件
   const preloadComponent = useCallback(async (tabId: string) => {

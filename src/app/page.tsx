@@ -20,7 +20,9 @@ import { StatisticsSkeleton } from "@/components/statistics-skeleton";
 import { 
   RecordInputSkeleton,
   AIChatButtonSkeleton,
-  AppHeaderSkeleton
+  AppHeaderSkeleton,
+  TimelineSkeleton,
+  StatisticsSkeleton
 } from "@/components/ui/skeleton";
 import { initMobileZoomFix } from "@/lib/utils/mobile-zoom-fix";
 
