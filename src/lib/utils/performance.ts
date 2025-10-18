@@ -4,6 +4,7 @@
  */
 
 import { onCLS, onFCP, onLCP, onTTFB, onINP, Metric } from 'web-vitals';
+import { isDev, isProd } from './env';
 
 // 性能指标阈值（基于Web Vitals建议）
 const THRESHOLDS = {
@@ -35,7 +36,7 @@ function handleMetric(metric: Metric) {
   const rating = getRating(metric);
   
   // 开发环境：输出到控制台
-  if (process.env.NODE_ENV === 'development') {
+  if (isDev()) {
     const emoji = rating === 'good' ? '✅' : rating === 'needs-improvement' ? '⚠️' : '❌';
     console.log(
       `${emoji} ${metric.name}:`,
@@ -46,13 +47,13 @@ function handleMetric(metric: Metric) {
   }
   
   // 生产环境：可以发送到分析服务
-  if (process.env.NODE_ENV === 'production') {
+  if (isProd()) {
     // 这里可以集成Google Analytics、Sentry等
     // sendToAnalytics(metric);
   }
   
-  // 保存到localStorage用于开发调试
-  if (typeof window !== 'undefined') {
+  // 保存到localStorage用于开发调试（仅开发环境）
+  if (typeof window !== 'undefined' && isDev()) {
     const perfData = JSON.parse(localStorage.getItem('perf-metrics') || '{}');
     perfData[metric.name] = {
       value: metric.value,

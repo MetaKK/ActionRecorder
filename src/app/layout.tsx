@@ -3,6 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { siteConfig } from "@/config/site";
 import { PerformanceMonitor } from "@/components/performance-monitor";
+import { isDebugEnabled } from "@/lib/utils/env";
+import { DebugProvider } from "@/lib/contexts/debug-context";
+import { ClientDebugWrapper } from "@/components/client-debug-wrapper";
 import "./globals.css";
 
 // 主字体 - Geist Sans (现代几何无衬线，适合UI)
@@ -48,9 +51,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-        <Toaster />
-        <PerformanceMonitor />
+        <DebugProvider>
+          {children}
+          <Toaster />
+          <PerformanceMonitor />
+          {/* 全局调试面板 - 在所有页面显示 */}
+          <ClientDebugWrapper />
+        </DebugProvider>
       </body>
     </html>
   );

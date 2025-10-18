@@ -32,6 +32,8 @@ const nextConfig: NextConfig = {
   experimental: {
     // 优化包导入
     optimizePackageImports: ['lucide-react', 'date-fns', 'zustand'],
+    // 启用路由预取优化
+    optimizeCss: true,
   },
 };
 

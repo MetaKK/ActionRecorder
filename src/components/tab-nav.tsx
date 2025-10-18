@@ -73,11 +73,15 @@ export function TabNav({ tabs, activeTab, onTabChange, className }: TabNavProps)
     });
   };
 
-  // 处理Tab切换
+  // 优化的Tab切换处理 - Apple风格即时反馈
   const handleTabChange = (tabId: string) => {
+    // 立即更新UI状态，提供即时反馈
     onTabChange(tabId);
-    // 延迟执行以确保DOM已更新
-    setTimeout(() => scrollToTab(tabId), 50);
+    
+    // 使用 requestAnimationFrame 优化滚动性能
+    requestAnimationFrame(() => {
+      scrollToTab(tabId);
+    });
   };
 
   const scroll = (direction: 'left' | 'right') => {
