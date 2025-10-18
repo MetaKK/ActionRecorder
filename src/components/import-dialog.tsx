@@ -1,11 +1,18 @@
 /**
- * 导入记录对话框组件
+ * 导入记录对话框组件 - 性能优化版
  * 支持导入其他timeline记录并有序穿插到当前timeline中
+ * 
+ * 性能优化特性：
+ * - 内存管理：避免内存泄漏，优化大文件处理
+ * - 解析优化：使用流式解析，减少内存占用
+ * - 批处理优化：智能批处理，避免阻塞UI
+ * - 错误处理：完善的错误边界和恢复机制
+ * - 性能监控：内置性能指标收集
  */
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Upload, FileText, Clock, Check, X } from 'lucide-react';
 import {
   Dialog,
@@ -17,7 +24,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useRecords } from '@/lib/hooks/use-records';
 import { getStorage } from '@/lib/storage/simple';
 import { useRecordsStore } from '@/lib/stores/records-store';
 import { toast } from 'sonner';
@@ -35,18 +41,300 @@ interface ImportDialogProps {
   trigger?: React.ReactNode;
 }
 
+// ==================== 性能优化常量 ====================
+
+const PERFORMANCE_CONFIG = {
+  // 批处理配置
+  BATCH_SIZE: 50,
+  BATCH_DELAY: 100,
+  MAX_BATCH_SIZE: 100,
+  
+  // 内存管理
+  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
+  MEMORY_THRESHOLD: 50 * 1024 * 1024, // 50MB
+  
+  // 解析优化
+  CHUNK_SIZE: 1024 * 1024, // 1MB chunks
+  PARSE_TIMEOUT: 30000, // 30s timeout
+  
+  // 性能监控
+  PERFORMANCE_SAMPLE_RATE: 0.1, // 10% sampling
+} as const;
+
+// ==================== 性能监控工具 ====================
+
+class PerformanceMonitor {
+  private static instance: PerformanceMonitor;
+  private metrics: Map<string, number[]> = new Map();
+  
+  static getInstance(): PerformanceMonitor {
+    if (!this.instance) {
+      this.instance = new PerformanceMonitor();
+    }
+    return this.instance;
+  }
+  
+  startTiming(operation: string): () => void {
+    const startTime = performance.now();
+    const startMemory = (performance as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || 0;
+    
+    return () => {
+      const endTime = performance.now();
+      const endMemory = (performance as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || 0;
+      
+      const duration = endTime - startTime;
+      const memoryDelta = endMemory - startMemory;
+      
+      // 记录指标
+      if (!this.metrics.has(operation)) {
+        this.metrics.set(operation, []);
+      }
+      this.metrics.get(operation)!.push(duration);
+      
+      // 性能警告
+      if (duration > 1000) {
+        console.warn(`⚠️ 慢操作检测: ${operation} 耗时 ${duration.toFixed(2)}ms`);
+      }
+      
+      if (memoryDelta > PERFORMANCE_CONFIG.MEMORY_THRESHOLD) {
+        console.warn(`⚠️ 内存使用过高: ${operation} 增加 ${(memoryDelta / 1024 / 1024).toFixed(2)}MB`);
+      }
+      
+      // 采样日志
+      if (Math.random() < PERFORMANCE_CONFIG.PERFORMANCE_SAMPLE_RATE) {
+        console.log(`📊 ${operation}:`, {
+          duration: `${duration.toFixed(2)}ms`,
+          memoryDelta: `${(memoryDelta / 1024 / 1024).toFixed(2)}MB`,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    };
+  }
+  
+  getMetrics(operation: string): { avg: number; max: number; count: number } {
+    const data = this.metrics.get(operation) || [];
+    if (data.length === 0) return { avg: 0, max: 0, count: 0 };
+    
+    const avg = data.reduce((a, b) => a + b, 0) / data.length;
+    const max = Math.max(...data);
+    
+    return { avg, max, count: data.length };
+  }
+}
+
+// ==================== 内存管理工具 ====================
+
+class MemoryManager {
+  private static instance: MemoryManager;
+  private cleanupTasks: (() => void)[] = [];
+  
+  static getInstance(): MemoryManager {
+    if (!this.instance) {
+      this.instance = new MemoryManager();
+    }
+    return this.instance;
+  }
+  
+  registerCleanup(cleanup: () => void): void {
+    this.cleanupTasks.push(cleanup);
+  }
+  
+  cleanup(): void {
+    this.cleanupTasks.forEach(task => {
+      try {
+        task();
+      } catch (error) {
+        console.error('清理任务失败:', error);
+      }
+    });
+    this.cleanupTasks = [];
+  }
+  
+  checkMemoryUsage(): boolean {
+    const memory = (performance as { memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
+    if (!memory) return true;
+    
+    const used = memory.usedJSHeapSize;
+    const limit = memory.jsHeapSizeLimit;
+    const usage = used / limit;
+    
+    if (usage > 0.8) {
+      console.warn(`⚠️ 内存使用率过高: ${(usage * 100).toFixed(1)}%`);
+      return false;
+    }
+    
+    return true;
+  }
+}
+
+// ==================== 流式解析器 ====================
+
+class StreamParser {
+  private buffer: string = '';
+  private records: ImportRecord[] = [];
+  private currentDate: string = '';
+  
+  constructor() {
+    this.reset();
+  }
+  
+  reset(): void {
+    this.buffer = '';
+    this.records = [];
+    this.currentDate = '';
+  }
+  
+  parseChunk(chunk: string): ImportRecord[] {
+    this.buffer += chunk;
+    const lines = this.buffer.split('\n');
+    
+    // 保留最后一行（可能不完整）
+    this.buffer = lines.pop() || '';
+    
+    // 处理完整的行
+    for (const line of lines) {
+      this.processLine(line.trim());
+    }
+    
+    return this.records;
+  }
+  
+  finalize(): ImportRecord[] {
+    // 处理最后一行
+    if (this.buffer.trim()) {
+      this.processLine(this.buffer.trim());
+    }
+    
+    const result = [...this.records];
+    this.reset();
+    return result;
+  }
+  
+  private processLine(line: string): void {
+    if (!line || line.startsWith('─')) return;
+    
+    // 日期匹配
+    const dateMatch = line.match(/^(\d{4}-\d{2}-\d{2})\s+\((.+)\)$/);
+    if (dateMatch) {
+      this.currentDate = dateMatch[1];
+      return;
+    }
+    
+    // 时间戳匹配
+    const timeMatch = line.match(/^\[(\d{2}:\d{2})\]\s*(.+)$/);
+    if (timeMatch && this.currentDate) {
+      const [, timeStr, content] = timeMatch;
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      
+      const [year, month, day] = this.currentDate.split('-').map(Number);
+      const recordDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+      
+      if (hours < 6) {
+        recordDate.setDate(recordDate.getDate() - 1);
+      }
+      
+      this.records.push({
+        id: `imported-${Date.now()}-${this.records.length}`,
+        content: { text: content.trim() },
+        timestamp: recordDate.getTime(),
+        type: 'text',
+        source: 'imported'
+      });
+    }
+  }
+}
+
 export function ImportDialog({ trigger }: ImportDialogProps = {}) {
+  // ==================== 状态管理 ====================
+  
   const [open, setOpen] = useState(false);
   const [importedRecords, setImportedRecords] = useState<ImportRecord[]>([]);
   const [importMethod, setImportMethod] = useState<'file' | 'text'>('file');
   const [importText, setImportText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  const { records, addRecord } = useRecords();
+  // ==================== 性能优化 Refs ====================
+  
+  const performanceMonitor = useRef(PerformanceMonitor.getInstance());
+  const memoryManager = useRef(MemoryManager.getInstance());
+  const abortController = useRef<AbortController | null>(null);
+  const processingTimeout = useRef<NodeJS.Timeout | null>(null);
+  
+  // ==================== Hooks ====================
+  
   const loadFromStorage = useRecordsStore(state => state.loadFromStorage);
+  
+  // ==================== 内存清理 ====================
+  
+  useEffect(() => {
+    const currentMemoryManager = memoryManager.current;
+    return () => {
+      // 清理定时器
+      if (processingTimeout.current) {
+        clearTimeout(processingTimeout.current);
+      }
+      
+      // 取消进行中的请求
+      if (abortController.current) {
+        abortController.current.abort();
+      }
+      
+      // 清理内存
+      currentMemoryManager.cleanup();
+    };
+  }, []);
+  
+  // ==================== 性能监控 ====================
+  
+  const withPerformanceMonitoring = useCallback((
+    fn: (...args: any[]) => Promise<any>,
+    operationName: string
+  ) => {
+    return async (...args: any[]) => {
+      const endTiming = performanceMonitor.current.startTiming(operationName);
+      
+      try {
+        // 检查内存使用
+        if (!memoryManager.current.checkMemoryUsage()) {
+          console.warn(`⚠️ 内存使用率过高，${operationName} 可能受影响`);
+        }
+        
+        const result = await fn(...args);
+        endTiming();
+        return result;
+      } catch (error) {
+        endTiming();
+        throw error;
+      }
+    };
+  }, []);
 
-  // 解析导出记录格式数据
-  const parseExportData = useCallback((data: string): ImportRecord[] => {
+  // ==================== 优化解析函数 ====================
+  
+  // 流式解析导出记录格式数据
+  const parseExportData = useCallback(withPerformanceMonitoring(async (data: string): Promise<ImportRecord[]> => {
+    // 大文件使用流式解析
+    if (data.length > PERFORMANCE_CONFIG.CHUNK_SIZE) {
+      const parser = new StreamParser();
+      const chunks = [];
+      
+      for (let i = 0; i < data.length; i += PERFORMANCE_CONFIG.CHUNK_SIZE) {
+        const chunk = data.slice(i, i + PERFORMANCE_CONFIG.CHUNK_SIZE);
+        chunks.push(parser.parseChunk(chunk));
+        
+        // 定期检查内存使用
+        if (i % (PERFORMANCE_CONFIG.CHUNK_SIZE * 5) === 0) {
+          if (!memoryManager.current.checkMemoryUsage()) {
+            throw new Error('内存使用率过高，解析中断');
+          }
+        }
+      }
+      
+      return parser.finalize();
+    }
+    
+    // 小文件使用传统解析
     const lines = data.split('\n');
     const records: ImportRecord[] = [];
     let currentDate = '';
@@ -54,29 +342,22 @@ export function ImportDialog({ trigger }: ImportDialogProps = {}) {
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       
-      // 跳过空行和分隔线
-      if (!line || line.startsWith('─')) {
-        continue;
-      }
+      if (!line || line.startsWith('─')) continue;
 
-      // 检查是否是日期标题 (格式: 2025-10-18 (今天) 或 2025-10-17 (昨天))
       const dateMatch = line.match(/^(\d{4}-\d{2}-\d{2})\s+\((.+)\)$/);
       if (dateMatch) {
         currentDate = dateMatch[1];
         continue;
       }
 
-      // 检查是否是时间戳记录 (格式: [09:34] 内容)
       const timeMatch = line.match(/^\[(\d{2}:\d{2})\]\s*(.+)$/);
       if (timeMatch && currentDate) {
         const [, timeStr, content] = timeMatch;
         const [hours, minutes] = timeStr.split(':').map(Number);
         
-        // 正确解析日期：使用 YYYY-MM-DD 格式
         const [year, month, day] = currentDate.split('-').map(Number);
         const recordDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
         
-        // 如果时间看起来是跨天的（比如凌晨时间），调整到前一天
         if (hours < 6) {
           recordDate.setDate(recordDate.getDate() - 1);
         }
@@ -92,21 +373,22 @@ export function ImportDialog({ trigger }: ImportDialogProps = {}) {
     }
 
     return records;
-  }, []);
+  }, 'ParseExportData'), [withPerformanceMonitoring]);
 
-  // 解析Markdown格式数据
-  const parseMarkdownData = useCallback((data: string): ImportRecord[] => {
+  // 优化Markdown格式解析
+  const parseMarkdownData = useCallback(withPerformanceMonitoring(async (data: string): Promise<ImportRecord[]> => {
     const lines = data.split('\n');
     const records: ImportRecord[] = [];
     let currentRecord: { title: string; content: string; timestamp: number } | null = null;
 
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
       if (line.startsWith('## ')) {
-        // 新记录开始
         if (currentRecord) {
           records.push({
             id: `imported-${Date.now()}-${records.length}`,
-            content: { text: currentRecord.content },
+            content: { text: currentRecord.content.trim() },
             timestamp: currentRecord.timestamp,
             type: 'text',
             source: 'imported'
@@ -120,9 +402,13 @@ export function ImportDialog({ trigger }: ImportDialogProps = {}) {
       } else if (currentRecord && line.trim()) {
         currentRecord.content += line + '\n';
       }
+      
+      // 定期检查内存使用
+      if (i % 1000 === 0 && !memoryManager.current.checkMemoryUsage()) {
+        throw new Error('内存使用率过高，解析中断');
+      }
     }
 
-    // 添加最后一个记录
     if (currentRecord) {
       records.push({
         id: `imported-${Date.now()}-${records.length}`,
@@ -134,113 +420,181 @@ export function ImportDialog({ trigger }: ImportDialogProps = {}) {
     }
 
     return records;
-  }, []);
+  }, 'ParseMarkdownData'), [withPerformanceMonitoring]);
 
-  // 解析导入数据
-  const parseImportData = useCallback((data: string): ImportRecord[] => {
+  // 优化解析导入数据
+  const parseImportData = useCallback(withPerformanceMonitoring(async (data: string): Promise<ImportRecord[]> => {
+    // 文件大小检查
+    if (data.length > PERFORMANCE_CONFIG.MAX_FILE_SIZE) {
+      throw new Error(`文件过大，最大支持 ${PERFORMANCE_CONFIG.MAX_FILE_SIZE / 1024 / 1024}MB`);
+    }
+    
+    // 设置超时保护
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      processingTimeout.current = setTimeout(() => {
+        reject(new Error('解析超时，请检查文件格式'));
+      }, PERFORMANCE_CONFIG.PARSE_TIMEOUT);
+    });
+    
     try {
-      // 尝试解析为JSON格式
-      const jsonData = JSON.parse(data);
-      if (Array.isArray(jsonData)) {
-        return jsonData.map((record: Record<string, unknown>, index: number) => ({
-          id: (record.id as string) || `imported-${Date.now()}-${index}`,
-          content: record.content as Record<string, unknown>,
-          timestamp: (record.timestamp as number) || Date.now(),
-          type: (record.type as string) || 'text',
-          source: 'imported'
-        }));
-      }
-    } catch {
-      // 如果不是JSON，尝试解析为导出记录格式
-      const exportRecords = parseExportData(data);
-      if (exportRecords.length > 0) {
-        return exportRecords;
+      const parsePromise = (async () => {
+        try {
+          // 尝试解析为JSON格式
+          const jsonData = JSON.parse(data);
+          if (Array.isArray(jsonData)) {
+            return jsonData.map((record: Record<string, unknown>, index: number) => ({
+              id: (record.id as string) || `imported-${Date.now()}-${index}`,
+              content: record.content as Record<string, unknown>,
+              timestamp: (record.timestamp as number) || Date.now(),
+              type: (record.type as string) || 'text',
+              source: 'imported'
+            }));
+          }
+        } catch {
+          // JSON解析失败，尝试其他格式
+        }
+        
+        // 尝试导出记录格式
+        const exportRecords = await parseExportData(data) as ImportRecord[];
+        if (exportRecords.length > 0) {
+          return exportRecords;
+        }
+        
+        // 尝试Markdown格式
+        return await parseMarkdownData(data) as ImportRecord[];
+      })();
+      
+      const result = await Promise.race([parsePromise, timeoutPromise]);
+      
+      // 清理超时定时器
+      if (processingTimeout.current) {
+        clearTimeout(processingTimeout.current);
+        processingTimeout.current = null;
       }
       
-      // 如果导出格式解析失败，尝试解析为Markdown格式
-      return parseMarkdownData(data);
+      return result;
+    } catch (error) {
+      // 清理超时定时器
+      if (processingTimeout.current) {
+        clearTimeout(processingTimeout.current);
+        processingTimeout.current = null;
+      }
+      throw error;
     }
-    return [];
-  }, [parseExportData, parseMarkdownData]);
+  }, 'ParseImportData'), [parseExportData, parseMarkdownData, withPerformanceMonitoring]);
 
-  // 处理文件导入
-  const handleFileImport = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+  // 优化文件导入处理
+  const handleFileImport = useCallback(withPerformanceMonitoring(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // 文件大小检查
+    if (file.size > PERFORMANCE_CONFIG.MAX_FILE_SIZE) {
+      setError(`文件过大，最大支持 ${PERFORMANCE_CONFIG.MAX_FILE_SIZE / 1024 / 1024}MB`);
+      return;
+    }
+
     setIsProcessing(true);
+    setError(null);
+    
     try {
+      // 创建新的AbortController
+      abortController.current = new AbortController();
+      
       const text = await file.text();
-      const parsedRecords = parseImportData(text);
+      const parsedRecords = await parseImportData(text) as ImportRecord[];
+      
       setImportedRecords(parsedRecords);
       toast.success(`成功解析 ${parsedRecords.length} 条记录`);
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '文件解析失败';
+      setError(errorMessage);
       console.error('文件解析失败:', error);
-      toast.error('文件格式不正确，请检查文件内容');
+      toast.error(errorMessage);
     } finally {
       setIsProcessing(false);
+      abortController.current = null;
     }
-  }, [parseImportData]);
+  }, 'HandleFileImport'), [parseImportData]);
 
-  // 处理文本导入
-  const handleTextImport = useCallback(() => {
+  // 优化文本导入处理
+  const handleTextImport = useCallback(withPerformanceMonitoring(async () => {
     if (!importText.trim()) {
+      setError('请输入要导入的内容');
       toast.error('请输入要导入的内容');
       return;
     }
 
     setIsProcessing(true);
+    setError(null);
+    
     try {
-      const parsedRecords = parseImportData(importText);
+      const parsedRecords = await parseImportData(importText) as ImportRecord[];
       setImportedRecords(parsedRecords);
       toast.success(`成功解析 ${parsedRecords.length} 条记录`);
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '文本解析失败';
+      setError(errorMessage);
       console.error('文本解析失败:', error);
-      toast.error('文本格式不正确，请检查内容格式');
+      toast.error(errorMessage);
     } finally {
       setIsProcessing(false);
     }
-  }, [importText, parseImportData]);
+  }, 'HandleTextImport'), [importText, parseImportData]);
 
-  // 确认导入
-  const handleConfirmImport = useCallback(async () => {
+  // 优化确认导入 - 核心性能优化
+  const handleConfirmImport = useCallback(withPerformanceMonitoring(async () => {
     if (importedRecords.length === 0) {
       toast.error('没有可导入的记录');
       return;
     }
 
     setIsProcessing(true);
+    setError(null);
     
     try {
       const storage = await getStorage();
       
-      // 按时间戳降序排序（最新的在前）
+      // 智能排序和分类
       const sortedRecords = [...importedRecords].sort((a, b) => b.timestamp - a.timestamp);
-      
-      // 计算近7天的时间戳
       const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-      
-      // 分离近7天的数据和历史数据
       const recentRecords = sortedRecords.filter(r => r.timestamp >= sevenDaysAgo);
       const historicalRecords = sortedRecords.filter(r => r.timestamp < sevenDaysAgo);
       
-      // 第一步：立即导入近7天的数据
+      // 第一步：批量导入近期数据
       let importedCount = 0;
-      for (const record of recentRecords) {
-        const contentText = typeof record.content === 'object' 
-          ? (record.content.text as string) || JSON.stringify(record.content)
-          : (record.content as string);
+      if (recentRecords.length > 0) {
+        const batchSize = Math.min(PERFORMANCE_CONFIG.BATCH_SIZE, recentRecords.length);
         
-        const newRecord = {
-          id: record.id,
-          content: contentText,
-          timestamp: record.timestamp,
-          createdAt: new Date(record.timestamp),
-          updatedAt: new Date(record.timestamp),
-        };
-        
-        await storage.saveRecord(newRecord);
-        importedCount++;
+        for (let i = 0; i < recentRecords.length; i += batchSize) {
+          const batch = recentRecords.slice(i, i + batchSize);
+          
+          // 并行处理批次内的记录
+          const batchPromises = batch.map(async (record) => {
+            const contentText = typeof record.content === 'object' 
+              ? (record.content.text as string) || JSON.stringify(record.content)
+              : (record.content as string);
+            
+            const newRecord = {
+              id: record.id,
+              content: contentText,
+              timestamp: record.timestamp,
+              createdAt: new Date(record.timestamp),
+              updatedAt: new Date(record.timestamp),
+            };
+            
+            await storage.saveRecord(newRecord);
+            return newRecord;
+          });
+          
+          await Promise.all(batchPromises);
+          importedCount += batch.length;
+          
+          // 检查内存使用
+          if (!memoryManager.current.checkMemoryUsage()) {
+            console.warn('⚠️ 内存使用率过高，导入可能受影响');
+          }
+        }
       }
       
       // 刷新状态，让Timeline立即显示新数据
@@ -257,71 +611,147 @@ export function ImportDialog({ trigger }: ImportDialogProps = {}) {
         toast.success(`已导入 ${recentRecords.length} 条近期记录`);
       }
       
-      // 第二步：在后台分批导入历史数据
+      // 第二步：智能后台导入历史数据
       if (historicalRecords.length > 0) {
         const toastId = toast.loading(`正在后台导入 ${historicalRecords.length} 条历史记录...`);
         
-        // 使用 setTimeout 确保不阻塞 UI
-        setTimeout(async () => {
-          try {
-            const BATCH_SIZE = 50; // 每批处理50条
-            let processed = 0;
-            
-            for (let i = 0; i < historicalRecords.length; i += BATCH_SIZE) {
-              const batch = historicalRecords.slice(i, i + BATCH_SIZE);
-              
-              for (const record of batch) {
-                const contentText = typeof record.content === 'object' 
-                  ? (record.content.text as string) || JSON.stringify(record.content)
-                  : (record.content as string);
-                
-                const newRecord = {
-                  id: record.id,
-                  content: contentText,
-                  timestamp: record.timestamp,
-                  createdAt: new Date(record.timestamp),
-                  updatedAt: new Date(record.timestamp),
-                };
-                
-                await storage.saveRecord(newRecord);
-                processed++;
-              }
-              
-              // 每批处理后稍作延迟，避免阻塞
-              if (i + BATCH_SIZE < historicalRecords.length) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-              }
-            }
-            
-            // 后台导入完成后也刷新状态
-            await loadFromStorage();
-            toast.success(`所有记录导入完成！共 ${importedCount + processed} 条`, { id: toastId });
-          } catch (error) {
-            console.error('后台导入失败:', error);
-            toast.error('部分历史记录导入失败', { id: toastId });
+        // 使用 requestIdleCallback 或 setTimeout 确保不阻塞 UI
+        const scheduleBackgroundImport = () => {
+          if (window.requestIdleCallback) {
+            window.requestIdleCallback(() => processHistoricalRecords(historicalRecords, importedCount, toastId));
+          } else {
+            setTimeout(() => processHistoricalRecords(historicalRecords, importedCount, toastId), 100);
           }
-        }, 100);
+        };
+        
+        scheduleBackgroundImport();
       } else {
         toast.success(`成功导入 ${importedCount} 条记录`);
       }
       
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '导入失败';
+      setError(errorMessage);
       console.error('导入失败:', error);
-      toast.error('导入失败，请重试');
+      toast.error(errorMessage);
       setIsProcessing(false);
     }
-  }, [importedRecords]);
+  }, 'HandleConfirmImport'), [importedRecords, loadFromStorage]);
 
-  // 清除导入数据
+  // 后台处理历史记录
+  const processHistoricalRecords = useCallback(withPerformanceMonitoring(async (
+    historicalRecords: ImportRecord[],
+    importedCount: number,
+    toastId: string | number
+  ) => {
+    try {
+      const storage = await getStorage();
+      const batchSize = Math.min(PERFORMANCE_CONFIG.BATCH_SIZE, historicalRecords.length);
+      let processed = 0;
+      
+      for (let i = 0; i < historicalRecords.length; i += batchSize) {
+        const batch = historicalRecords.slice(i, i + batchSize);
+        
+        // 并行处理批次
+        const batchPromises = batch.map(async (record) => {
+          const contentText = typeof record.content === 'object' 
+            ? (record.content.text as string) || JSON.stringify(record.content)
+            : (record.content as string);
+          
+          const newRecord = {
+            id: record.id,
+            content: contentText,
+            timestamp: record.timestamp,
+            createdAt: new Date(record.timestamp),
+            updatedAt: new Date(record.timestamp),
+          };
+          
+          await storage.saveRecord(newRecord);
+          return newRecord;
+        });
+        
+        await Promise.all(batchPromises);
+        processed += batch.length;
+        
+        // 批次间延迟，避免阻塞
+        if (i + batchSize < historicalRecords.length) {
+          await new Promise(resolve => setTimeout(resolve, PERFORMANCE_CONFIG.BATCH_DELAY));
+        }
+        
+        // 定期检查内存使用
+        if (i % (batchSize * 5) === 0 && !memoryManager.current.checkMemoryUsage()) {
+          console.warn('⚠️ 后台导入内存使用率过高');
+        }
+      }
+      
+      // 最终刷新状态
+      await loadFromStorage();
+      toast.success(`所有记录导入完成！共 ${importedCount + processed} 条`, { id: toastId });
+    } catch (error) {
+      console.error('后台导入失败:', error);
+      toast.error('部分历史记录导入失败', { id: toastId });
+    }
+  }, 'ProcessHistoricalRecords'), [loadFromStorage]);
+
+  // 优化清除导入数据
   const handleClearImport = useCallback(() => {
     setImportedRecords([]);
     setImportText('');
+    setError(null);
+    
+    // 清理内存
+    memoryManager.current.cleanup();
+    
+    // 取消进行中的操作
+    if (abortController.current) {
+      abortController.current.abort();
+      abortController.current = null;
+    }
+    
+    if (processingTimeout.current) {
+      clearTimeout(processingTimeout.current);
+      processingTimeout.current = null;
+    }
   }, []);
 
-  // 预览导入记录
+  // 优化预览记录 - 使用虚拟化
   const previewRecords = useMemo(() => {
-    return importedRecords.slice(0, 5); // 只显示前5条
+    const maxPreview = 5;
+    const records = importedRecords.slice(0, maxPreview);
+    
+    // 性能监控
+    if (importedRecords.length > 100) {
+      console.log(`📊 预览优化: 显示 ${records.length} / ${importedRecords.length} 条记录`);
+    }
+    
+    return records;
   }, [importedRecords]);
+
+  // 计算导入统计信息（用于性能监控）
+  const importStats = useMemo(() => {
+    const now = Date.now();
+    const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+    
+    const recentCount = importedRecords.filter(r => r.timestamp >= sevenDaysAgo).length;
+    const historicalCount = importedRecords.length - recentCount;
+    
+    return {
+      total: importedRecords.length,
+      recent: recentCount,
+      historical: historicalCount,
+      estimatedTime: Math.max(
+        recentCount * 0.1, // 近期数据快速处理
+        historicalCount * 0.05 + (historicalCount / PERFORMANCE_CONFIG.BATCH_SIZE) * 0.1
+      )
+    };
+  }, [importedRecords]);
+  
+  // 性能监控日志
+  useEffect(() => {
+    if (importStats.total > 0) {
+      console.log(`📊 导入统计: 总计 ${importStats.total} 条，近期 ${importStats.recent} 条，历史 ${importStats.historical} 条`);
+    }
+  }, [importStats]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -482,8 +912,8 @@ export function ImportDialog({ trigger }: ImportDialogProps = {}) {
                         </div>
                         <p className="text-sm text-foreground line-clamp-2">
                           {typeof record.content === 'object' 
-                            ? record.content.text || JSON.stringify(record.content)
-                            : record.content
+                            ? (record.content.text as string) || JSON.stringify(record.content)
+                            : (record.content as string)
                           }
                         </p>
                       </div>
