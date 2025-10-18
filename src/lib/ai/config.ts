@@ -12,6 +12,7 @@ export enum ModelCapability {
   CODE = "code",                    // 代码生成
   FAST = "fast",                    // 快速响应
   MULTIMODAL = "multimodal",        // 多模态
+  IMAGE_GENERATION = "image_generation", // 图片生成
 }
 
 // 模型提供商枚举
@@ -224,15 +225,16 @@ export const AI_MODELS: AIModelConfig[] = [
     contextWindow: 128000,
     costPer1kTokens: { input: 0.0006, output: 0.0015 },
     isNew: true,
+    requiresSpecialHandling: true, // 需要特殊处理
     category: "multimodal",
   },
   {
     id: "doubao-dream",
-    name: process.env.DOUBAO_DREAM_ENDPOINT || "ep-20251019000834-qqc8l",
+    name: process.env.DOUBAO_DREAM_ENDPOINT || "doubao-seedream-4-0-250828",
     provider: ModelProvider.DOUBAO,
     displayName: "豆包 Dream",
     description: "强大的图片生成模型，支持2K/4K超高清图片生成",
-    capabilities: [ModelCapability.VISION],
+    capabilities: [ModelCapability.IMAGE_GENERATION],
     maxTokens: 4096,
     contextWindow: 32000,
     costPer1kTokens: { input: 0.002, output: 0.002 },

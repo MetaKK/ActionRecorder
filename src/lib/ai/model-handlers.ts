@@ -100,6 +100,12 @@ export function handleDoubaoModel(
   systemPrompt?: string,
   modelId?: string
 ): ModelHandlerResult {
+  console.log('[Doubao Handler] 处理豆包模型:', {
+    modelId,
+    hasSystem: !!systemPrompt,
+    messageCount: messages.length
+  });
+
   const baseParams: ModelHandlerResult = {
     messages,
     system: systemPrompt,
@@ -109,29 +115,39 @@ export function handleDoubaoModel(
 
   // 豆包 1.6 支持深度思考参数
   if (modelId === 'doubao-1.6') {
-    // 根据官方文档，深度思考需要完整的参数配置
     baseParams.additionalParams = {
       reasoning_effort: "medium", // 可选: low, medium, high
-      max_completion_tokens: 65535, // 最大输出token数
-      // 豆包API需要的特殊参数 - 正确的嵌套格式
-      input: {
-        status: "enabled" // 豆包API要求的参数格式：在input对象内包含status字段
-      }
     };
-    
-    // 深度思考任务可能需要更高的token限制
-    baseParams.maxTokens = 65535;
-    
-    // 调整temperature以支持更好的推理
-    baseParams.temperature = 0.8;
+    console.log('[Doubao Handler] 应用深度思考参数:', baseParams.additionalParams);
   }
 
   // 豆包 Flash 不需要reasoning_effort参数
   if (modelId === 'doubao-1.6-flash') {
     // 优化快速响应
     baseParams.temperature = 0.6;
+    baseParams.maxTokens = 32768; // Flash版本使用较小的token限制
+    console.log('[Doubao Handler] 应用Flash优化参数:', {
+      temperature: baseParams.temperature,
+      maxTokens: baseParams.maxTokens
+    });
   }
 
+  // 豆包 Dream 图片生成模型
+  if (modelId === 'doubao-dream') {
+    // Dream模型使用不同的参数
+    baseParams.temperature = 0.8;
+    baseParams.maxTokens = 4096;
+    baseParams.additionalParams = {
+      size: "2K",
+      sequential_image_generation: "disabled",
+      stream: false,
+      response_format: "url",
+      watermark: true
+    };
+    console.log('[Doubao Handler] 应用Dream图片生成参数:', baseParams.additionalParams);
+  }
+
+  console.log('[Doubao Handler] 最终参数:', baseParams);
   return baseParams;
 }
 
@@ -181,9 +197,19 @@ export function processModelRequest(
     throw new Error(`Model ${modelId} not found`);
   }
 
+  // Auto智能模式 - 优先处理
+  if (modelId === "auto") {
+    return handleAutoMode(messages, systemPrompt);
+  }
+
   // o1系列模型特殊处理
   if (modelConfig.requiresSpecialHandling && modelId.startsWith("o1")) {
     return handleO1Model(messages, systemPrompt);
+  }
+
+  // 豆包大模型 - 需要特殊处理
+  if (modelConfig.provider === "doubao") {
+    return handleDoubaoModel(messages, systemPrompt, modelId);
   }
 
   // Perplexity搜索模型
@@ -194,16 +220,6 @@ export function processModelRequest(
   // Claude模型
   if (modelConfig.provider === "anthropic") {
     return handleClaudeModel(messages, systemPrompt);
-  }
-
-  // Auto智能模式
-  if (modelId === "auto") {
-    return handleAutoMode(messages, systemPrompt);
-  }
-
-  // 豆包大模型
-  if (modelConfig.provider === "doubao") {
-    return handleDoubaoModel(messages, systemPrompt, modelId);
   }
 
   // 标准模型

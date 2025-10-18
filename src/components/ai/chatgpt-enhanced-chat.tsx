@@ -142,13 +142,6 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
       const context = generateUserContext(records);
       const userContextStr = formatUserContext(context);
       
-      console.log('[ChatGPT] 发送请求:', {
-        selectedModel,
-        messageCount: messages.length + 1,
-        hasApiKey: !!apiKey,
-        userContext: userContextStr ? '有上下文' : '无上下文'
-      });
-      
       // 调用真实的AI API
       const response = await fetch('/ai/api/chat', {
         method: 'POST',
@@ -166,18 +159,11 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
         }),
       });
 
-      console.log('[ChatGPT] API响应状态:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
-
       if (!response.ok) {
         // 检查是否是API key错误
         if (response.status === 500) {
           try {
             const errorData = await response.json();
-            console.log('[ChatGPT] API错误详情:', errorData);
             if (errorData.error && errorData.error.includes('API key not configured')) {
               setApiKeyError("需要配置API Key才能使用AI功能");
               setShowSettings(true);
@@ -187,7 +173,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
             // 如果无法解析错误响应，继续抛出错误
           }
         }
-        throw new Error(`AI API request failed: ${response.status} ${response.statusText}`);
+        throw new Error('AI API request failed');
       }
 
       // 处理流式响应
@@ -195,32 +181,17 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
       const decoder = new TextDecoder();
       let currentText = "";
 
-      console.log('[ChatGPT] 开始处理流式响应:', {
-        hasReader: !!reader,
-        contentType: response.headers.get('content-type')
-      });
-
       if (reader) {
         while (true) {
           const { done, value } = await reader.read();
-          if (done) {
-            console.log('[ChatGPT] 流式响应完成，总长度:', currentText.length);
-            break;
-          }
+          if (done) break;
 
           const chunk = decoder.decode(value, { stream: true });
           
           // 直接累加文本内容
           currentText += chunk;
           setCurrentAIMessage(currentText);
-          
-          // 每1000字符打印一次进度
-          if (currentText.length % 1000 === 0) {
-            console.log('[ChatGPT] 流式响应进度:', currentText.length, '字符');
-          }
         }
-      } else {
-        console.error('[ChatGPT] 无法获取响应流');
       }
 
       // 完成AI响应

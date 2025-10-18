@@ -3,7 +3,7 @@ import { getSystemPromptWithTime } from "@/lib/ai/prompts";
 import { getLanguageModel } from "@/lib/ai/providers";
 import { processModelRequest } from "@/lib/ai/model-handlers";
 import { getModelById } from "@/lib/ai/config";
-import { handleAutoMode, getAutoModeSystemPrompt } from "@/lib/ai/auto-agent";
+import { handleAutoMode, getAutoModeSystemPrompt, analyzeTask } from "@/lib/ai/auto-agent";
 
 export async function POST(request: Request) {
   try {
@@ -24,15 +24,9 @@ export async function POST(request: Request) {
       autoAnalysis = autoResult.analysis;
       
       console.log('[Auto Agent] 智能选择模型:', {
-        originalModel: model,
         selectedModel: actualModel,
         taskType: autoAnalysis.type,
-        complexity: autoAnalysis.complexity,
-        confidence: autoAnalysis.confidence,
         reasoning: autoAnalysis.reasoning,
-        requiresVision: autoAnalysis.requiresVision,
-        requiresSearch: autoAnalysis.requiresSearch,
-        requiresReasoning: autoAnalysis.requiresReasoning,
       });
     }
 
@@ -50,14 +44,53 @@ export async function POST(request: Request) {
       );
     }
 
-    // 获取语言模型实例
+    // 获取语言模型实例 - 优先使用环境变量，只有在环境变量不存在时才使用手动输入的key
     let languageModel;
     try {
-      languageModel = getLanguageModel(actualModel, customApiKey || undefined);
-    } catch {
+      // 检查环境变量中是否有对应的API key
+      const modelConfig = getModelById(actualModel);
+      let useCustomApiKey = false;
+      
+      if (modelConfig?.provider === "doubao" && !process.env.DOUBAO_API_KEY && customApiKey) {
+        useCustomApiKey = true;
+      } else if (modelConfig?.provider === "openai" && !process.env.OPENAI_API_KEY && customApiKey) {
+        useCustomApiKey = true;
+      } else if (modelConfig?.provider === "anthropic" && !process.env.ANTHROPIC_API_KEY && customApiKey) {
+        useCustomApiKey = true;
+      } else if (modelConfig?.provider === "perplexity" && !process.env.PERPLEXITY_API_KEY && customApiKey) {
+        useCustomApiKey = true;
+      }
+      
+      console.log('[API] API Key选择策略:', {
+        model: actualModel,
+        provider: modelConfig?.provider,
+        hasEnvKey: !!process.env[`${modelConfig?.provider?.toUpperCase()}_API_KEY`],
+        hasCustomKey: !!customApiKey,
+        useCustomKey: useCustomApiKey
+      });
+      
+      languageModel = getLanguageModel(actualModel, useCustomApiKey ? customApiKey || undefined : undefined);
+    } catch (error) {
+      console.error('[API] 模型实例创建失败:', error);
+      
+      // 根据模型类型提供具体的错误信息
+      const modelConfig = getModelById(actualModel);
+      let errorMessage = "API key not configured.";
+      
+      if (modelConfig?.provider === "doubao") {
+        errorMessage = "DOUBAO_API_KEY not found. Please set DOUBAO_API_KEY environment variable or provide API key manually.";
+      } else if (modelConfig?.provider === "openai") {
+        errorMessage = "OPENAI_API_KEY not found. Please set OPENAI_API_KEY environment variable or provide API key manually.";
+      } else if (modelConfig?.provider === "anthropic") {
+        errorMessage = "ANTHROPIC_API_KEY not found. Please set ANTHROPIC_API_KEY environment variable or provide API key manually.";
+      } else if (modelConfig?.provider === "perplexity") {
+        errorMessage = "PERPLEXITY_API_KEY not found. Please set PERPLEXITY_API_KEY environment variable or provide API key manually.";
+      }
+      
       return new Response(
         JSON.stringify({ 
-          error: "API key not configured. Please set API key in settings or environment variable." 
+          error: errorMessage,
+          details: error instanceof Error ? error.message : "Unknown error"
         }), 
         { 
           status: 500,
@@ -72,6 +105,16 @@ export async function POST(request: Request) {
     // Auto模式：使用任务特定的系统提示
     if (model === "auto" && autoAnalysis) {
       systemPrompt = getAutoModeSystemPrompt(autoAnalysis);
+    } else if (modelConfig?.provider === "doubao") {
+      // 豆包模型：也进行任务分析，使用智能系统提示
+      const taskAnalysis = analyzeTask(messages);
+      systemPrompt = getAutoModeSystemPrompt(taskAnalysis);
+      
+      console.log('[Doubao] 豆包模型任务分析:', {
+        model: actualModel,
+        taskType: taskAnalysis.type,
+        reasoning: taskAnalysis.reasoning
+      });
     }
     
     const fullSystemPrompt = userContext 
@@ -79,9 +122,10 @@ export async function POST(request: Request) {
       : systemPrompt;
     
     const processedRequest = processModelRequest(actualModel, messages, fullSystemPrompt);
-
-    console.log('[API] 模型处理结果:', {
-      model: actualModel,
+    
+    // 调试日志
+    console.log('[API] 模型处理参数:', {
+      modelId: actualModel,
       hasSystem: !!processedRequest.system,
       temperature: processedRequest.temperature,
       maxTokens: processedRequest.maxTokens,
@@ -113,20 +157,6 @@ export async function POST(request: Request) {
     if (processedRequest.additionalParams) {
       Object.assign(streamParams, processedRequest.additionalParams);
     }
-    
-    console.log('[API] 最终Stream参数:', {
-      modelId: actualModel,
-      hasMessages: !!streamParams.messages,
-      messageCount: streamParams.messages?.length,
-      hasSystem: !!streamParams.system,
-      temperature: streamParams.temperature,
-      maxTokens: streamParams.maxTokens,
-      reasoning_effort: streamParams.reasoning_effort,
-      max_completion_tokens: streamParams.max_completion_tokens,
-      input_object: streamParams.input,
-      // 显示所有额外参数
-      allAdditionalParams: processedRequest.additionalParams,
-    });
 
     // 执行流式文本生成
     const result = await streamText(streamParams);

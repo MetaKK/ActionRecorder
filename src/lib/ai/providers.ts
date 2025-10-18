@@ -29,8 +29,20 @@ function createOpenAIProvider(config?: ProviderConfig) {
     return providerCache.get(cacheKey);
   }
 
+  const apiKey = config?.apiKey || process.env.OPENAI_API_KEY;
+  
+  // 检查API key是否存在
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY not found. Please set OPENAI_API_KEY environment variable or provide API key manually.');
+  }
+
+  console.log('[OpenAI Provider] 创建OpenAI provider:', {
+    hasApiKey: !!apiKey,
+    apiKeyPrefix: apiKey ? apiKey.substring(0, 8) + '...' : 'none'
+  });
+
   const provider = createOpenAI({
-    apiKey: config?.apiKey || process.env.OPENAI_API_KEY,
+    apiKey: apiKey,
     baseURL: config?.baseURL,
     organization: config?.organization,
     headers: config?.headers,
@@ -50,8 +62,20 @@ function createAnthropicProvider(config?: ProviderConfig) {
     return providerCache.get(cacheKey);
   }
 
+  const apiKey = config?.apiKey || process.env.ANTHROPIC_API_KEY;
+  
+  // 检查API key是否存在
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY not found. Please set ANTHROPIC_API_KEY environment variable or provide API key manually.');
+  }
+
+  console.log('[Anthropic Provider] 创建Anthropic provider:', {
+    hasApiKey: !!apiKey,
+    apiKeyPrefix: apiKey ? apiKey.substring(0, 8) + '...' : 'none'
+  });
+
   const provider = createAnthropic({
-    apiKey: config?.apiKey || process.env.ANTHROPIC_API_KEY,
+    apiKey: apiKey,
     baseURL: config?.baseURL,
     headers: config?.headers,
   });
@@ -70,8 +94,20 @@ function createPerplexityProvider(config?: ProviderConfig) {
     return providerCache.get(cacheKey);
   }
 
+  const apiKey = config?.apiKey || process.env.PERPLEXITY_API_KEY;
+  
+  // 检查API key是否存在
+  if (!apiKey) {
+    throw new Error('PERPLEXITY_API_KEY not found. Please set PERPLEXITY_API_KEY environment variable or provide API key manually.');
+  }
+
+  console.log('[Perplexity Provider] 创建Perplexity provider:', {
+    hasApiKey: !!apiKey,
+    apiKeyPrefix: apiKey ? apiKey.substring(0, 8) + '...' : 'none'
+  });
+
   const provider = createOpenAI({
-    apiKey: config?.apiKey || process.env.PERPLEXITY_API_KEY,
+    apiKey: apiKey,
     baseURL: config?.baseURL || "https://api.perplexity.ai",
     headers: config?.headers,
   });
@@ -90,9 +126,24 @@ function createDoubaoProvider(config?: ProviderConfig) {
     return providerCache.get(cacheKey);
   }
 
+  const apiKey = config?.apiKey || process.env.DOUBAO_API_KEY;
+  
+  // 检查API key是否存在
+  if (!apiKey) {
+    throw new Error('DOUBAO_API_KEY not found. Please set DOUBAO_API_KEY environment variable or provide API key manually.');
+  }
+
+  console.log('[Doubao Provider] 创建豆包provider:', {
+    hasApiKey: !!apiKey,
+    apiKeyPrefix: apiKey ? apiKey.substring(0, 8) + '...' : 'none',
+    baseURL: config?.baseURL || "https://ark.cn-beijing.volces.com/api/v3",
+    envApiKey: !!process.env.DOUBAO_API_KEY,
+    customApiKey: !!config?.apiKey
+  });
+
   // 豆包大模型使用OpenAI兼容的API格式
   const provider = createOpenAI({
-    apiKey: config?.apiKey || process.env.DOUBAO_API_KEY,
+    apiKey: apiKey,
     baseURL: config?.baseURL || "https://ark.cn-beijing.volces.com/api/v3",
     headers: {
       ...config?.headers,
@@ -119,6 +170,16 @@ export function getLanguageModel(
   const providerConfig: ProviderConfig = customApiKey 
     ? { apiKey: customApiKey }
     : {};
+
+  // 调试日志
+  console.log('[Provider] 获取模型实例:', {
+    modelId,
+    modelName: modelConfig.name,
+    provider: modelConfig.provider,
+    hasCustomApiKey: !!customApiKey,
+    hasEnvApiKey: !!process.env.DOUBAO_API_KEY,
+    endpoint: modelConfig.name
+  });
 
   let provider;
   const modelName = modelConfig.name;

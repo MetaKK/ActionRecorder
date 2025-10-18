@@ -5,7 +5,6 @@
 
 import { CoreMessage } from "ai";
 import { AI_MODELS, AIModelConfig, ModelCapability } from "./config";
-import { getAvailableProviders } from "./providers";
 
 // 任务类型识别
 export enum TaskType {
@@ -111,28 +110,16 @@ export function analyzeTask(messages: CoreMessage[]): TaskAnalysis {
  */
 function selectBestModel(taskType: TaskType, complexity: "low" | "medium" | "high"): string {
   const modelScores: Record<string, number> = {};
-  
-  // 获取可用的provider（有API Key的）
-  const availableProviders = getAvailableProviders();
 
   AI_MODELS.forEach(model => {
     if (model.id === 'auto') return; // 跳过auto模式本身
-    
-    // 只评估有API Key的模型
-    if (!availableProviders.includes(model.provider)) {
-      return;
-    }
-    
-    // Dream模型需要特殊的图片生成API，暂时不自动选择
-    if (model.id === 'doubao-dream') {
-      return;
-    }
 
     let score = 0;
 
     switch (taskType) {
       case TaskType.IMAGE_GENERATION:
         if (model.id === 'doubao-dream') score = 100;
+        else if (model.capabilities.includes(ModelCapability.IMAGE_GENERATION)) score = 80;
         else if (model.capabilities.includes(ModelCapability.VISION)) score = 50;
         break;
 
@@ -145,7 +132,7 @@ function selectBestModel(taskType: TaskType, complexity: "low" | "medium" | "hig
       case TaskType.DEEP_REASONING:
         if (model.id === 'o1-preview') score = 100;
         else if (model.id === 'o1-mini') score = 95;
-        else if (model.id === 'doubao-1.6') score = 90; // 豆包1.6支持深度思考
+        else if (model.id === 'doubao-1.6' && complexity === 'high') score = 85;
         else if (model.capabilities.includes(ModelCapability.REASONING)) score = 70;
         break;
 
