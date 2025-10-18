@@ -32,7 +32,6 @@ import {
   Wand2,
   Check,
   AlertCircle,
-  Palette,
   Zap,
 } from 'lucide-react';
 import { WriterStyleCarousel } from '@/components/ai/writer-style-carousel';
@@ -47,7 +46,6 @@ export default function DiaryGeneratePage() {
   const [currentStep, setCurrentStep] = useState<GenerationStep>('style-select');
   const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null);
   const [customPrompt, setCustomPrompt] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState<DiaryGenerationProgress | null>(null);
   const [apiKey, setApiKey] = useState<string>('');
   const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
@@ -97,7 +95,6 @@ export default function DiaryGeneratePage() {
     }
 
     setCurrentStep('generating');
-    setIsGenerating(true);
     setProgress(null);
 
     try {
@@ -133,7 +130,6 @@ export default function DiaryGeneratePage() {
     } catch (error) {
       console.error('日记生成失败:', error);
       alert('日记生成失败，请重试');
-      setIsGenerating(false);
       setCurrentStep('style-select');
     }
   };

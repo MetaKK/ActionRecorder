@@ -61,66 +61,6 @@ const PERFORMANCE_CONFIG = {
   PERFORMANCE_SAMPLE_RATE: 0.1, // 10% sampling
 } as const;
 
-// ==================== 性能监控工具 ====================
-
-class PerformanceMonitor {
-  private static instance: PerformanceMonitor;
-  private metrics: Map<string, number[]> = new Map();
-  
-  static getInstance(): PerformanceMonitor {
-    if (!this.instance) {
-      this.instance = new PerformanceMonitor();
-    }
-    return this.instance;
-  }
-  
-  startTiming(operation: string): () => void {
-    const startTime = performance.now();
-    const startMemory = (performance as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || 0;
-    
-    return () => {
-      const endTime = performance.now();
-      const endMemory = (performance as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || 0;
-      
-      const duration = endTime - startTime;
-      const memoryDelta = endMemory - startMemory;
-      
-      // 记录指标
-      if (!this.metrics.has(operation)) {
-        this.metrics.set(operation, []);
-      }
-      this.metrics.get(operation)!.push(duration);
-      
-      // 性能警告
-      if (duration > 1000) {
-        console.warn(`⚠️ 慢操作检测: ${operation} 耗时 ${duration.toFixed(2)}ms`);
-      }
-      
-      if (memoryDelta > PERFORMANCE_CONFIG.MEMORY_THRESHOLD) {
-        console.warn(`⚠️ 内存使用过高: ${operation} 增加 ${(memoryDelta / 1024 / 1024).toFixed(2)}MB`);
-      }
-      
-      // 采样日志
-      if (Math.random() < PERFORMANCE_CONFIG.PERFORMANCE_SAMPLE_RATE) {
-        console.log(`📊 ${operation}:`, {
-          duration: `${duration.toFixed(2)}ms`,
-          memoryDelta: `${(memoryDelta / 1024 / 1024).toFixed(2)}MB`,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    };
-  }
-  
-  getMetrics(operation: string): { avg: number; max: number; count: number } {
-    const data = this.metrics.get(operation) || [];
-    if (data.length === 0) return { avg: 0, max: 0, count: 0 };
-    
-    const avg = data.reduce((a, b) => a + b, 0) / data.length;
-    const max = Math.max(...data);
-    
-    return { avg, max, count: data.length };
-  }
-}
 
 // ==================== 内存管理工具 ====================
 
@@ -252,11 +192,9 @@ export function ImportDialog({ trigger }: ImportDialogProps = {}) {
   const [importMethod, setImportMethod] = useState<'file' | 'text'>('file');
   const [importText, setImportText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   
   // ==================== 性能优化 Refs ====================
   
-  const performanceMonitor = useRef(PerformanceMonitor.getInstance());
   const memoryManager = useRef(MemoryManager.getInstance());
   const abortController = useRef<AbortController | null>(null);
   const processingTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -286,34 +224,11 @@ export function ImportDialog({ trigger }: ImportDialogProps = {}) {
   }, []);
   
   // ==================== 性能监控 ====================
-  
-  const withPerformanceMonitoring = useCallback((
-    fn: (...args: any[]) => Promise<any>,
-    operationName: string
-  ) => {
-    return async (...args: any[]) => {
-      const endTiming = performanceMonitor.current.startTiming(operationName);
-      
-      try {
-        // 检查内存使用
-        if (!memoryManager.current.checkMemoryUsage()) {
-          console.warn(`⚠️ 内存使用率过高，${operationName} 可能受影响`);
-        }
-        
-        const result = await fn(...args);
-        endTiming();
-        return result;
-      } catch (error) {
-        endTiming();
-        throw error;
-      }
-    };
-  }, []);
 
   // ==================== 优化解析函数 ====================
   
   // 流式解析导出记录格式数据
-  const parseExportData = useCallback(withPerformanceMonitoring(async (data: string): Promise<ImportRecord[]> => {
+  const parseExportData = useCallback(async (data: string): Promise<ImportRecord[]> => {
     // 大文件使用流式解析
     if (data.length > PERFORMANCE_CONFIG.CHUNK_SIZE) {
       const parser = new StreamParser();
@@ -373,10 +288,10 @@ export function ImportDialog({ trigger }: ImportDialogProps = {}) {
     }
 
     return records;
-  }, 'ParseExportData'), [withPerformanceMonitoring]);
+  }, []);
 
   // 优化Markdown格式解析
-  const parseMarkdownData = useCallback(withPerformanceMonitoring(async (data: string): Promise<ImportRecord[]> => {
+  const parseMarkdownData = useCallback(async (data: string): Promise<ImportRecord[]> => {
     const lines = data.split('\n');
     const records: ImportRecord[] = [];
     let currentRecord: { title: string; content: string; timestamp: number } | null = null;
@@ -420,10 +335,10 @@ export function ImportDialog({ trigger }: ImportDialogProps = {}) {
     }
 
     return records;
-  }, 'ParseMarkdownData'), [withPerformanceMonitoring]);
+  }, []);
 
   // 优化解析导入数据
-  const parseImportData = useCallback(withPerformanceMonitoring(async (data: string): Promise<ImportRecord[]> => {
+  const parseImportData = useCallback(async (data: string): Promise<ImportRecord[]> => {
     // 文件大小检查
     if (data.length > PERFORMANCE_CONFIG.MAX_FILE_SIZE) {
       throw new Error(`文件过大，最大支持 ${PERFORMANCE_CONFIG.MAX_FILE_SIZE / 1024 / 1024}MB`);
@@ -481,21 +396,19 @@ export function ImportDialog({ trigger }: ImportDialogProps = {}) {
       }
       throw error;
     }
-  }, 'ParseImportData'), [parseExportData, parseMarkdownData, withPerformanceMonitoring]);
+  }, [parseExportData, parseMarkdownData]);
 
   // 优化文件导入处理
-  const handleFileImport = useCallback(withPerformanceMonitoring(async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileImport = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     // 文件大小检查
     if (file.size > PERFORMANCE_CONFIG.MAX_FILE_SIZE) {
-      setError(`文件过大，最大支持 ${PERFORMANCE_CONFIG.MAX_FILE_SIZE / 1024 / 1024}MB`);
       return;
     }
 
     setIsProcessing(true);
-    setError(null);
     
     try {
       // 创建新的AbortController
@@ -508,25 +421,22 @@ export function ImportDialog({ trigger }: ImportDialogProps = {}) {
       toast.success(`成功解析 ${parsedRecords.length} 条记录`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '文件解析失败';
-      setError(errorMessage);
       console.error('文件解析失败:', error);
       toast.error(errorMessage);
     } finally {
       setIsProcessing(false);
       abortController.current = null;
     }
-  }, 'HandleFileImport'), [parseImportData]);
+  }, [parseImportData]);
 
   // 优化文本导入处理
-  const handleTextImport = useCallback(withPerformanceMonitoring(async () => {
+  const handleTextImport = useCallback(async () => {
     if (!importText.trim()) {
-      setError('请输入要导入的内容');
       toast.error('请输入要导入的内容');
       return;
     }
 
     setIsProcessing(true);
-    setError(null);
     
     try {
       const parsedRecords = await parseImportData(importText) as ImportRecord[];
@@ -534,23 +444,21 @@ export function ImportDialog({ trigger }: ImportDialogProps = {}) {
       toast.success(`成功解析 ${parsedRecords.length} 条记录`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '文本解析失败';
-      setError(errorMessage);
       console.error('文本解析失败:', error);
       toast.error(errorMessage);
     } finally {
       setIsProcessing(false);
     }
-  }, 'HandleTextImport'), [importText, parseImportData]);
+  }, [importText, parseImportData]);
 
   // 优化确认导入 - 核心性能优化
-  const handleConfirmImport = useCallback(withPerformanceMonitoring(async () => {
+  const handleConfirmImport = useCallback(async () => {
     if (importedRecords.length === 0) {
       toast.error('没有可导入的记录');
       return;
     }
 
     setIsProcessing(true);
-    setError(null);
     
     try {
       const storage = await getStorage();
@@ -631,15 +539,14 @@ export function ImportDialog({ trigger }: ImportDialogProps = {}) {
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '导入失败';
-      setError(errorMessage);
       console.error('导入失败:', error);
       toast.error(errorMessage);
       setIsProcessing(false);
     }
-  }, 'HandleConfirmImport'), [importedRecords, loadFromStorage]);
+  }, [importedRecords, loadFromStorage]);
 
   // 后台处理历史记录
-  const processHistoricalRecords = useCallback(withPerformanceMonitoring(async (
+  const processHistoricalRecords = useCallback(async (
     historicalRecords: ImportRecord[],
     importedCount: number,
     toastId: string | number
@@ -691,13 +598,12 @@ export function ImportDialog({ trigger }: ImportDialogProps = {}) {
       console.error('后台导入失败:', error);
       toast.error('部分历史记录导入失败', { id: toastId });
     }
-  }, 'ProcessHistoricalRecords'), [loadFromStorage]);
+  }, [loadFromStorage]);
 
   // 优化清除导入数据
   const handleClearImport = useCallback(() => {
     setImportedRecords([]);
     setImportText('');
-    setError(null);
     
     // 清理内存
     memoryManager.current.cleanup();

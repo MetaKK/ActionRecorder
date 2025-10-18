@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, 
@@ -13,7 +14,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface CustomStyleCreatorProps {
@@ -61,7 +61,7 @@ export function CustomStyleCreator({ onStyleGenerated }: CustomStyleCreatorProps
     setIsAnalyzing(true);
     
     try {
-      // 构建分析prompt
+      // 构建分析prompt (用于未来AI集成)
       let analysisPrompt = '';
       
       if (mode === 'text') {
@@ -101,6 +101,8 @@ ${text}
       }
 
       // 调用AI分析（这里需要集成实际的AI API）
+      // TODO: 使用 analysisPrompt 调用实际的AI API
+      console.log('Analysis prompt prepared:', analysisPrompt.length > 0 ? 'Ready' : 'Empty');
       // 暂时模拟
       await new Promise(resolve => setTimeout(resolve, 2000));
       
@@ -306,9 +308,11 @@ ${text}
             ) : (
               <div className="space-y-3">
                 <div className="relative rounded-2xl overflow-hidden">
-                  <img
+                  <Image
                     src={image}
                     alt="Uploaded inspiration"
+                    width={400}
+                    height={256}
                     className="w-full h-64 object-cover"
                   />
                   <button

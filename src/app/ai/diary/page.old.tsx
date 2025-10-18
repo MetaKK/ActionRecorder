@@ -13,7 +13,6 @@ import { Card } from '@/components/ui/card';
 import { DiaryEditor } from '@/components/ai/diary-editor';
 import { generateDiary } from '@/lib/ai/diary/generator';
 import { saveDiary, migrateFromLocalStorage } from '@/lib/storage/diary-db';
-import { debugChatData } from '@/lib/ai/diary/sources';
 import { useRouter } from 'next/navigation';
 import {
   Diary,
@@ -37,7 +36,6 @@ export default function DiaryPage() {
   const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
   const [selectedMood, setSelectedMood] = useState<string>('😊');
   const [entryMode, setEntryMode] = useState<'ai' | 'manual' | null>(null);
-  const [isCreatingManual, setIsCreatingManual] = useState(false);
   
   // 固定使用最佳风格：叙事型（温暖、真实、生动）
   const BEST_DIARY_STYLE = DiaryStyle.NARRATIVE;
@@ -175,11 +173,6 @@ export default function DiaryPage() {
     URL.revokeObjectURL(url);
   };
   
-  // 调试聊天数据
-  const handleDebug = () => {
-    debugChatData();
-    alert('调试信息已输出到控制台，请查看开发者工具');
-  };
   
   // 检查API Key
   const checkApiKey = () => {
@@ -205,7 +198,6 @@ export default function DiaryPage() {
 
   // 创建手动日记
   const handleCreateManual = async () => {
-    setIsCreatingManual(true);
     try {
       const now = new Date();
       const today = now.toISOString().split('T')[0];
@@ -263,8 +255,6 @@ export default function DiaryPage() {
       console.error('Failed to create manual diary:', error);
       const errorMessage = error instanceof Error ? error.message : '未知错误';
       alert(`创建日记失败：${errorMessage}`);
-    } finally {
-      setIsCreatingManual(false);
     }
   };
 
@@ -606,17 +596,6 @@ export default function DiaryPage() {
   );
 }
 
-// 辅助函数
-function getStyleLabel(style: DiaryStyle): string {
-  const labels = {
-    [DiaryStyle.NARRATIVE]: '📖 叙事体',
-    [DiaryStyle.REFLECTIVE]: '💭 反思型',
-    [DiaryStyle.BULLET]: '📝 要点式',
-    [DiaryStyle.POETIC]: '🌸 文艺型',
-    [DiaryStyle.ANALYTICAL]: '📊 分析型',
-  };
-  return labels[style] || style;
-}
 
 function getMoodEmoji(mood: string): string {
   const emojiMap: Record<string, string> = {
