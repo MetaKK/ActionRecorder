@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence, useDragControls, PanInfo } from 'framer-motion';
 import { Sparkles, Info, X } from 'lucide-react';
 import { WriterStyle } from '@/lib/ai/diary/writer-styles';
@@ -26,7 +26,8 @@ export function WriterStyleCarousel({
   const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
   const dragControls = useDragControls();
 
-  const currentStyle = styles[currentIndex];
+  // 性能优化：缓存当前样式
+  const currentStyle = useMemo(() => styles[currentIndex], [styles, currentIndex]);
 
   const handleNext = useCallback(() => {
     setDirection(1);
@@ -47,22 +48,23 @@ export function WriterStyleCarousel({
     };
   }, [isAutoPlay, selectedStyle, showDetails, handleNext]);
 
-  const handleSelect = (styleId: string) => {
+  // 性能优化：缓存选择处理函数
+  const handleSelect = useCallback((styleId: string) => {
     onSelectStyle(styleId);
     setIsAutoPlay(false);
-  };
+  }, [onSelectStyle]);
 
   // 手势处理函数
-  const handleDragStart = () => {
+  const handleDragStart = useCallback(() => {
     setIsDragging(true);
     setIsAutoPlay(false); // 拖拽时暂停自动播放
-  };
+  }, []);
 
-  const handleDrag = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handleDrag = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     setDragX(info.offset.x);
-  };
+  }, []);
 
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     setIsDragging(false);
     setDragX(0);
     
@@ -80,12 +82,10 @@ export function WriterStyleCarousel({
         setCurrentIndex((prev) => (prev + 1) % styles.length);
       }
     }
-  };
+  }, [styles.length]);
 
-  // 歌词滚动不需要额外的状态管理
-
-  // 卡片变体 - 优化后的位置和视觉效果
-  const getCardPosition = (offset: number) => {
+  // 性能优化：缓存卡片位置计算函数
+  const getCardPosition = useCallback((offset: number) => {
     if (offset === 0) {
       // 中心卡片：完全不透明，最大尺寸，无旋转
       return {
@@ -127,7 +127,33 @@ export function WriterStyleCarousel({
         filter: 'blur(4px) brightness(0.5)',
       };
     }
-  };
+  }, []);
+
+  // 性能优化：缓存背景渐变样式
+  const backgroundGradientStyle = useMemo(() => ({
+    backgroundImage: `linear-gradient(135deg, ${currentStyle.color.from}, ${currentStyle.color.to})`,
+  }), [currentStyle.color.from, currentStyle.color.to]);
+
+  // 性能优化：缓存详情面板背景样式（降低蒙层透明度，让背景图片更清晰）
+  const detailsBackgroundStyle = useMemo(() => ({
+    backgroundImage: 'url(/img/writer.bg.jpg), url(/img/grain.bg.png), linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(10,10,10,0.65) 100%)',
+    backgroundSize: 'cover, auto, auto',
+    backgroundPosition: 'center, center, center',
+    backgroundBlendMode: 'overlay' as const,
+  }), []);
+
+  // 性能优化：缓存动画 transition 配置
+  const detailsTransition = useMemo(() => ({
+    duration: 0.5,
+    ease: [0.32, 0.72, 0, 1] as [number, number, number, number]
+  }), []);
+
+  const closeButtonTransition = useMemo(() => ({
+    delay: 0.2,
+    type: 'spring' as const,
+    stiffness: 400,
+    damping: 25
+  }), []);
 
   return (
     <div className="relative w-full h-[500px] sm:h-[600px] flex items-center justify-center perspective-[2000px]">
@@ -135,9 +161,7 @@ export function WriterStyleCarousel({
       {/* 背景渐变 */}
       <div 
         className="absolute inset-0 bg-gradient-to-br opacity-20 blur-3xl transition-all duration-1000"
-        style={{
-          backgroundImage: `linear-gradient(135deg, ${currentStyle.color.from}, ${currentStyle.color.to})`,
-        }}
+        style={backgroundGradientStyle}
       />
 
       {/* 卡片容器 - 支持拖拽手势 */}
@@ -154,12 +178,12 @@ export function WriterStyleCarousel({
           x: isDragging ? dragX : 0,
         }}
       >
-        <AnimatePresence initial={false} custom={direction}>
+        <AnimatePresence initial={false} custom={direction} mode="sync">
           {styles.map((style, index) => {
             const offset = (index - currentIndex + styles.length) % styles.length;
             const normalizedOffset = offset > styles.length / 2 ? offset - styles.length : offset;
             
-            // 只渲染中心及相邻的卡片
+            // 性能优化：只渲染中心及相邻的卡片，减少 DOM 节点
             if (Math.abs(normalizedOffset) > 1) return null;
 
             return (
@@ -337,34 +361,28 @@ export function WriterStyleCarousel({
                     </motion.div>
 
                     {/* 详细信息（Apple风格）- 纵向滚动名言 */}
-                    <AnimatePresence>
+                    <AnimatePresence mode="wait">
                       {showDetails && normalizedOffset === 0 && (
                         <motion.div
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          transition={{ 
-                            duration: 0.5, 
-                            ease: [0.32, 0.72, 0, 1]
-                          }}
+                          transition={detailsTransition}
                           className="absolute inset-0 overflow-hidden"
                           onClick={(e) => e.stopPropagation()}
-                          style={{
-                            backgroundImage: 'url(/img/grain.bg.png), linear-gradient(180deg, rgba(0,0,0,0.96) 0%, rgba(10,10,10,0.98) 100%)',
-                            backgroundBlendMode: 'overlay',
-                          }}
+                          style={detailsBackgroundStyle}
                         >
-                          {/* 顶部渐变遮罩 */}
-                          <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-black/90 via-black/50 to-transparent z-10 pointer-events-none" />
+                          {/* 顶部渐变遮罩 - 降低透明度让背景更清晰 */}
+                          <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-black/60 via-black/30 to-transparent z-10 pointer-events-none" />
                           
-                          {/* 底部渐变遮罩 */}
-                          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-10 pointer-events-none" />
+                          {/* 底部渐变遮罩 - 降低透明度让背景更清晰 */}
+                          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/60 via-black/30 to-transparent z-10 pointer-events-none" />
 
                           {/* 关闭按钮 */}
                           <motion.button
                             initial={{ scale: 0, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: 0.2, type: 'spring', stiffness: 400, damping: 25 }}
+                            transition={closeButtonTransition}
                             onClick={() => setShowDetails(false)}
                             className="absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-white/10 backdrop-blur-xl border border-white/10 hover:bg-white/15 hover:border-white/20 transition-all duration-300 flex items-center justify-center"
                           >
@@ -392,81 +410,66 @@ export function WriterStyleCarousel({
                             </motion.div>
                           </div> */}
 
-                          {/* 名言滚动容器 - 歌词滚动效果 */}
+                          {/* 名言滚动容器 - Apple Music 风格优雅滚动 */}
                           <div className="absolute inset-0 overflow-hidden">
                             <motion.div
                               key={`lyrics-${style.id}`}
-                              className="relative w-full h-full"
+                              className="relative w-full"
                               animate={{
-                                y: [0, -100 * style.famousQuotes.length]
+                                y: ['0%', '-50%'] // 滚动到一半（因为内容复制了一遍）
                               }}
                               transition={{
-                                duration: style.famousQuotes.length * 8, // 每句8秒
-                                ease: 'linear',
-                                repeat: Infinity,
-                                repeatDelay: 2, // 循环间隔2秒
+                                duration: style.famousQuotes.length * 15, // 每句15秒，优雅缓慢
+                                ease: 'linear', // 线性匀速
+                                repeat: Infinity, // 无限循环
+                                repeatType: 'loop', // 循环模式
+                              }}
+                              style={{
+                                height: `${style.famousQuotes.length * 2 * 100}%`, // 高度是两倍（复制了内容）
+                                willChange: 'transform',
                               }}
                             >
-                              {/* 渲染所有名言，形成连续滚动 */}
-                              {style.famousQuotes.map((quote, index) => (
+                              {/* 渲染两遍所有名言，实现真正的无缝循环 */}
+                              {[...style.famousQuotes, ...style.famousQuotes].map((quote, index) => (
                                 <div
                                   key={`quote-${index}`}
                                   className="absolute w-full flex items-center justify-center"
                                   style={{
-                                    top: `${index * 100}%`, // 每句占100%高度
-                                    height: '100%',
+                                    top: `${(index / (style.famousQuotes.length * 2)) * 100}%`,
+                                    height: `${(1 / (style.famousQuotes.length * 2)) * 100}%`,
                                   }}
                                 >
-                                  <div className="text-center px-8 sm:px-12 max-w-4xl">
-                                    {/* 名言文本 */}
-                                    <p className="text-2xl sm:text-3xl md:text-4xl font-light leading-relaxed tracking-wide"
+                                  <div className="text-center px-8 sm:px-12 max-w-4xl h-full flex flex-col items-center justify-center">
+                                    {/* 名言文本 - 优化质感 */}
+                                    <p className="text-2xl sm:text-3xl md:text-4xl font-light leading-relaxed tracking-wide text-white"
                                        style={{
-                                         textShadow: '0 4px 40px rgba(0,0,0,0.8)',
-                                         fontFamily: "'Noto Serif SC', 'Songti SC', 'PingFang SC', serif",
-                                         letterSpacing: '0.03em',
-                                         lineHeight: '1.6',
+                                         textShadow: '0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.5), 0 12px 48px rgba(0,0,0,0.3)',
+                                         fontFamily: "'Noto Serif SC', 'Songti SC', 'STSong', 'PingFang SC', serif",
+                                         letterSpacing: '0.05em',
+                                         lineHeight: '1.7',
                                          WebkitFontSmoothing: 'antialiased',
+                                         MozOsxFontSmoothing: 'grayscale',
+                                         textRendering: 'optimizeLegibility',
+                                         fontWeight: 300,
                                        }}>
                                       &ldquo;{quote}&rdquo;
                                     </p>
                                     
-                                    {/* 作家署名 */}
-                                    <div className="flex items-center justify-center gap-4 mt-6 opacity-60">
-                                      <div className="h-px w-12 bg-white/30" />
-                                      <span className="text-sm tracking-[0.2em] uppercase font-medium">{style.name}</span>
-                                      <div className="h-px w-12 bg-white/30" />
+                                    {/* 作家署名 - 优化质感 */}
+                                    <div className="flex items-center justify-center gap-4 mt-8 opacity-70">
+                                      <div className="h-px w-16 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                                      <span 
+                                        className="text-sm tracking-[0.25em] uppercase font-light text-white"
+                                        style={{
+                                          textShadow: '0 2px 8px rgba(0,0,0,0.4)',
+                                          fontWeight: 300,
+                                        }}
+                                      >{style.name}</span>
+                                      <div className="h-px w-16 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
                                     </div>
                                   </div>
                                 </div>
                               ))}
-                              
-                              {/* 循环标记 - 重复第一句名言 */}
-                              <div
-                                className="absolute w-full flex items-center justify-center"
-                                style={{
-                                  top: `${style.famousQuotes.length * 100}%`,
-                                  height: '100%',
-                                }}
-                              >
-                                <div className="text-center px-8 sm:px-12 max-w-4xl">
-                                  <p className="text-2xl sm:text-3xl md:text-4xl font-light leading-relaxed tracking-wide"
-                                     style={{
-                                       textShadow: '0 4px 40px rgba(0,0,0,0.8)',
-                                       fontFamily: "'Noto Serif SC', 'Songti SC', 'PingFang SC', serif",
-                                       letterSpacing: '0.03em',
-                                       lineHeight: '1.6',
-                                       WebkitFontSmoothing: 'antialiased',
-                                     }}>
-                                    &ldquo;{style.famousQuotes[0]}&rdquo;
-                                  </p>
-                                  
-                                  <div className="flex items-center justify-center gap-4 mt-6 opacity-60">
-                                    <div className="h-px w-12 bg-white/30" />
-                                    <span className="text-sm tracking-[0.2em] uppercase font-medium">{style.name}</span>
-                                    <div className="h-px w-12 bg-white/30" />
-                                  </div>
-                                </div>
-                              </div>
                             </motion.div>
                           </div>
 
