@@ -200,7 +200,6 @@ export const Video = Node.create({
 
   addCommands() {
     return {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setVideo: (options: Record<string, unknown>) => ({ commands }: any) => {
         return commands.insertContent({
           type: this.name,
@@ -304,7 +303,6 @@ export const Audio = Node.create({
 
   addCommands() {
     return {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setAudio: (options: Record<string, unknown>) => ({ commands }: any) => {
         return commands.insertContent({
           type: this.name,
@@ -366,7 +364,6 @@ export const FileAttachment = Node.create({
 
   addCommands() {
     return {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setFile: (options: Record<string, unknown>) => ({ commands }: any) => {
         return commands.insertContent({
           type: this.name,

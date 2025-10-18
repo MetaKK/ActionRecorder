@@ -251,7 +251,6 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose }: Ima
           </video>
         ) : (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
             src={currentMedia.data}
             alt={`图片 ${currentIndex + 1}`}

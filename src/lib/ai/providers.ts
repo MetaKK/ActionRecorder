@@ -17,7 +17,6 @@ export interface ProviderConfig {
 }
 
 // Provider实例缓存
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const providerCache = new Map<string, any>();
 
 /**

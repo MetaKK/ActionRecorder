@@ -143,7 +143,6 @@ export class LocalStorageAdapter implements IStorageAdapter {
   /**
    * 保存媒体文件（不支持）
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async saveMedia(media: MediaData): Promise<string> {
     throw new Error('LocalStorage does not support media files. Use IndexedDB instead.');
   }
@@ -151,7 +150,6 @@ export class LocalStorageAdapter implements IStorageAdapter {
   /**
    * 获取媒体文件（不支持）
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getMedia(id: string): Promise<MediaData | null> {
     throw new Error('LocalStorage does not support media files');
   }
@@ -159,7 +157,6 @@ export class LocalStorageAdapter implements IStorageAdapter {
   /**
    * 删除媒体文件（不支持）
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async deleteMedia(id: string): Promise<void> {
     throw new Error('LocalStorage does not support media files');
   }

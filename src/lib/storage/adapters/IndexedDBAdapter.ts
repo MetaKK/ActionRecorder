@@ -76,7 +76,8 @@ export class IndexedDBAdapter implements IStorageAdapter {
           console.log('✅ Created records object store with optimized indexes');
         } else if (oldVersion < 2) {
           // 升级现有store到v2
-          const transaction = (event.target as IDBOpenDBRequest).transaction!;
+          const transaction = (event.target as IDBOpenDBRequest).transaction;
+          if (!transaction) return;
           const recordStore = transaction.objectStore(this.STORE_RECORDS);
           
           // 添加新索引（如果不存在）
@@ -119,7 +120,8 @@ export class IndexedDBAdapter implements IStorageAdapter {
   async saveRecord(record: Record): Promise<void> {
     this.ensureInitialized();
     
-    const transaction = this.db!.transaction([this.STORE_RECORDS], 'readwrite');
+    if (!this.db) throw new Error('Database not initialized');
+    const transaction = this.db.transaction([this.STORE_RECORDS], 'readwrite');
     const store = transaction.objectStore(this.STORE_RECORDS);
     
     // 如果记录包含媒体，先保存媒体数据
@@ -161,7 +163,8 @@ export class IndexedDBAdapter implements IStorageAdapter {
   async getRecord(id: string): Promise<Record | null> {
     this.ensureInitialized();
     
-    const transaction = this.db!.transaction([this.STORE_RECORDS], 'readonly');
+    if (!this.db) throw new Error('Database not initialized');
+    const transaction = this.db.transaction([this.STORE_RECORDS], 'readonly');
     const store = transaction.objectStore(this.STORE_RECORDS);
     
     return new Promise((resolve, reject) => {
@@ -201,7 +204,8 @@ export class IndexedDBAdapter implements IStorageAdapter {
   async getAllRecords(): Promise<Record[]> {
     this.ensureInitialized();
     
-    const transaction = this.db!.transaction([this.STORE_RECORDS], 'readonly');
+    if (!this.db) throw new Error('Database not initialized');
+    const transaction = this.db.transaction([this.STORE_RECORDS], 'readonly');
     const store = transaction.objectStore(this.STORE_RECORDS);
     
     return new Promise((resolve, reject) => {
@@ -262,7 +266,8 @@ export class IndexedDBAdapter implements IStorageAdapter {
       }
     }
     
-    const transaction = this.db!.transaction([this.STORE_RECORDS], 'readwrite');
+    if (!this.db) throw new Error('Database not initialized');
+    const transaction = this.db.transaction([this.STORE_RECORDS], 'readwrite');
     const store = transaction.objectStore(this.STORE_RECORDS);
     
     return new Promise((resolve, reject) => {
@@ -281,7 +286,8 @@ export class IndexedDBAdapter implements IStorageAdapter {
   async saveMedia(media: MediaData): Promise<string> {
     this.ensureInitialized();
     
-    const transaction = this.db!.transaction([this.STORE_MEDIA], 'readwrite');
+    if (!this.db) throw new Error('Database not initialized');
+    const transaction = this.db.transaction([this.STORE_MEDIA], 'readwrite');
     const store = transaction.objectStore(this.STORE_MEDIA);
     
     // 将 Base64 转换为 Blob
@@ -316,7 +322,8 @@ export class IndexedDBAdapter implements IStorageAdapter {
   async getMedia(id: string): Promise<MediaData | null> {
     this.ensureInitialized();
     
-    const transaction = this.db!.transaction([this.STORE_MEDIA], 'readonly');
+    if (!this.db) throw new Error('Database not initialized');
+    const transaction = this.db.transaction([this.STORE_MEDIA], 'readonly');
     const store = transaction.objectStore(this.STORE_MEDIA);
     
     return new Promise((resolve, reject) => {
@@ -359,7 +366,8 @@ export class IndexedDBAdapter implements IStorageAdapter {
   async deleteMedia(id: string): Promise<void> {
     this.ensureInitialized();
     
-    const transaction = this.db!.transaction([this.STORE_MEDIA], 'readwrite');
+    if (!this.db) throw new Error('Database not initialized');
+    const transaction = this.db.transaction([this.STORE_MEDIA], 'readwrite');
     const store = transaction.objectStore(this.STORE_MEDIA);
     
     return new Promise((resolve, reject) => {
@@ -381,7 +389,8 @@ export class IndexedDBAdapter implements IStorageAdapter {
     const records = await this.getAllRecords();
     
     // 获取媒体信息
-    const mediaTransaction = this.db!.transaction([this.STORE_MEDIA], 'readonly');
+    if (!this.db) throw new Error('Database not initialized');
+    const mediaTransaction = this.db.transaction([this.STORE_MEDIA], 'readonly');
     const mediaStore = mediaTransaction.objectStore(this.STORE_MEDIA);
     
     return new Promise((resolve, reject) => {
@@ -416,16 +425,15 @@ export class IndexedDBAdapter implements IStorageAdapter {
   async clear(): Promise<void> {
     this.ensureInitialized();
     
-    const transaction = this.db!.transaction([this.STORE_RECORDS, this.STORE_MEDIA], 'readwrite');
+    if (!this.db) throw new Error('Database not initialized');
+    const transaction = this.db.transaction([this.STORE_RECORDS, this.STORE_MEDIA], 'readwrite');
     
     const recordsStore = transaction.objectStore(this.STORE_RECORDS);
     const mediaStore = transaction.objectStore(this.STORE_MEDIA);
     
     return new Promise((resolve, reject) => {
       // 触发清除操作 - 这些请求会在事务中执行
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const clearRecords = recordsStore.clear();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const clearMedia = mediaStore.clear();
       
       transaction.oncomplete = () => {

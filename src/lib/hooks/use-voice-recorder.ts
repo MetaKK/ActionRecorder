@@ -63,7 +63,6 @@ export function useVoiceRecorder({
     try {
       // 使用 Web Speech API 进行实时语音识别
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const recognition = new (SpeechRecognition as { new(): unknown })() as any;
       
       recognition.continuous = true;
