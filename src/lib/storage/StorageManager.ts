@@ -354,7 +354,6 @@ export class StorageManager {
   /**
    * 选择媒体的存储适配器
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private selectAdapterForMedia(media: MediaData): IStorageAdapter {
     // 媒体文件优先级：
     // 1. 云端（如果是会员）

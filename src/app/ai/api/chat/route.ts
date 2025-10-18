@@ -52,7 +52,6 @@ export async function POST(request: Request) {
     const processedRequest = processModelRequest(model, messages, fullSystemPrompt);
 
     // 构建streamText参数
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const streamParams: any = {
       model: languageModel,
       messages: processedRequest.messages,

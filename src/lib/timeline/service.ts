@@ -449,7 +449,10 @@ export class TimelineService extends EventEmitter {
       if (!grouped.has(dateKey)) {
         grouped.set(dateKey, []);
       }
-      grouped.get(dateKey)!.push(item);
+      const dayItems = grouped.get(dateKey);
+      if (dayItems) {
+        dayItems.push(item);
+      }
     });
     
     // 对每一天的项进行排序

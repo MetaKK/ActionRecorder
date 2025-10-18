@@ -63,7 +63,10 @@ export function groupByDate<T extends { createdAt: Date }>(items: T[]): Map<stri
     if (!groups.has(dateKey)) {
       groups.set(dateKey, []);
     }
-    groups.get(dateKey)!.push(item);
+    const dayItems = groups.get(dateKey);
+    if (dayItems) {
+      dayItems.push(item);
+    }
   });
   
   return groups;

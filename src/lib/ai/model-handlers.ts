@@ -11,7 +11,6 @@ export interface ModelHandlerResult {
   system?: string;
   temperature?: number;
   maxTokens?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additionalParams?: Record<string, any>;
 }
 

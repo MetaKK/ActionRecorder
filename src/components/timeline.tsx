@@ -151,6 +151,36 @@ export function Timeline() {
         {visibleSortedGroups.map(([dateKey, items]) => {
           const dateLabel = getDateLabel(items[0].createdAt);
           
+          // 获取当天的所有日记
+          const dayDiaries = diaryMap.get(dateKey) || [];
+          
+          // 创建混合数组：日记 + 记录
+          const mixedItems: Array<{ type: 'diary' | 'record'; id: string; data: unknown; createdAt: Date }> = [];
+          
+          // 添加所有日记
+          dayDiaries.forEach(diary => {
+            const diaryTime = diary.createdAt || diary.generatedAt || new Date(diary.date + 'T20:00:00');
+            mixedItems.push({
+              type: 'diary' as const,
+              id: diary.id,
+              createdAt: diaryTime,
+              data: diary
+            });
+          });
+          
+          // 添加记录
+          items.forEach(record => {
+            mixedItems.push({
+              type: 'record' as const,
+              id: record.id,
+              createdAt: record.createdAt,
+              data: record
+            });
+          });
+          
+          // 按时间排序（最新的在前）
+          mixedItems.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+          
           return (
             <div key={dateKey} className="space-y-4">
               {/* 日期标题 */}
@@ -176,57 +206,24 @@ export function Timeline() {
               
               {/* 优化：混合内容预计算，避免每次渲染都重新排序 */}
               <div className="space-y-3">
-                {useMemo(() => {
-                  // 获取当天的所有日记
-                  const dayDiaries = diaryMap.get(dateKey) || [];
-                  
-                  // 创建混合数组：日记 + 记录
-                  const mixedItems: Array<{ type: 'diary' | 'record'; id: string; data: unknown; createdAt: Date }> = [];
-                  
-                  // 添加所有日记
-                  dayDiaries.forEach(diary => {
-                    const diaryTime = diary.createdAt || diary.generatedAt || new Date(diary.date + 'T20:00:00');
-                    mixedItems.push({
-                      type: 'diary' as const,
-                      id: diary.id,
-                      createdAt: diaryTime,
-                      data: diary
-                    });
-                  });
-                  
-                  // 添加记录
-                  items.forEach(record => {
-                    mixedItems.push({
-                      type: 'record' as const,
-                      id: record.id,
-                      createdAt: record.createdAt,
-                      data: record
-                    });
-                  });
-                  
-                  // 按时间排序（最新的在前）
-                  mixedItems.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-                  
-                  // 渲染混合内容
-                  return mixedItems.map((item) => {
-                    if (item.type === 'diary') {
-                      return (
-                        <DiaryCard
-                          key={`diary-${item.id}`}
-                          diary={item.data as DiaryPreview}
-                          onEdit={handleEditDiary}
-                          onShare={handleShareDiary}
-                          onExport={handleExportDiary}
-                          onDelete={handleDeleteDiary}
-                        />
-                      );
-                    } else {
-                      return (
-                        <TimelineItem key={item.id} record={item.data as unknown as Record} />
-                      );
-                    }
-                  });
-                }, [dateKey, items, diaryMap])}
+                {mixedItems.map((item) => {
+                  if (item.type === 'diary') {
+                    return (
+                      <DiaryCard
+                        key={`diary-${item.id}`}
+                        diary={item.data as DiaryPreview}
+                        onEdit={handleEditDiary}
+                        onShare={handleShareDiary}
+                        onExport={handleExportDiary}
+                        onDelete={handleDeleteDiary}
+                      />
+                    );
+                  } else {
+                    return (
+                      <TimelineItem key={item.id} record={item.data as unknown as Record} />
+                    );
+                  }
+                })}
               </div>
             </div>
           );

@@ -142,9 +142,7 @@ function generateVideoThumbnail(file: File): Promise<{
     video.onloadedmetadata = () => {
       const duration = video.duration;
       // 视频尺寸信息（保留用于未来可能的尺寸验证）
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const width = video.videoWidth;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const height = video.videoHeight;
       
       // 跳转到指定时间生成缩略图
