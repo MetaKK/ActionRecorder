@@ -8,6 +8,7 @@ import { useRecords } from "@/lib/hooks/use-records";
 // 移除静态导入，改为动态导入
 import { ExportDialog } from "@/components/export-dialog";
 import { EnglishPromptDialog } from "@/components/english-prompt-dialog";
+import { ImportDialog } from "@/components/import-dialog";
 import { ErrorBoundary } from "@/components/error-boundary";
 // 移除静态导入，改为动态导入
 import { 
@@ -131,6 +132,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-2">
               <EnglishPromptDialog />
+              <ImportDialog />
               <ExportDialog />
             </div>
           </div>
