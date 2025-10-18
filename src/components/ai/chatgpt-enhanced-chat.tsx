@@ -8,9 +8,10 @@ import { useAIChat } from "@/lib/hooks/use-ai-chat";
 import { AIChatHeader } from "./ai-chat-header";
 import { ChatGPTMessage } from "./chatgpt-message";
 import { AIInputMinimal } from "./ai-input-minimal";
-import { getModelById, CAPABILITY_NAMES } from "@/lib/ai/config";
+import { getModelById, CAPABILITY_NAMES, AI_MODELS } from "@/lib/ai/config";
 import { generateUserContext, formatUserContext } from "@/lib/ai/user-context";
 import { useRecords } from "@/lib/hooks/use-records";
+import { AppleSelect } from "@/components/ui/apple-select";
 
 interface ChatGPTEnhancedChatProps {
   chatId: string;
@@ -141,6 +142,13 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
       const context = generateUserContext(records);
       const userContextStr = formatUserContext(context);
       
+      console.log('[ChatGPT] 发送请求:', {
+        selectedModel,
+        messageCount: messages.length + 1,
+        hasApiKey: !!apiKey,
+        userContext: userContextStr ? '有上下文' : '无上下文'
+      });
+      
       // 调用真实的AI API
       const response = await fetch('/ai/api/chat', {
         method: 'POST',
@@ -158,11 +166,18 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
         }),
       });
 
+      console.log('[ChatGPT] API响应状态:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
         // 检查是否是API key错误
         if (response.status === 500) {
           try {
             const errorData = await response.json();
+            console.log('[ChatGPT] API错误详情:', errorData);
             if (errorData.error && errorData.error.includes('API key not configured')) {
               setApiKeyError("需要配置API Key才能使用AI功能");
               setShowSettings(true);
@@ -172,7 +187,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
             // 如果无法解析错误响应，继续抛出错误
           }
         }
-        throw new Error('AI API request failed');
+        throw new Error(`AI API request failed: ${response.status} ${response.statusText}`);
       }
 
       // 处理流式响应
@@ -180,17 +195,32 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
       const decoder = new TextDecoder();
       let currentText = "";
 
+      console.log('[ChatGPT] 开始处理流式响应:', {
+        hasReader: !!reader,
+        contentType: response.headers.get('content-type')
+      });
+
       if (reader) {
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            console.log('[ChatGPT] 流式响应完成，总长度:', currentText.length);
+            break;
+          }
 
           const chunk = decoder.decode(value, { stream: true });
           
           // 直接累加文本内容
           currentText += chunk;
           setCurrentAIMessage(currentText);
+          
+          // 每1000字符打印一次进度
+          if (currentText.length % 1000 === 0) {
+            console.log('[ChatGPT] 流式响应进度:', currentText.length, '字符');
+          }
         }
+      } else {
+        console.error('[ChatGPT] 无法获取响应流');
       }
 
       // 完成AI响应
@@ -315,36 +345,20 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
               <label className="text-sm font-medium text-gray-800 dark:text-gray-200 tracking-wide">
                 选择模型
               </label>
-              <div className="relative">
-                <select
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200/60 dark:border-gray-600/60 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 shadow-sm hover:shadow-md appearance-none cursor-pointer"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                    backgroundPosition: 'right 10px center',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundSize: '14px'
-                  }}
-                >
-                  <optgroup label="标准对话">
-                    <option value="gpt-4o-mini">GPT-4o Mini (推荐⭐)</option>
-                    <option value="gpt-4o">GPT-4o (最新)</option>
-                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                    <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
-                    <option value="claude-3-5-haiku">Claude 3.5 Haiku</option>
-                  </optgroup>
-                  <optgroup label="深度思考 🧠">
-                    <option value="o1-preview">o1 Preview (新🔥)</option>
-                    <option value="o1-mini">o1 Mini (新🔥)</option>
-                  </optgroup>
-                  <optgroup label="联网搜索 🌐">
-                    <option value="sonar-pro">Sonar Pro (新🔥)</option>
-                    <option value="sonar">Sonar</option>
-                  </optgroup>
-                </select>
-              </div>
+              <AppleSelect
+                value={selectedModel}
+                onChange={setSelectedModel}
+                options={AI_MODELS.map(model => ({
+                  value: model.id,
+                  label: `${model.displayName}${model.isRecommended ? ' (推荐⭐)' : ''}${model.isNew ? ' (新🔥)' : ''}`,
+                  group: model.category === 'standard' ? '标准对话' : 
+                         model.category === 'reasoning' ? '深度思考 🧠' :
+                         model.category === 'search' ? '联网搜索 🌐' :
+                         model.category === 'multimodal' ? '豆包大模型 🎨' : '其他'
+                }))}
+                placeholder="请选择AI模型..."
+                className="w-full"
+              />
               
               {/* 模型信息显示 */}
               {(() => {

@@ -93,6 +93,66 @@ export function handleClaudeModel(
 }
 
 /**
+ * 豆包大模型处理器
+ */
+export function handleDoubaoModel(
+  messages: CoreMessage[],
+  systemPrompt?: string,
+  modelId?: string
+): ModelHandlerResult {
+  const baseParams: ModelHandlerResult = {
+    messages,
+    system: systemPrompt,
+    temperature: 0.7,
+    maxTokens: 65535,
+  };
+
+  // 豆包 1.6 支持深度思考参数
+  if (modelId === 'doubao-1.6') {
+    // 根据官方文档，深度思考需要完整的参数配置
+    baseParams.additionalParams = {
+      reasoning_effort: "medium", // 可选: low, medium, high
+      max_completion_tokens: 65535, // 最大输出token数
+      // 豆包API需要的特殊参数 - 正确的嵌套格式
+      input: {
+        status: "enabled" // 豆包API要求的参数格式：在input对象内包含status字段
+      }
+    };
+    
+    // 深度思考任务可能需要更高的token限制
+    baseParams.maxTokens = 65535;
+    
+    // 调整temperature以支持更好的推理
+    baseParams.temperature = 0.8;
+  }
+
+  // 豆包 Flash 不需要reasoning_effort参数
+  if (modelId === 'doubao-1.6-flash') {
+    // 优化快速响应
+    baseParams.temperature = 0.6;
+  }
+
+  return baseParams;
+}
+
+/**
+ * Auto模式处理器
+ */
+export function handleAutoMode(
+  messages: CoreMessage[],
+  systemPrompt?: string
+): ModelHandlerResult {
+  // Auto模式会在API路由中动态选择模型
+  // 这里返回基础配置
+  return {
+    messages,
+    system: systemPrompt,
+    temperature: 0.7,
+    maxTokens: 65535,
+  };
+}
+
+/**
  * 标准模型处理器
  */
 export function handleStandardModel(
@@ -134,6 +194,16 @@ export function processModelRequest(
   // Claude模型
   if (modelConfig.provider === "anthropic") {
     return handleClaudeModel(messages, systemPrompt);
+  }
+
+  // Auto智能模式
+  if (modelId === "auto") {
+    return handleAutoMode(messages, systemPrompt);
+  }
+
+  // 豆包大模型
+  if (modelConfig.provider === "doubao") {
+    return handleDoubaoModel(messages, systemPrompt, modelId);
   }
 
   // 标准模型

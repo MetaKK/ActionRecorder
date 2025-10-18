@@ -256,34 +256,34 @@ export function AIInputMinimal({
                 align="start"
                 className={cn(
                   "w-48 rounded-[18px]",
-                  "shadow-[0_6px_24px_rgba(0,0,0,0.1)]",
-                  "border border-gray-200/80 dark:border-gray-700/80",
+                  "shadow-[0_8px_32px_rgba(0,0,0,0.12)]",
+                  "border border-gray-200/60 dark:border-gray-700/60",
                   "bg-white/98 dark:bg-gray-900/98 backdrop-blur-xl",
                   "p-1.5"
                 )}
                 sideOffset={12}
               >
+                {/* 优化后的菜单项顺序：拍照 > 图片 > 文件 */}
                 <DropdownMenuItem 
                   onClick={handleImageSelect}
-                  className="rounded-[12px] py-2 px-3 cursor-pointer transition-all duration-150 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
+                  className="rounded-[12px] py-2.5 px-3 cursor-pointer transition-all duration-150 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
                 >
-                  <Camera className="mr-2.5 h-4 w-4 text-gray-600 dark:text-gray-300" strokeWidth={2} />
+                  <Camera className="mr-3 h-[18px] w-[18px] text-blue-600 dark:text-blue-400" strokeWidth={2} />
                   <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">拍照</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={handleFileSelect}
-                  className="rounded-[12px] py-2 px-3 cursor-pointer transition-all duration-150 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
-                >
-                  <Paperclip className="mr-2.5 h-4 w-4 text-gray-600 dark:text-gray-300" strokeWidth={2} />
-                  <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">添加文件</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="my-1.5 bg-gradient-to-r from-transparent via-gray-300/40 dark:via-gray-600/40 to-transparent h-px" />
-                <DropdownMenuItem 
                   onClick={handleImageSelect}
-                  className="rounded-[12px] py-2 px-3 cursor-pointer transition-all duration-150 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
+                  className="rounded-[12px] py-2.5 px-3 cursor-pointer transition-all duration-150 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
                 >
-                  <ImageIcon className="mr-2.5 h-4 w-4 text-gray-600 dark:text-gray-300" strokeWidth={2} />
+                  <ImageIcon className="mr-3 h-[18px] w-[18px] text-purple-600 dark:text-purple-400" strokeWidth={2} />
                   <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">添加图片</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={handleFileSelect}
+                  className="rounded-[12px] py-2.5 px-3 cursor-pointer transition-all duration-150 hover:bg-gray-100/80 dark:hover:bg-gray-800/80"
+                >
+                  <Paperclip className="mr-3 h-[18px] w-[18px] text-gray-600 dark:text-gray-400" strokeWidth={2} />
+                  <span className="text-[14px] font-medium text-gray-900 dark:text-gray-100">添加文件</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

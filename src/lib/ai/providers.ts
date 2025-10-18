@@ -81,6 +81,29 @@ function createPerplexityProvider(config?: ProviderConfig) {
 }
 
 /**
+ * 创建豆包大模型 Provider
+ */
+function createDoubaoProvider(config?: ProviderConfig) {
+  const cacheKey = `doubao-${config?.apiKey || "default"}`;
+  
+  if (providerCache.has(cacheKey)) {
+    return providerCache.get(cacheKey);
+  }
+
+  // 豆包大模型使用OpenAI兼容的API格式
+  const provider = createOpenAI({
+    apiKey: config?.apiKey || process.env.DOUBAO_API_KEY,
+    baseURL: config?.baseURL || "https://ark.cn-beijing.volces.com/api/v3",
+    headers: {
+      ...config?.headers,
+    },
+  });
+
+  providerCache.set(cacheKey, provider);
+  return provider;
+}
+
+/**
  * 获取模型实例
  */
 export function getLanguageModel(
@@ -113,6 +136,10 @@ export function getLanguageModel(
       provider = createPerplexityProvider(providerConfig);
       break;
 
+    case ModelProvider.DOUBAO:
+      provider = createDoubaoProvider(providerConfig);
+      break;
+
     default:
       throw new Error(`Provider ${modelConfig.provider} not supported`);
   }
@@ -131,6 +158,8 @@ export function checkApiKeyAvailable(provider: ModelProvider): boolean {
       return !!process.env.ANTHROPIC_API_KEY;
     case ModelProvider.PERPLEXITY:
       return !!process.env.PERPLEXITY_API_KEY;
+    case ModelProvider.DOUBAO:
+      return !!process.env.DOUBAO_API_KEY;
     default:
       return false;
   }
@@ -150,6 +179,9 @@ export function getAvailableProviders(): ModelProvider[] {
   }
   if (checkApiKeyAvailable(ModelProvider.PERPLEXITY)) {
     providers.push(ModelProvider.PERPLEXITY);
+  }
+  if (checkApiKeyAvailable(ModelProvider.DOUBAO)) {
+    providers.push(ModelProvider.DOUBAO);
   }
 
   return providers;

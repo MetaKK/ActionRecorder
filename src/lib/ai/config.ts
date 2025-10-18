@@ -21,6 +21,7 @@ export enum ModelProvider {
   PERPLEXITY = "perplexity",
   DEEPSEEK = "deepseek",
   GOOGLE = "google",
+  DOUBAO = "doubao",
 }
 
 // 模型配置接口
@@ -45,6 +46,23 @@ export interface AIModelConfig {
 
 // 所有支持的模型配置
 export const AI_MODELS: AIModelConfig[] = [
+  // ===== Auto 智能模式 =====
+  {
+    id: "auto",
+    name: "auto",
+    provider: ModelProvider.OPENAI, // 使用OpenAI作为默认provider
+    displayName: "Auto 智能模式",
+    description: "AI Agent自动选择最适合的模型处理您的请求",
+    capabilities: [ModelCapability.CHAT, ModelCapability.REASONING, ModelCapability.SEARCH, ModelCapability.VISION, ModelCapability.CODE, ModelCapability.MULTIMODAL],
+    maxTokens: 65535,
+    contextWindow: 200000,
+    costPer1kTokens: { input: 0.001, output: 0.002 },
+    isRecommended: true,
+    isNew: true,
+    requiresSpecialHandling: true,
+    category: "standard",
+  },
+  
   // ===== OpenAI 标准模型 =====
   {
     id: "gpt-4o",
@@ -178,6 +196,49 @@ export const AI_MODELS: AIModelConfig[] = [
     costPer1kTokens: { input: 0.001, output: 0.001 },
     isNew: true,
     category: "search",
+  },
+
+  // ===== 豆包大模型 =====
+  {
+    id: "doubao-1.6",
+    name: process.env.DOUBAO_SEED_1_6_ENDPOINT || "doubao-seed-1-6-251015",
+    provider: ModelProvider.DOUBAO,
+    displayName: "豆包大模型 1.6",
+    description: "字节跳动豆包大模型，支持多模态对话和深度思考",
+    capabilities: [ModelCapability.CHAT, ModelCapability.VISION, ModelCapability.MULTIMODAL, ModelCapability.REASONING],
+    maxTokens: 65535,
+    contextWindow: 128000,
+    costPer1kTokens: { input: 0.0008, output: 0.002 },
+    isNew: true,
+    requiresSpecialHandling: true, // 支持深度思考参数
+    category: "multimodal",
+  },
+  {
+    id: "doubao-1.6-flash",
+    name: process.env.DOUBAO_SEED_1_6_FLASH_ENDPOINT || "doubao-seed-1-6-flash-250828",
+    provider: ModelProvider.DOUBAO,
+    displayName: "豆包大模型 1.6 Flash",
+    description: "快速版本，支持多模态对话，响应速度更快",
+    capabilities: [ModelCapability.CHAT, ModelCapability.VISION, ModelCapability.MULTIMODAL, ModelCapability.FAST],
+    maxTokens: 65535,
+    contextWindow: 128000,
+    costPer1kTokens: { input: 0.0006, output: 0.0015 },
+    isNew: true,
+    category: "multimodal",
+  },
+  {
+    id: "doubao-dream",
+    name: process.env.DOUBAO_DREAM_ENDPOINT || "ep-20251019000834-qqc8l",
+    provider: ModelProvider.DOUBAO,
+    displayName: "豆包 Dream",
+    description: "强大的图片生成模型，支持2K/4K超高清图片生成",
+    capabilities: [ModelCapability.VISION],
+    maxTokens: 4096,
+    contextWindow: 32000,
+    costPer1kTokens: { input: 0.002, output: 0.002 },
+    isNew: true,
+    requiresSpecialHandling: true, // 使用图片生成API
+    category: "multimodal",
   },
 ];
 

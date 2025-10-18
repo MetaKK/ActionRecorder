@@ -8,6 +8,7 @@ import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeHighlight from "rehype-highlight";
 import { cn } from "@/lib/utils";
+import { MessageActionBar } from "./message-action-bar";
 import "highlight.js/styles/github-dark.css";
 
 interface ChatGPTMessageProps {
@@ -19,9 +20,24 @@ interface ChatGPTMessageProps {
   };
   isTyping?: boolean;
   isLast?: boolean;
+  onCopy?: () => void;
+  onLike?: () => void;
+  onDislike?: () => void;
+  onShare?: () => void;
+  onRegenerate?: () => void;
+  onRegenerateWith?: (instruction: string) => void;
 }
 
-export function ChatGPTMessage({ message, isTyping = false }: ChatGPTMessageProps) {
+export function ChatGPTMessage({ 
+  message, 
+  isTyping = false,
+  onCopy,
+  onLike,
+  onDislike,
+  onShare,
+  onRegenerate,
+  onRegenerateWith
+}: ChatGPTMessageProps) {
   const isUser = message.role === "user";
   const isAssistant = message.role === "assistant";
 
@@ -31,25 +47,33 @@ export function ChatGPTMessage({ message, isTyping = false }: ChatGPTMessageProp
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "flex gap-3 mb-6",
-        isUser ? "justify-end" : "justify-start"
+        "group/turn-messages flex mb-6",
+        isUser ? "justify-end" : "justify-start",
+        // 移动端优化间距
+        "gap-2 md:gap-3",
+        // 移动端减少底部间距
+        "mb-4 md:mb-6"
       )}
     >
-      {/* Avatar - 使用情绪小人图片 */}
+      {/* Avatar - 使用情绪小人图片 - 移动端隐藏 */}
       {isAssistant && (
         <Image
           src="/img/9ade71d75a1c0e93.png"
           alt="AI助手"
           width={32}
           height={32}
-          className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-border/20 shadow-md"
+          className="hidden md:block w-8 h-8 rounded-full object-cover flex-shrink-0 border border-border/20 shadow-md"
         />
       )}
       
       {/* Message Content */}
       <div
         className={cn(
-          "max-w-[80%] rounded-2xl px-4 py-3 relative overflow-hidden",
+          "rounded-2xl relative overflow-hidden",
+          // 移动端使用更多空间，桌面端保持80%
+          "max-w-[95%] md:max-w-[80%]",
+          // 移动端优化内边距
+          "px-3 py-2.5 md:px-4 md:py-3",
           isUser
             ? "bg-blue-500 text-white"
             : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
@@ -227,6 +251,26 @@ export function ChatGPTMessage({ message, isTyping = false }: ChatGPTMessageProp
             <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
             <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
           </div>
+        )}
+        
+        {/* 消息操作栏 - ChatGPT风格 - 移动端只显示AI消息的操作栏 */}
+        {!isTyping && (
+          <MessageActionBar
+            messageId={message.id}
+            content={message.content}
+            isAssistant={isAssistant}
+            onCopy={onCopy}
+            onLike={onLike}
+            onDislike={onDislike}
+            onShare={onShare}
+            onRegenerate={onRegenerate}
+            onRegenerateWith={onRegenerateWith}
+            className={cn(
+              "mt-2",
+              // 移动端只显示AI消息的操作栏，用户消息隐藏
+              isUser ? "hidden md:block" : ""
+            )}
+          />
         )}
       </div>
     </motion.div>
