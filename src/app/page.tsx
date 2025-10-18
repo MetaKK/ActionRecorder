@@ -14,8 +14,6 @@ import { ExportDialog } from "@/components/export-dialog";
 import { EnglishPromptDialog } from "@/components/english-prompt-dialog";
 import { ImportDialog } from "@/components/import-dialog";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { TimelineSkeleton } from "@/components/timeline-skeleton";
-import { StatisticsSkeleton } from "@/components/statistics-skeleton";
 // 移除静态导入，改为动态导入
 import { 
   RecordInputSkeleton,

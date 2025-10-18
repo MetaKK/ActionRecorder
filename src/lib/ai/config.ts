@@ -302,5 +302,6 @@ export const CAPABILITY_NAMES = {
   [ModelCapability.CODE]: "代码生成",
   [ModelCapability.FAST]: "快速响应",
   [ModelCapability.MULTIMODAL]: "多模态",
+  [ModelCapability.IMAGE_GENERATION]: "图片生成",
 } as const;
 
