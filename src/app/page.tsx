@@ -18,7 +18,9 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { 
   RecordInputSkeleton,
   AIChatButtonSkeleton,
-  AppHeaderSkeleton
+  AppHeaderSkeleton,
+  TimelineSkeleton,
+  StatisticsSkeleton
 } from "@/components/ui/skeleton";
 import { initMobileZoomFix } from "@/lib/utils/mobile-zoom-fix";
 
