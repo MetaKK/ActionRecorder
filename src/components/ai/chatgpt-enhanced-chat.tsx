@@ -30,6 +30,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentAIMessage, setCurrentAIMessage] = useState("");
   const [selectedModel, setSelectedModel] = useState("gpt-4o-mini");
@@ -182,7 +183,8 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsSending(true);
-    setIsTyping(true);
+    setIsWaitingForResponse(true); // 开始等待AI响应
+    setIsTyping(false); // 先不显示打字指示器
     setCurrentAIMessage("");
 
     try {
@@ -227,6 +229,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
       // 处理流式响应
       const reader = response.body?.getReader();
       let currentText = "";
+      let hasStartedReceiving = false;
 
       if (reader) {
         while (true) {
@@ -237,6 +240,13 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
           processSSEStream(
             value,
             (content: string) => {
+              // 第一次接收到内容时，切换状态
+              if (!hasStartedReceiving) {
+                setIsWaitingForResponse(false);
+                setIsTyping(true);
+                hasStartedReceiving = true;
+              }
+              
               currentText += content;
               setCurrentAIMessage(currentText);
             },
@@ -279,6 +289,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
     } finally {
       setIsSending(false);
       setIsTyping(false);
+      setIsWaitingForResponse(false);
     }
   }, [input, isSending, apiKey, messages, selectedModel, records]);
 
@@ -591,6 +602,20 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
                 isLast={index === messages.length - 1}
               />
             ))}
+
+            {/* 等待AI响应 */}
+            {isWaitingForResponse && (
+              <ChatGPTMessage
+                message={{
+                  id: "waiting",
+                  role: "assistant",
+                  content: "",
+                  timestamp: new Date(),
+                }}
+                isTyping={true}
+                isLast={true}
+              />
+            )}
 
             {/* 正在输入的AI消息 */}
             {isTyping && currentAIMessage && (

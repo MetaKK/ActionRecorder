@@ -253,8 +253,8 @@ export function ChatGPTMessage({
           </div>
         )}
         
-        {/* 消息操作栏 - 仅AI消息显示 */}
-        {!isTyping && isAssistant && (
+        {/* 消息操作栏 - 仅AI消息显示，且不在等待或打字状态 */}
+        {!isTyping && isAssistant && message.content.trim() && (
           <MessageActionBar
             messageId={message.id}
             content={message.content}
