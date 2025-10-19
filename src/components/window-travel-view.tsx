@@ -95,10 +95,9 @@ export function WindowTravelView({
     return () => clearTimeout(timer);
   }, [currentVideoIndex]);
 
-  // 手势处理
+  // 手势处理 - 移动端优化
   const handleDragEnd = useCallback(
     (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-      const threshold = 50;
       const { offset, velocity } = info;
 
       // 移动端优化的方向判断
@@ -106,16 +105,16 @@ export function WindowTravelView({
       const absY = Math.abs(offset.y);
       const totalDistance = Math.sqrt(absX * absX + absY * absY);
       
-      // 移动端阈值调整
-      const mobileThreshold = 60;
-      const mobileVelocityThreshold = 200;
-      const directionRatio = 1.2;
+      // 降低移动端阈值，更容易触发
+      const mobileThreshold = 30; // 降低滑动距离阈值
+      const mobileVelocityThreshold = 100; // 降低速度阈值
       
       // 如果移动距离太小，忽略
-      if (totalDistance < 30) return;
+      if (totalDistance < 15) return;
       
-      const isVerticalSwipe = absY > absX * directionRatio;
-      const isHorizontalSwipe = absX > absY * directionRatio;
+      // 简化方向判断 - 优先垂直滑动
+      const isVerticalSwipe = absY > absX;
+      const isHorizontalSwipe = absX > absY && absX > 20;
 
       // 垂直滑动 - 切换视频
       if (isVerticalSwipe) {
@@ -494,29 +493,6 @@ export function WindowTravelView({
           )}
         </AnimatePresence>
 
-        {/* 窗口指示器 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute top-6 left-6 flex gap-2"
-        >
-          {windowFrames.map((frame, index) => (
-            <motion.div
-              key={frame.id}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentWindowIndex 
-                  ? 'bg-white scale-125' 
-                  : 'bg-white/40 scale-100'
-              }`}
-              whileHover={{ scale: 1.2 }}
-              onClick={() => {
-                if (index !== currentWindowIndex) {
-                  setCurrentWindowIndex(index);
-                }
-              }}
-            />
-          ))}
-        </motion.div>
 
         {/* 视频标题 - 左下角，2秒后自动消失 */}
         <AnimatePresence>

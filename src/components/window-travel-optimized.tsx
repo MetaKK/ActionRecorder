@@ -94,12 +94,12 @@ class GestureManager {
   private touchStartY = 0;
   private touchStartX = 0;
   
-  // 移动端优化的阈值设置
-  private readonly SWIPE_THRESHOLD = 60; // 移动端需要更大的滑动距离
-  private readonly VELOCITY_THRESHOLD = 200; // 移动端降低速度阈值
+  // 移动端优化的阈值设置 - 降低阈值，更容易触发
+  private readonly SWIPE_THRESHOLD = 30; // 降低滑动距离阈值
+  private readonly VELOCITY_THRESHOLD = 100; // 降低速度阈值
   private readonly SWIPE_TIMEOUT = 300; // 移动端需要更长的超时时间
-  private readonly MIN_DRAG_DISTANCE = 30; // 移动端最小拖拽距离
-  private readonly DIRECTION_RATIO = 1.2; // 移动端方向判断比例
+  private readonly MIN_DRAG_DISTANCE = 15; // 降低最小拖拽距离
+  private readonly DIRECTION_RATIO = 1.0; // 降低方向判断比例，更容易识别垂直滑动
 
   handleDragStart(event: MouseEvent | TouchEvent | PointerEvent): void {
     this.isDragging = true;
@@ -134,7 +134,7 @@ class GestureManager {
     const duration = Date.now() - this.startTime;
 
     // 移动端防抖：更宽松的条件
-    if (duration < 100) return;
+    if (duration < 50) return;
 
     // 计算实际移动距离
     const absX = Math.abs(offset.x);
@@ -144,11 +144,11 @@ class GestureManager {
     // 如果移动距离太小，忽略
     if (totalDistance < this.MIN_DRAG_DISTANCE) return;
 
-    // 移动端优化的方向判断
-    const isVerticalSwipe = absY > absX * this.DIRECTION_RATIO;
-    const isHorizontalSwipe = absX > absY * this.DIRECTION_RATIO;
+    // 简化的方向判断 - 优先垂直滑动
+    const isVerticalSwipe = absY > absX;
+    const isHorizontalSwipe = absX > absY && absX > 20; // 水平滑动需要更明显的距离
 
-    // 垂直滑动 - 切换视频
+    // 垂直滑动 - 切换视频（优先处理）
     if (isVerticalSwipe) {
       if (offset.y < -this.SWIPE_THRESHOLD || velocity.y < -this.VELOCITY_THRESHOLD) {
         onSwipe('up');
@@ -156,7 +156,7 @@ class GestureManager {
         onSwipe('down');
       }
     } 
-    // 水平滑动 - 切换窗口
+    // 水平滑动 - 切换窗口（次要处理）
     else if (isHorizontalSwipe) {
       if (offset.x < -this.SWIPE_THRESHOLD || velocity.x < -this.VELOCITY_THRESHOLD) {
         onSwipe('left');
@@ -768,29 +768,6 @@ export function WindowTravelOptimized({
           )}
         </AnimatePresence>
 
-        {/* 窗口指示器 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute top-6 left-6 flex gap-2"
-        >
-          {windowFrames.map((frame, index) => (
-            <motion.div
-              key={frame.id}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentWindowIndex 
-                  ? 'bg-white scale-125' 
-                  : 'bg-white/40 scale-100'
-              }`}
-              whileHover={{ scale: 1.2 }}
-              onClick={() => {
-                if (index !== currentWindowIndex) {
-                  setCurrentWindowIndex(index);
-                }
-              }}
-            />
-          ))}
-        </motion.div>
 
         <AnimatePresence>
           {currentVideo.title && showTitle && (
