@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { Loader2, Volume2, VolumeX } from "lucide-react";
 
 export interface TravelContent {
   id: string;
@@ -35,11 +35,12 @@ export function WindowTravelView({
 }: WindowTravelViewProps) {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [currentWindowIndex, setCurrentWindowIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(false); // 用户点击后将取消静音
+  const [isMuted, setIsMuted] = useState(true); // 默认静音，用户点击后取消静音
   const [isLoading, setIsLoading] = useState(true);
   const [direction, setDirection] = useState<'up' | 'down' | 'left' | 'right' | null>(null);
   const [showStartScreen, setShowStartScreen] = useState(true); // 显示启动页面
   const [showTitle, setShowTitle] = useState(true); // 控制标题显示
+  const [isTransitioning, setIsTransitioning] = useState(false); // 切换状态
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const nextVideoRef = useRef<HTMLVideoElement>(null);
@@ -105,10 +106,12 @@ export function WindowTravelView({
         if (offset.y < -threshold || velocity.y < -500) {
           // 向上滑 - 下一个视频
           setDirection('up');
+          setIsTransitioning(true);
           setCurrentVideoIndex((prev) => (prev + 1) % videos.length);
         } else if (offset.y > threshold || velocity.y > 500) {
           // 向下滑 - 上一个视频
           setDirection('down');
+          setIsTransitioning(true);
           setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length);
         }
       }
@@ -117,10 +120,12 @@ export function WindowTravelView({
         if (offset.x < -threshold || velocity.x < -500) {
           // 向左滑 - 下一个窗口
           setDirection('left');
+          setIsTransitioning(true);
           setCurrentWindowIndex((prev) => (prev + 1) % windowFrames.length);
         } else if (offset.x > threshold || velocity.x > 500) {
           // 向右滑 - 上一个窗口
           setDirection('right');
+          setIsTransitioning(true);
           setCurrentWindowIndex((prev) => (prev - 1 + windowFrames.length) % windowFrames.length);
         }
       }
@@ -128,9 +133,10 @@ export function WindowTravelView({
       // 重置
       setTimeout(() => {
         setDirection(null);
+        setIsTransitioning(false);
         y.set(0);
         x.set(0);
-      }, 300);
+      }, 500);
     },
     [videos.length, windowFrames.length, y, x]
   );
@@ -151,8 +157,7 @@ export function WindowTravelView({
       if (videoRef.current) {
         // 设置音量为最大
         videoRef.current.volume = 1.0;
-        videoRef.current.muted = false;
-        setIsMuted(false);
+        videoRef.current.muted = isMuted;
         
         // 先加载视频
         videoRef.current.load();
@@ -161,12 +166,13 @@ export function WindowTravelView({
         videoRef.current.addEventListener('loadeddata', () => {
           setIsLoading(false);
           if (videoRef.current) {
-            // 再次确认不静音
-            videoRef.current.muted = false;
+            // 智能播放策略：根据用户设置决定是否静音
+            videoRef.current.muted = isMuted;
             videoRef.current.volume = 1.0;
             
-            videoRef.current.play().catch(() => {
-              // 如果有声播放失败，静音后重试
+            videoRef.current.play().catch((error) => {
+              console.warn('播放失败，尝试静音播放:', error);
+              // 如果播放失败，静音后重试
               if (videoRef.current) {
                 videoRef.current.muted = true;
                 setIsMuted(true);
@@ -177,16 +183,24 @@ export function WindowTravelView({
         }, { once: true });
       }
     }, 100);
-  }, []);
+  }, [isMuted]);
 
-  // 获取切换动画变体
+  // 切换静音状态
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => !prev);
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+    }
+  }, [isMuted]);
+
+  // 获取切换动画变体 - 更流畅的切换效果
   const getVideoVariants = () => {
     if (!direction) return {};
     
     return {
-      initial: direction === 'up' ? { y: '100%' } : { y: '-100%' },
-      animate: { y: 0 },
-      exit: direction === 'up' ? { y: '-100%' } : { y: '100%' },
+      initial: direction === 'up' ? { y: '100%', opacity: 0.8 } : { y: '-100%', opacity: 0.8 },
+      animate: { y: 0, opacity: 1 },
+      exit: direction === 'up' ? { y: '-100%', opacity: 0.8 } : { y: '100%', opacity: 0.8 },
     };
   };
 
@@ -194,9 +208,9 @@ export function WindowTravelView({
     if (!direction) return {};
     
     return {
-      initial: direction === 'left' ? { x: '100%' } : { x: '-100%' },
-      animate: { x: 0 },
-      exit: direction === 'left' ? { x: '-100%' } : { x: '100%' },
+      initial: direction === 'left' ? { x: '100%', opacity: 0.9 } : { x: '-100%', opacity: 0.9 },
+      animate: { x: 0, opacity: 1 },
+      exit: direction === 'left' ? { x: '-100%', opacity: 0.9 } : { x: '100%', opacity: 0.9 },
     };
   };
 
@@ -274,10 +288,39 @@ export function WindowTravelView({
           <motion.div
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black"
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black"
           >
-            <Loader2 className="w-12 h-12 text-white animate-spin mb-4" />
-            <p className="text-white text-lg">正在加载旅行视频...</p>
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+              className="flex flex-col items-center"
+            >
+              {/* 自定义加载动画 */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full mb-6"
+              />
+              
+              {/* 脉冲效果 */}
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                className="text-white text-lg font-light tracking-wide"
+              >
+                正在加载旅行视频...
+              </motion.div>
+              
+              {/* 进度指示器 */}
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: "60%" }}
+                transition={{ duration: 2, ease: "easeOut" }}
+                className="mt-4 h-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -295,7 +338,12 @@ export function WindowTravelView({
           <motion.div
             key={currentVideo.id}
             {...getVideoVariants()}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 200, 
+              damping: 25,
+              mass: 0.8
+            }}
             className="absolute inset-0"
           >
             <video
@@ -306,6 +354,7 @@ export function WindowTravelView({
               muted={isMuted}
               playsInline
               preload="auto"
+              autoPlay={autoPlay}
               onLoadedData={handleVideoLoad}
               onCanPlay={handleCanPlay}
               onError={() => setIsLoading(false)}
@@ -334,7 +383,12 @@ export function WindowTravelView({
           <motion.div
             key={currentWindow.id}
             {...getWindowVariants()}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 200, 
+              damping: 25,
+              mass: 0.8
+            }}
             className="absolute inset-0 pointer-events-none"
           >
             <Image
@@ -350,6 +404,35 @@ export function WindowTravelView({
 
       {/* 沉浸式UI层 - 仅显示标题 */}
       <div className="absolute inset-0 z-20 pointer-events-none">
+        {/* 音频控制按钮 */}
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={toggleMute}
+          className="absolute top-6 right-6 p-3 bg-black/50 backdrop-blur-sm rounded-full text-white hover:bg-black/70 transition-all pointer-events-auto"
+        >
+          {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+        </motion.button>
+
+        {/* 切换指示器 */}
+        <AnimatePresence>
+          {isTransitioning && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.3 }}
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-8 h-8 border-2 border-white/50 border-t-white rounded-full"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* 视频标题 - 左下角，2秒后自动消失 */}
         <AnimatePresence>
           {currentVideo.title && showTitle && (

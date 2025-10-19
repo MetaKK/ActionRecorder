@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, PanInfo, useMotionValue } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { Loader2, Volume2, VolumeX } from "lucide-react";
 
 export interface TravelContent {
   id: string;
@@ -156,6 +156,8 @@ export function WindowTravelOptimized({
   const [isLoading, setIsLoading] = useState(true);
   const [showStartScreen, setShowStartScreen] = useState(true);
   const [showTitle, setShowTitle] = useState(true);
+  const [isMuted, setIsMuted] = useState(true); // 默认静音，用户点击后取消静音
+  const [isTransitioning, setIsTransitioning] = useState(false); // 切换状态
   
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -201,11 +203,23 @@ export function WindowTravelOptimized({
       
       if (video) {
         video.currentTime = 0;
-        video.muted = false;
         video.loop = loop;
         
+        // 智能播放策略：根据用户设置决定是否静音
         if (autoPlay) {
-          await video.play();
+          try {
+            video.muted = isMuted;
+            await video.play();
+          } catch (error) {
+            console.warn('播放失败:', error);
+            // 如果播放失败，尝试静音播放
+            try {
+              video.muted = true;
+              await video.play();
+            } catch (mutedError) {
+              console.error('静音播放也失败:', mutedError);
+            }
+          }
         }
         
         setIsLoading(false);
@@ -218,6 +232,7 @@ export function WindowTravelOptimized({
 
   // 切换视频
   const switchVideo = useCallback((direction: 'up' | 'down') => {
+    setIsTransitioning(true);
     setCurrentVideoIndex(prev => {
       if (direction === 'up') {
         return (prev + 1) % videos.length;
@@ -225,10 +240,16 @@ export function WindowTravelOptimized({
         return (prev - 1 + videos.length) % videos.length;
       }
     });
+    
+    // 切换完成后重置状态
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 500);
   }, [videos.length]);
 
   // 切换窗口
   const switchWindow = useCallback((direction: 'left' | 'right') => {
+    setIsTransitioning(true);
     setCurrentWindowIndex(prev => {
       if (direction === 'left') {
         return (prev + 1) % windowFrames.length;
@@ -236,6 +257,11 @@ export function WindowTravelOptimized({
         return (prev - 1 + windowFrames.length) % windowFrames.length;
       }
     });
+    
+    // 切换完成后重置状态
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 500);
   }, [windowFrames.length]);
 
   // 手势处理
@@ -268,6 +294,11 @@ export function WindowTravelOptimized({
     setShowStartScreen(false);
   }, []);
 
+  // 切换静音状态
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => !prev);
+  }, []);
+
   // 标题自动隐藏
   useEffect(() => {
     setShowTitle(true);
@@ -297,19 +328,29 @@ export function WindowTravelOptimized({
     };
   }, []);
 
-  // 动画变体
+  // 动画变体 - 更流畅的切换效果
   const getVideoVariants = (direction: string) => ({
-    initial: direction === 'up' ? { y: '100%' } : { y: '-100%' },
-    animate: { y: 0 },
-    exit: direction === 'up' ? { y: '-100%' } : { y: '100%' },
-    transition: { type: "spring" as const, stiffness: 300, damping: 30 }
+    initial: direction === 'up' ? { y: '100%', opacity: 0.8 } : { y: '-100%', opacity: 0.8 },
+    animate: { y: 0, opacity: 1 },
+    exit: direction === 'up' ? { y: '-100%', opacity: 0.8 } : { y: '100%', opacity: 0.8 },
+    transition: { 
+      type: "spring" as const, 
+      stiffness: 200, 
+      damping: 25,
+      mass: 0.8
+    }
   });
 
   const getWindowVariants = (direction: string) => ({
-    initial: direction === 'left' ? { x: '100%' } : { x: '-100%' },
-    animate: { x: 0 },
-    exit: direction === 'left' ? { x: '-100%' } : { x: '100%' },
-    transition: { type: "spring" as const, stiffness: 300, damping: 30 }
+    initial: direction === 'left' ? { x: '100%', opacity: 0.9 } : { x: '-100%', opacity: 0.9 },
+    animate: { x: 0, opacity: 1 },
+    exit: direction === 'left' ? { x: '-100%', opacity: 0.9 } : { x: '100%', opacity: 0.9 },
+    transition: { 
+      type: "spring" as const, 
+      stiffness: 200, 
+      damping: 25,
+      mass: 0.8
+    }
   });
 
   return (
@@ -376,10 +417,39 @@ export function WindowTravelOptimized({
           <motion.div
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black"
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black"
           >
-            <Loader2 className="w-12 h-12 text-white animate-spin mb-4" />
-            <p className="text-white text-lg">正在加载旅行视频...</p>
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+              className="flex flex-col items-center"
+            >
+              {/* 自定义加载动画 */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full mb-6"
+              />
+              
+              {/* 脉冲效果 */}
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                className="text-white text-lg font-light tracking-wide"
+              >
+                正在加载旅行视频...
+              </motion.div>
+              
+              {/* 进度指示器 */}
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: "60%" }}
+                transition={{ duration: 2, ease: "easeOut" }}
+                className="mt-4 h-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -405,9 +475,10 @@ export function WindowTravelOptimized({
               src={currentVideo.videoUrl}
               className="w-full h-full object-cover"
               loop={loop}
-              muted={false}
+              muted={isMuted}
               playsInline
               preload="auto"
+              autoPlay={autoPlay}
               onLoadedData={() => setIsLoading(false)}
               onError={() => setIsLoading(false)}
             />
@@ -446,6 +517,35 @@ export function WindowTravelOptimized({
 
       {/* UI层 */}
       <div className="absolute inset-0 z-20 pointer-events-none">
+        {/* 音频控制按钮 */}
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={toggleMute}
+          className="absolute top-6 right-6 p-3 bg-black/50 backdrop-blur-sm rounded-full text-white hover:bg-black/70 transition-all pointer-events-auto"
+        >
+          {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+        </motion.button>
+
+        {/* 切换指示器 */}
+        <AnimatePresence>
+          {isTransitioning && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.3 }}
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-8 h-8 border-2 border-white/50 border-t-white rounded-full"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <AnimatePresence>
           {currentVideo.title && showTitle && (
             <motion.div
