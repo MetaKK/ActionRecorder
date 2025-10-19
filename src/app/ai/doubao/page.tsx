@@ -92,7 +92,7 @@ export default function DoubaoPage() {
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Card className="p-6 text-center">
             <div className="p-3 bg-green-100 rounded-full w-fit mx-auto mb-4">
-              <Image className="w-6 h-6 text-green-600" alt="图片生成图标" />
+              <Image className="w-6 h-6 text-green-600" />
             </div>
             <h3 className="font-semibold mb-2">图片生成</h3>
             <p className="text-sm text-gray-600 mb-3">
