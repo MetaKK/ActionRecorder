@@ -12,6 +12,7 @@ import { getModelById, CAPABILITY_NAMES, AI_MODELS } from "@/lib/ai/config";
 import { generateUserContext, formatUserContext } from "@/lib/ai/user-context";
 import { useRecords } from "@/lib/hooks/use-records";
 import { AppleSelect } from "@/components/ui/apple-select";
+import { processSSEStream } from "@/lib/ai/sse-parser";
 
 interface ChatGPTEnhancedChatProps {
   chatId: string;
@@ -178,7 +179,6 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
 
       // 处理流式响应
       const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
       let currentText = "";
 
       if (reader) {
@@ -186,11 +186,17 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          const chunk = decoder.decode(value, { stream: true });
-          
-          // 直接累加文本内容
-          currentText += chunk;
-          setCurrentAIMessage(currentText);
+          // 使用通用SSE解析器处理流数据
+          processSSEStream(
+            value,
+            (content: string) => {
+              currentText += content;
+              setCurrentAIMessage(currentText);
+            },
+            () => {
+              console.log('[Chat] 流式响应完成');
+            }
+          );
         }
       }
 

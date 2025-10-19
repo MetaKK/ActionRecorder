@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { useEnhancedChatStorage } from "@/lib/storage/enhanced-storage";
+import { processSSEStream } from "@/lib/ai/sse-parser";
 
 // 类型定义
 export interface MessageContent {
@@ -152,26 +153,21 @@ export function useAIChat({ chatId, selectedModel }: UseAIChatOptions): UseAICha
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = new TextDecoder().decode(value);
-        const lines = chunk.split('\n');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              if (data.content) {
-                assistantContent += data.content;
-                setMessages(prev => prev.map(msg => 
-                  msg.id === assistantMessage.id 
-                    ? { ...msg, content: assistantContent }
-                    : msg
-                ));
-              }
-            } catch {
-              // Ignore parsing errors
-            }
+        // 使用通用SSE解析器处理流数据
+        processSSEStream(
+          value,
+          (content: string) => {
+            assistantContent += content;
+            setMessages(prev => prev.map(msg => 
+              msg.id === assistantMessage.id 
+                ? { ...msg, content: assistantContent }
+                : msg
+            ));
+          },
+          () => {
+            console.log('[AI Chat] 流式响应完成');
           }
-        }
+        );
       }
 
       // 保存最终消息

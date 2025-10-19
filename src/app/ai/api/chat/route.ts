@@ -4,6 +4,7 @@ import { getLanguageModel } from "@/lib/ai/providers";
 import { processModelRequest } from "@/lib/ai/model-handlers";
 import { getModelById } from "@/lib/ai/config";
 import { handleAutoMode, getAutoModeSystemPrompt, analyzeTask } from "@/lib/ai/auto-agent";
+import { createDoubaoToOpenAITransformer, preprocessDoubaoMessages } from "@/lib/ai/doubao-message-converter";
 
 export async function POST(request: Request) {
   try {
@@ -158,10 +159,93 @@ export async function POST(request: Request) {
       Object.assign(streamParams, processedRequest.additionalParams);
     }
 
+    // 豆包模型特殊处理：避免AI SDK内部路由问题
+    if (modelConfig?.provider === "doubao") {
+      console.log('[Doubao] 使用豆包专用处理逻辑，避免AI SDK内部路由');
+      
+      // 直接调用豆包API，避免AI SDK内部路由
+      const baseURL = "https://ark.cn-beijing.volces.com/api/v3";
+      const url = `${baseURL}/chat/completions`;
+      
+      // 预处理豆包消息格式
+      const preprocessedMessages = preprocessDoubaoMessages(processedRequest.messages);
+      
+      const requestBody = {
+        model: modelConfig.name,
+        messages: preprocessedMessages,
+        max_completion_tokens: processedRequest.maxTokens || 65535,
+        temperature: processedRequest.temperature || 0.7,
+        stream: true,
+        ...processedRequest.additionalParams
+      };
+
+      console.log('[Doubao] 发送请求到豆包API:', {
+        url,
+        model: requestBody.model,
+        messageCount: requestBody.messages.length,
+        hasStream: requestBody.stream
+      });
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.DOUBAO_API_KEY}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`豆包API请求失败: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      // 创建转换器，将豆包响应格式转换为OpenAI兼容格式
+      const transformStream = createDoubaoToOpenAITransformer(modelConfig.name);
+
+      // 返回转换后的流式响应
+      return new Response(
+        response.body?.pipeThrough(transformStream),
+        {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+          },
+        }
+      );
+    }
+
     // 执行流式文本生成
     const result = await streamText(streamParams);
 
-    return result.toTextStreamResponse();
+    // 将AI SDK的流转换为SSE格式
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of result.textStream) {
+            // 将AI SDK的文本块转换为SSE格式
+            const sseData = `data: ${JSON.stringify({ content: chunk })}\n\n`;
+            controller.enqueue(encoder.encode(sseData));
+          }
+          // 发送结束标记
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+          controller.close();
+        } catch (error) {
+          console.error('[AI SDK] 流处理错误:', error);
+          controller.error(error);
+        }
+      }
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
   } catch (error) {
     console.error("AI Chat API Error:", error);
     

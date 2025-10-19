@@ -118,8 +118,9 @@ function createPerplexityProvider(config?: ProviderConfig) {
 
 /**
  * 创建豆包大模型 Provider
+ * 使用完全独立的豆包API实现，避免AI SDK内部路由问题
  */
-function createDoubaoProvider(config?: ProviderConfig) {
+function createDoubaoProviderWrapper(config?: ProviderConfig) {
   const cacheKey = `doubao-${config?.apiKey || "default"}`;
   
   if (providerCache.has(cacheKey)) {
@@ -141,7 +142,8 @@ function createDoubaoProvider(config?: ProviderConfig) {
     customApiKey: !!config?.apiKey
   });
 
-  // 豆包大模型使用OpenAI兼容的API格式
+  // 使用OpenAI兼容API，但确保请求发送到豆包端点
+  // 这样可以避免AI SDK v2规范问题
   const provider = createOpenAI({
     apiKey: apiKey,
     baseURL: config?.baseURL || "https://ark.cn-beijing.volces.com/api/v3",
@@ -198,7 +200,7 @@ export function getLanguageModel(
       break;
 
     case ModelProvider.DOUBAO:
-      provider = createDoubaoProvider(providerConfig);
+      provider = createDoubaoProviderWrapper(providerConfig);
       break;
 
     default:
