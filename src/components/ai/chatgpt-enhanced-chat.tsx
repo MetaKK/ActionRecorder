@@ -9,6 +9,7 @@ import { AIChatHeader } from "./ai-chat-header";
 import { ChatGPTMessage } from "./chatgpt-message";
 import { AIInputMinimal } from "./ai-input-minimal";
 import { getModelById, CAPABILITY_NAMES, AI_MODELS } from "@/lib/ai/config";
+import { AdapterFactory } from "@/lib/ai/adapters/adapter-factory";
 import { generateUserContext, formatUserContext } from "@/lib/ai/user-context";
 import { useRecords } from "@/lib/hooks/use-records";
 import { AppleSelect } from "@/components/ui/apple-select";
@@ -200,6 +201,21 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
         }
       }
 
+      // 检查是否有内容，如果没有则提供兜底回答
+      if (!currentText.trim()) {
+        const fallbackMessages = [
+          "抱歉，我暂时无法生成回复。不过没关系！😊 你可以尝试重新提问，或者换个方式表达你的问题。我在这里随时为你服务！",
+          "哎呀，这次我有点卡壳了... 🤔 但别担心！你可以重新发送消息，或者换个角度提问，我一定能帮到你的！",
+          "看起来我需要一点时间来思考... 💭 请稍等片刻再试，或者换个方式提问，我会努力给你最好的回答！",
+          "抱歉让你久等了！😅 有时候我需要一点时间来组织语言。请重新发送消息，我会给你一个满意的回复！",
+          "哎呀，这次我有点'短路'了... ⚡ 不过没关系！重新发送消息，我会给你一个更好的回答！"
+        ];
+        
+        const randomFallback = fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
+        currentText = randomFallback;
+        setCurrentAIMessage(randomFallback);
+      }
+
       // 完成AI响应
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -325,14 +341,22 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
               <AppleSelect
                 value={selectedModel}
                 onChange={setSelectedModel}
-                options={AI_MODELS.map(model => ({
-                  value: model.id,
-                  label: `${model.displayName}${model.isRecommended ? ' (推荐⭐)' : ''}${model.isNew ? ' (新🔥)' : ''}`,
-                  group: model.category === 'standard' ? '标准对话' : 
-                         model.category === 'reasoning' ? '深度思考 🧠' :
-                         model.category === 'search' ? '联网搜索 🌐' :
-                         model.category === 'multimodal' ? '豆包大模型 🎨' : '其他'
-                }))}
+                options={AI_MODELS
+                  .filter(model => {
+                    // 只显示适配器工厂实际支持的模型
+                    const supportedProviders = AdapterFactory.getSupportedProviders();
+                    return supportedProviders.includes(model.provider);
+                  })
+                  .map(model => ({
+                    value: model.id,
+                    label: model.displayName,
+                    group: model.category === 'standard' ? '标准对话' : 
+                           model.category === 'reasoning' ? '深度思考' :
+                           model.category === 'search' ? '联网搜索' :
+                           model.category === 'multimodal' ? '豆包大模型' : '其他',
+                    isRecommended: model.isRecommended,
+                    isNew: model.isNew
+                  }))}
                 placeholder="请选择AI模型..."
                 className="w-full"
               />

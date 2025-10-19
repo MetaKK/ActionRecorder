@@ -9,6 +9,8 @@ interface AppleSelectOption {
   label: string;
   group?: string;
   disabled?: boolean;
+  isRecommended?: boolean;
+  isNew?: boolean;
 }
 
 interface AppleSelectProps {
@@ -116,28 +118,22 @@ export function AppleSelect({
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={cn(
-          "w-full px-4 py-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl",
-          "border-0 rounded-2xl text-gray-900 dark:text-gray-100",
-          "focus:ring-4 focus:ring-blue-500/20 focus:outline-none",
-          "transition-all duration-300 shadow-lg hover:shadow-xl",
+          "w-full px-3 py-2.5 bg-white dark:bg-gray-800",
+          "border border-gray-200 dark:border-gray-700 rounded-lg",
+          "focus:ring-2 focus:ring-blue-500/20 focus:outline-none",
+          "transition-all duration-200 shadow-sm hover:shadow-md",
           "cursor-pointer font-medium text-sm",
           "flex items-center justify-between",
           "disabled:opacity-50 disabled:cursor-not-allowed",
-          isOpen && "shadow-xl ring-4 ring-blue-500/20"
+          isOpen && "ring-2 ring-blue-500/20 shadow-md"
         )}
-        style={{
-          boxShadow: isOpen 
-            ? '0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)' 
-            : '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid rgba(0, 0, 0, 0.05)'
-        }}
       >
         <span className="truncate">
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <ChevronDown 
           className={cn(
-            "w-4 h-4 text-gray-500 transition-transform duration-200",
+            "w-4 h-4 text-gray-400 transition-transform duration-200",
             isOpen && "rotate-180"
           )}
         />
@@ -147,20 +143,17 @@ export function AppleSelect({
       {isOpen && (
         <div
           className={cn(
-            "absolute top-full left-0 right-0 z-50 mt-2",
-            "bg-white/98 dark:bg-gray-800/98 backdrop-blur-xl",
-            "rounded-2xl shadow-2xl border border-gray-200/20 dark:border-gray-700/20",
-            "max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300/60 dark:scrollbar-thumb-gray-600/60 scrollbar-track-transparent",
-            "animate-in slide-in-from-top-2 duration-200"
+            "absolute top-full left-0 right-0 z-50 mt-1",
+            "bg-white dark:bg-gray-800",
+            "rounded-lg shadow-lg border border-gray-200 dark:border-gray-700",
+            "max-h-64 overflow-y-auto",
+            "animate-in slide-in-from-top-1 duration-150"
           )}
-          style={{
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 32px rgba(0, 0, 0, 0.1)'
-          }}
         >
           {Object.entries(groupedOptions).map(([groupName, groupOptions]) => (
             <div key={groupName}>
               {groupName !== 'default' && (
-                <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <div className="px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50">
                   {groupName}
                 </div>
               )}
@@ -180,18 +173,31 @@ export function AppleSelect({
                       }
                     }}
                     className={cn(
-                      "px-4 py-3 cursor-pointer transition-all duration-150",
+                      "px-3 py-2.5 cursor-pointer transition-colors duration-150",
                       "flex items-center justify-between",
-                      "hover:bg-gray-50/80 dark:hover:bg-gray-700/50",
-                      isSelected && "bg-blue-50/80 dark:bg-blue-900/20",
-                      isFocused && "bg-gray-100/80 dark:bg-gray-700/80",
-                      option.disabled && "opacity-50 cursor-not-allowed",
-                      "first:rounded-t-2xl last:rounded-b-2xl"
+                      "hover:bg-gray-50 dark:hover:bg-gray-700/50",
+                      isSelected && "bg-blue-50 dark:bg-blue-900/20",
+                      isFocused && "bg-gray-100 dark:bg-gray-700/80",
+                      option.disabled && "opacity-50 cursor-not-allowed"
                     )}
                   >
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {option.label}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-900 dark:text-gray-100">
+                        {option.label}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        {option.isRecommended && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                            推荐
+                          </span>
+                        )}
+                        {option.isNew && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+                            新
+                          </span>
+                        )}
+                      </div>
+                    </div>
                     {isSelected && (
                       <Check className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     )}

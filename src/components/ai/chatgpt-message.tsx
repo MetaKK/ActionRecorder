@@ -253,8 +253,8 @@ export function ChatGPTMessage({
           </div>
         )}
         
-        {/* 消息操作栏 - ChatGPT风格 - 移动端只显示AI消息的操作栏 */}
-        {!isTyping && (
+        {/* 消息操作栏 - 仅AI消息显示 */}
+        {!isTyping && isAssistant && (
           <MessageActionBar
             messageId={message.id}
             content={message.content}
@@ -265,11 +265,7 @@ export function ChatGPTMessage({
             onShare={onShare}
             onRegenerate={onRegenerate}
             onRegenerateWith={onRegenerateWith}
-            className={cn(
-              "mt-2",
-              // 移动端只显示AI消息的操作栏，用户消息隐藏
-              isUser ? "hidden md:block" : ""
-            )}
+            className="mt-2"
           />
         )}
       </div>

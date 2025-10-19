@@ -1,10 +1,18 @@
-import { streamText } from "ai";
+/*
+ * @Author: MetaKK metakk@example.com
+ * @Date: 2025-10-19 16:59:16
+ * @LastEditors: MetaKK metakk@example.com
+ * @LastEditTime: 2025-10-19 17:51:03
+ * @FilePath: \ActionRecorder\src\app\ai\api\chat\route.ts
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
+/**
+ * 重构后的AI聊天API路由
+ * 使用统一的AI服务架构
+ */
+
+import { AIService } from "@/lib/ai/services/ai-service";
 import { getSystemPromptWithTime } from "@/lib/ai/prompts";
-import { getLanguageModel } from "@/lib/ai/providers";
-import { processModelRequest } from "@/lib/ai/model-handlers";
-import { getModelById } from "@/lib/ai/config";
-import { handleAutoMode, getAutoModeSystemPrompt, analyzeTask } from "@/lib/ai/auto-agent";
-import { createDoubaoToOpenAITransformer, preprocessDoubaoMessages } from "@/lib/ai/doubao-message-converter";
 
 export async function POST(request: Request) {
   try {
@@ -15,241 +23,21 @@ export async function POST(request: Request) {
       return new Response("Invalid messages format", { status: 400 });
     }
 
-    // Auto模式：智能选择模型
-    let actualModel = model;
-    let autoAnalysis = null;
-    
-    if (model === "auto") {
-      const autoResult = handleAutoMode(messages);
-      actualModel = autoResult.selectedModel;
-      autoAnalysis = autoResult.analysis;
-      
-      console.log('[Auto Agent] 智能选择模型:', {
-        selectedModel: actualModel,
-        taskType: autoAnalysis.type,
-        reasoning: autoAnalysis.reasoning,
-      });
-    }
+    // 生成系统提示词
+    const systemPrompt = getSystemPromptWithTime();
 
-    // 获取模型配置
-    const modelConfig = getModelById(actualModel);
-    if (!modelConfig) {
-      return new Response(
-        JSON.stringify({ 
-          error: `Model ${actualModel} not found. Please select a valid model.` 
-        }), 
-        { 
-          status: 400,
-          headers: { "Content-Type": "application/json" }
-        }
-      );
-    }
+    // 使用统一的AI服务处理请求
+    return await AIService.processRequest({
+      messages,
+      model,
+      systemPrompt,
+      userContext,
+      // 这里可以添加更多参数
+    }, customApiKey || undefined);
 
-    // 获取语言模型实例 - 优先使用环境变量，只有在环境变量不存在时才使用手动输入的key
-    let languageModel;
-    try {
-      // 检查环境变量中是否有对应的API key
-      const modelConfig = getModelById(actualModel);
-      let useCustomApiKey = false;
-      
-      if (modelConfig?.provider === "doubao" && !process.env.DOUBAO_API_KEY && customApiKey) {
-        useCustomApiKey = true;
-      } else if (modelConfig?.provider === "openai" && !process.env.OPENAI_API_KEY && customApiKey) {
-        useCustomApiKey = true;
-      } else if (modelConfig?.provider === "anthropic" && !process.env.ANTHROPIC_API_KEY && customApiKey) {
-        useCustomApiKey = true;
-      } else if (modelConfig?.provider === "perplexity" && !process.env.PERPLEXITY_API_KEY && customApiKey) {
-        useCustomApiKey = true;
-      }
-      
-      console.log('[API] API Key选择策略:', {
-        model: actualModel,
-        provider: modelConfig?.provider,
-        hasEnvKey: !!process.env[`${modelConfig?.provider?.toUpperCase()}_API_KEY`],
-        hasCustomKey: !!customApiKey,
-        useCustomKey: useCustomApiKey
-      });
-      
-      languageModel = getLanguageModel(actualModel, useCustomApiKey ? customApiKey || undefined : undefined);
-    } catch (error) {
-      console.error('[API] 模型实例创建失败:', error);
-      
-      // 根据模型类型提供具体的错误信息
-      const modelConfig = getModelById(actualModel);
-      let errorMessage = "API key not configured.";
-      
-      if (modelConfig?.provider === "doubao") {
-        errorMessage = "DOUBAO_API_KEY not found. Please set DOUBAO_API_KEY environment variable or provide API key manually.";
-      } else if (modelConfig?.provider === "openai") {
-        errorMessage = "OPENAI_API_KEY not found. Please set OPENAI_API_KEY environment variable or provide API key manually.";
-      } else if (modelConfig?.provider === "anthropic") {
-        errorMessage = "ANTHROPIC_API_KEY not found. Please set ANTHROPIC_API_KEY environment variable or provide API key manually.";
-      } else if (modelConfig?.provider === "perplexity") {
-        errorMessage = "PERPLEXITY_API_KEY not found. Please set PERPLEXITY_API_KEY environment variable or provide API key manually.";
-      }
-      
-      return new Response(
-        JSON.stringify({ 
-          error: errorMessage,
-          details: error instanceof Error ? error.message : "Unknown error"
-        }), 
-        { 
-          status: 500,
-          headers: { "Content-Type": "application/json" }
-        }
-      );
-    }
-
-    // 处理特殊模型需求（如o1、Perplexity等）
-    let systemPrompt = getSystemPromptWithTime();
-    
-    // Auto模式：使用任务特定的系统提示
-    if (model === "auto" && autoAnalysis) {
-      systemPrompt = getAutoModeSystemPrompt(autoAnalysis);
-    } else if (modelConfig?.provider === "doubao") {
-      // 豆包模型：也进行任务分析，使用智能系统提示
-      const taskAnalysis = analyzeTask(messages);
-      systemPrompt = getAutoModeSystemPrompt(taskAnalysis);
-      
-      console.log('[Doubao] 豆包模型任务分析:', {
-        model: actualModel,
-        taskType: taskAnalysis.type,
-        reasoning: taskAnalysis.reasoning
-      });
-    }
-    
-    const fullSystemPrompt = userContext 
-      ? `${systemPrompt}\n\n${userContext}`
-      : systemPrompt;
-    
-    const processedRequest = processModelRequest(actualModel, messages, fullSystemPrompt);
-    
-    // 调试日志
-    console.log('[API] 模型处理参数:', {
-      modelId: actualModel,
-      hasSystem: !!processedRequest.system,
-      temperature: processedRequest.temperature,
-      maxTokens: processedRequest.maxTokens,
-      additionalParams: processedRequest.additionalParams,
-    });
-
-    // 构建streamText参数
-    const streamParams: any = {
-      model: languageModel,
-      messages: processedRequest.messages,
-    };
-
-    // 只在支持的模型上添加system prompt
-    if (processedRequest.system) {
-      streamParams.system = processedRequest.system;
-    }
-
-    // 添加temperature（如果指定）
-    if (processedRequest.temperature !== undefined) {
-      streamParams.temperature = processedRequest.temperature;
-    }
-
-    // 添加maxTokens（如果指定）
-    if (processedRequest.maxTokens) {
-      streamParams.maxTokens = processedRequest.maxTokens;
-    }
-
-    // 添加其他参数
-    if (processedRequest.additionalParams) {
-      Object.assign(streamParams, processedRequest.additionalParams);
-    }
-
-    // 豆包模型特殊处理：避免AI SDK内部路由问题
-    if (modelConfig?.provider === "doubao") {
-      console.log('[Doubao] 使用豆包专用处理逻辑，避免AI SDK内部路由');
-      
-      // 直接调用豆包API，避免AI SDK内部路由
-      const baseURL = "https://ark.cn-beijing.volces.com/api/v3";
-      const url = `${baseURL}/chat/completions`;
-      
-      // 预处理豆包消息格式
-      const preprocessedMessages = preprocessDoubaoMessages(processedRequest.messages);
-      
-      const requestBody = {
-        model: modelConfig.name,
-        messages: preprocessedMessages,
-        max_completion_tokens: processedRequest.maxTokens || 65535,
-        temperature: processedRequest.temperature || 0.7,
-        stream: true,
-        ...processedRequest.additionalParams
-      };
-
-      console.log('[Doubao] 发送请求到豆包API:', {
-        url,
-        model: requestBody.model,
-        messageCount: requestBody.messages.length,
-        hasStream: requestBody.stream
-      });
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.DOUBAO_API_KEY}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`豆包API请求失败: ${response.status} ${response.statusText} - ${errorText}`);
-      }
-
-      // 创建转换器，将豆包响应格式转换为OpenAI兼容格式
-      const transformStream = createDoubaoToOpenAITransformer(modelConfig.name);
-
-      // 返回转换后的流式响应
-      return new Response(
-        response.body?.pipeThrough(transformStream),
-        {
-          headers: {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-          },
-        }
-      );
-    }
-
-    // 执行流式文本生成
-    const result = await streamText(streamParams);
-
-    // 将AI SDK的流转换为SSE格式
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of result.textStream) {
-            // 将AI SDK的文本块转换为SSE格式
-            const sseData = `data: ${JSON.stringify({ content: chunk })}\n\n`;
-            controller.enqueue(encoder.encode(sseData));
-          }
-          // 发送结束标记
-          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-          controller.close();
-        } catch (error) {
-          console.error('[AI SDK] 流处理错误:', error);
-          controller.error(error);
-        }
-      }
-    });
-
-    return new Response(stream, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
-    });
   } catch (error) {
     console.error("AI Chat API Error:", error);
     
-    // 提供更详细的错误信息
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     
     return new Response(
