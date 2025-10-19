@@ -33,13 +33,20 @@ export const getEnv = (key: string, defaultValue: string = '') => {
 
 /**
  * 是否启用调试模式
- * 可以通过环境变量 NEXT_PUBLIC_DEBUG 来强制启用调试（即使在生产环境）
+ * 可以通过环境变量 NEXT_PUBLIC_DEBUG 来控制调试面板的显示
  */
 export const isDebugEnabled = () => {
-  // 在开发环境默认启用
-  if (isDev()) return true;
+  // 如果明确设置了 NEXT_PUBLIC_DEBUG=false，则禁用调试面板
+  if (process.env.NEXT_PUBLIC_DEBUG === 'false') {
+    return false;
+  }
   
-  // 在生产环境中，只有明确设置了 NEXT_PUBLIC_DEBUG=true 才启用
-  return process.env.NEXT_PUBLIC_DEBUG === 'true';
+  // 如果明确设置了 NEXT_PUBLIC_DEBUG=true，则启用调试面板
+  if (process.env.NEXT_PUBLIC_DEBUG === 'true') {
+    return true;
+  }
+  
+  // 默认禁用调试面板（无论开发还是生产环境）
+  return false;
 };
 

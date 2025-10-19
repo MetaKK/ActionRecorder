@@ -37,6 +37,7 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [previewFiles, setPreviewFiles] = useState<{file: File, preview: string, type: 'image' | 'file'}[]>([]);
   const [apiKeyError, setApiKeyError] = useState("");
+  const [apiKeySource, setApiKeySource] = useState<'env' | 'custom' | 'none'>('none');
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -46,11 +47,41 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
   // 获取用户记录
   const { records } = useRecords();
 
+  // 检查API Key状态和来源
+  const checkApiKeyStatus = useCallback(() => {
+    const modelConfig = getModelById(selectedModel);
+    if (!modelConfig) return;
+
+    console.log(`[API Key] 检查模型 ${selectedModel} (${modelConfig.provider}) 的API Key状态`);
+
+    // 先清空当前显示的API Key，避免显示其他模型的Key
+    setApiKey("");
+
+    // 检查环境变量
+    const envKey = process.env[`${modelConfig.provider.toUpperCase()}_API_KEY`];
+    if (envKey) {
+      console.log(`[API Key] 使用环境变量Key (${modelConfig.provider})`);
+      setApiKeySource('env');
+      return;
+    }
+
+    // 检查自定义Key
+    const customKey = sessionStorage.getItem(`api_key_${modelConfig.provider}`);
+    if (customKey) {
+      console.log(`[API Key] 使用自定义Key (${modelConfig.provider})`);
+      setApiKey(customKey);
+      setApiKeySource('custom');
+      return;
+    }
+
+    console.log(`[API Key] 未找到 ${modelConfig.provider} 的API Key`);
+    setApiKeySource('none');
+  }, [selectedModel]);
+
   // 从本地存储加载聊天历史
   useEffect(() => {
     const savedMessages = localStorage.getItem(`chat_${chatId}`);
     const savedModel = localStorage.getItem(`chat_model_${chatId}`);
-    const savedApiKey = sessionStorage.getItem(`api_key`);
     
     if (savedMessages) {
       try {
@@ -67,11 +98,21 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
     if (savedModel) {
       setSelectedModel(savedModel);
     }
-    
-    if (savedApiKey) {
-      setApiKey(savedApiKey);
-    }
   }, [chatId]);
+
+  // 检查API Key状态
+  useEffect(() => {
+    checkApiKeyStatus();
+  }, [checkApiKeyStatus]);
+
+  // 模型切换时的特殊处理
+  useEffect(() => {
+    // 当模型切换时，清除错误状态
+    setApiKeyError("");
+    
+    // 重新检查API Key状态
+    checkApiKeyStatus();
+  }, [selectedModel, checkApiKeyStatus]);
 
   // 保存聊天历史到本地存储
   useEffect(() => {
@@ -85,12 +126,17 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
     localStorage.setItem(`chat_model_${chatId}`, selectedModel);
   }, [selectedModel, chatId]);
 
-  // 保存API Key到sessionStorage
+  // 保存API Key到sessionStorage - 用户输入就默认记住
   useEffect(() => {
     if (apiKey) {
-      sessionStorage.setItem(`api_key`, apiKey);
+      const modelConfig = getModelById(selectedModel);
+      if (modelConfig) {
+        // 按提供商存储API Key
+        sessionStorage.setItem(`api_key_${modelConfig.provider}`, apiKey);
+        console.log(`[API Key] 保存 ${modelConfig.provider} 的API Key`);
+      }
     }
-  }, [apiKey]);
+  }, [apiKey, selectedModel]);
 
 
   // 使用现有的AI聊天Hook
@@ -384,62 +430,136 @@ export function ChatGPTEnhancedChat({ chatId }: ChatGPTEnhancedChatProps) {
               })()}
             </div>
 
-            {/* API Key 输入 - Apple风格 */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-800 dark:text-gray-200 tracking-wide">
-                自定义 API Key
-              </label>
-              <div className="relative">
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => {
-                    setApiKey(e.target.value);
-                    setApiKeyError(""); // 清除错误状态
-                  }}
-                  placeholder="留空则使用环境变量中的key"
-                  className={`w-full px-3 py-2.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 shadow-sm hover:shadow-md ${
-                    apiKeyError ? 'border-red-300 dark:border-red-600' : 'border-gray-200/60 dark:border-gray-600/60'
-                  }`}
-                />
-                {apiKey && (
-                  <button
-                    onClick={() => {
-                      setApiKey("");
-                      setApiKeyError("");
-                    }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-200/80 dark:bg-gray-600/80 hover:bg-gray-300/90 dark:hover:bg-gray-500/90 flex items-center justify-center transition-all duration-200"
-                  >
-                    <svg className="w-2.5 h-2.5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-              
-              {/* API Key 错误提示 */}
-              {apiKeyError && (
-                <div className="flex items-start gap-2 p-3 bg-red-50/80 dark:bg-red-950/30 border border-red-200/60 dark:border-red-800/60 rounded-lg">
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center mt-0.5">
-                    <svg className="w-3 h-3 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">
-                      {apiKeyError}
-                    </p>
-                    <p className="text-xs text-red-600 dark:text-red-300 leading-relaxed">
-                      请在上方输入您的OpenAI API Key，或联系管理员配置环境变量。您可以在 <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">OpenAI平台</a> 获取API Key。
-                    </p>
-                  </div>
+             {/* API Key 管理 - 开发环境完全隐藏 */}
+             {/* 只有在没有环境变量Key且非开发环境时才显示配置区域 */}
+             {apiKeySource !== 'env' && process.env.NODE_ENV !== 'development' && (
+               <div className="space-y-3">
+                 {/* API Key 状态指示器 */}
+                 <div className="flex items-center justify-between">
+                   <label className="text-sm font-medium text-gray-800 dark:text-gray-200 tracking-wide">
+                     API Key 配置
+                   </label>
+                   <div className="flex items-center gap-2">
+                     {apiKeySource === 'custom' && (
+                       <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-800/60 rounded-md">
+                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                         <span className="text-xs font-medium text-blue-700 dark:text-blue-300">自定义</span>
+                       </div>
+                     )}
+                     {apiKeySource === 'none' && (
+                       <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-800/60 rounded-md">
+                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                         <span className="text-xs font-medium text-blue-700 dark:text-blue-300">需要配置</span>
+                       </div>
+                     )}
+                   </div>
+                 </div>
+
+                 {/* 智能提示信息 - 统一蓝色风格 */}
+                 {apiKeySource === 'none' && (
+                   <div className="mt-2 p-2.5 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/40 dark:border-blue-800/40 rounded-lg">
+                     <p className="text-xs text-blue-800 dark:text-blue-200 mb-1.5">
+                       需要配置 API Key 才能使用AI功能
+                     </p>
+                     <div className="flex flex-wrap gap-1.5">
+                       <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-blue-100/80 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                         配置API Key
+                       </span>
+                       <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-blue-100/80 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                         环境变量
+                       </span>
+                     </div>
+                   </div>
+                 )}
+
+                 {/* 自定义Key状态显示 - 统一蓝色风格 */}
+                 {apiKeySource === 'custom' && (
+                   <div className="mt-2 p-2.5 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/40 dark:border-blue-800/40 rounded-lg">
+                     <p className="text-xs text-blue-800 dark:text-blue-200 mb-1.5">
+                       已配置自定义 API Key，可正常使用AI功能
+                     </p>
+                     <div className="flex flex-wrap gap-1.5">
+                       <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-blue-100/80 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                         自定义Key
+                       </span>
+                       <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-blue-100/80 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                         已配置
+                       </span>
+                     </div>
+                   </div>
+                 )}
+
+                 {/* API Key 输入框 */}
+                 <div className="space-y-2">
+                   <div className="relative">
+                     <input
+                       type="password"
+                       value={apiKey}
+                       onChange={(e) => {
+                         setApiKey(e.target.value);
+                         setApiKeyError("");
+                         if (e.target.value) {
+                           setApiKeySource('custom');
+                         }
+                       }}
+                       placeholder="输入您的 API Key"
+                       className={`w-full px-3 py-2.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border rounded-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 shadow-sm hover:shadow-md ${
+                         apiKeyError ? 'border-red-300 dark:border-red-600' : 'border-gray-200/60 dark:border-gray-600/60'
+                       }`}
+                     />
+                     {apiKey && (
+                       <button
+                         onClick={() => {
+                           setApiKey("");
+                           setApiKeyError("");
+                           checkApiKeyStatus();
+                         }}
+                         className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-200/80 dark:bg-gray-600/80 hover:bg-gray-300/90 dark:hover:bg-gray-500/90 flex items-center justify-center transition-all duration-200"
+                       >
+                         <svg className="w-2.5 h-2.5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                         </svg>
+                       </button>
+                     )}
+                   </div>
+
+                   {/* API Key 错误提示 */}
+                   {apiKeyError && (
+                     <div className="flex items-start gap-2 p-3 bg-red-50/80 dark:bg-red-950/30 border border-red-200/60 dark:border-red-800/60 rounded-lg">
+                       <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center mt-0.5">
+                         <svg className="w-3 h-3 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                         </svg>
+                       </div>
+                       <div className="flex-1">
+                         <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">
+                           API Key 错误
+                         </p>
+                         <p className="text-xs text-red-700 dark:text-red-300">
+                           {apiKeyError}
+                         </p>
+                       </div>
+                     </div>
+                   )}
+                 </div>
+               </div>
+             )}
+
+            {/* 环境变量Key状态显示 - 简洁版本 */}
+            {apiKeySource === 'env' && (
+              <div className="flex items-center gap-2 p-3 bg-green-50/80 dark:bg-green-950/20 border border-green-200/60 dark:border-green-800/60 rounded-lg">
+                <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                  <svg className="w-3 h-3 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
                 </div>
-              )}
-              
-              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                仅保存在浏览器会话中，刷新后需重新输入
-              </p>
-            </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                    已使用环境变量中的 API Key
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
