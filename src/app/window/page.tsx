@@ -1,8 +1,8 @@
 /*
  * @Author: meta-kk 11097094+teacher-kk@user.noreply.gitee.com
  * @Date: 2025-10-16 19:28:35
- * @LastEditors: meta-kk 11097094+teacher-kk@user.noreply.gitee.com
- * @LastEditTime: 2025-10-16 19:43:58
+ * @LastEditors: MetaKK metakk@example.com
+ * @LastEditTime: 2025-10-20 00:33:41
  * @FilePath: /life-recorder/src/app/window/page.tsx
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -49,6 +49,11 @@ const DEFAULT_WINDOW_FRAMES: WindowFrame[] = [
     id: "window-1",
     imageUrl: "/img/window-frame-1.png",
     name: "飞机窗口",
+  },
+  {
+    id: "window-2",
+    imageUrl: "/img/window-frame-2.png",
+    name: "复古豪华窗口",
   }
 ];
 

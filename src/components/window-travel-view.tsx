@@ -101,14 +101,30 @@ export function WindowTravelView({
       const threshold = 50;
       const { offset, velocity } = info;
 
+      // 移动端优化的方向判断
+      const absX = Math.abs(offset.x);
+      const absY = Math.abs(offset.y);
+      const totalDistance = Math.sqrt(absX * absX + absY * absY);
+      
+      // 移动端阈值调整
+      const mobileThreshold = 60;
+      const mobileVelocityThreshold = 200;
+      const directionRatio = 1.2;
+      
+      // 如果移动距离太小，忽略
+      if (totalDistance < 30) return;
+      
+      const isVerticalSwipe = absY > absX * directionRatio;
+      const isHorizontalSwipe = absX > absY * directionRatio;
+
       // 垂直滑动 - 切换视频
-      if (Math.abs(offset.y) > Math.abs(offset.x)) {
-        if (offset.y < -threshold || velocity.y < -500) {
+      if (isVerticalSwipe) {
+        if (offset.y < -mobileThreshold || velocity.y < -mobileVelocityThreshold) {
           // 向上滑 - 下一个视频
           setDirection('up');
           setIsTransitioning(true);
           setCurrentVideoIndex((prev) => (prev + 1) % videos.length);
-        } else if (offset.y > threshold || velocity.y > 500) {
+        } else if (offset.y > mobileThreshold || velocity.y > mobileVelocityThreshold) {
           // 向下滑 - 上一个视频
           setDirection('down');
           setIsTransitioning(true);
@@ -116,13 +132,13 @@ export function WindowTravelView({
         }
       }
       // 水平滑动 - 切换窗口
-      else if (Math.abs(offset.x) > Math.abs(offset.y)) {
-        if (offset.x < -threshold || velocity.x < -500) {
+      else if (isHorizontalSwipe) {
+        if (offset.x < -mobileThreshold || velocity.x < -mobileVelocityThreshold) {
           // 向左滑 - 下一个窗口
           setDirection('left');
           setIsTransitioning(true);
           setCurrentWindowIndex((prev) => (prev + 1) % windowFrames.length);
-        } else if (offset.x > threshold || velocity.x > 500) {
+        } else if (offset.x > mobileThreshold || velocity.x > mobileVelocityThreshold) {
           // 向右滑 - 上一个窗口
           setDirection('right');
           setIsTransitioning(true);
@@ -208,9 +224,34 @@ export function WindowTravelView({
     if (!direction) return {};
     
     return {
-      initial: direction === 'left' ? { x: '100%', opacity: 0.9 } : { x: '-100%', opacity: 0.9 },
-      animate: { x: 0, opacity: 1 },
-      exit: direction === 'left' ? { x: '-100%', opacity: 0.9 } : { x: '100%', opacity: 0.9 },
+      initial: direction === 'left' ? { 
+        x: '100%', 
+        opacity: 0.7,
+        scale: 0.95,
+        rotateY: 15
+      } : { 
+        x: '-100%', 
+        opacity: 0.7,
+        scale: 0.95,
+        rotateY: -15
+      },
+      animate: { 
+        x: 0, 
+        opacity: 1,
+        scale: 1,
+        rotateY: 0
+      },
+      exit: direction === 'left' ? { 
+        x: '-100%', 
+        opacity: 0.7,
+        scale: 0.95,
+        rotateY: -15
+      } : { 
+        x: '100%', 
+        opacity: 0.7,
+        scale: 0.95,
+        rotateY: 15
+      },
     };
   };
 
@@ -330,6 +371,7 @@ export function WindowTravelView({
         drag
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
         dragElastic={0.2}
+        dragPropagation={false}
         onDragEnd={handleDragEnd}
         style={{ y, opacity: videoOpacity }}
         className="absolute inset-0 z-0"
@@ -358,6 +400,14 @@ export function WindowTravelView({
               onLoadedData={handleVideoLoad}
               onCanPlay={handleCanPlay}
               onError={() => setIsLoading(false)}
+              onEnded={() => {
+                // 确保视频循环播放
+                const video = event.target as HTMLVideoElement;
+                if (loop && video) {
+                  video.currentTime = 0;
+                  video.play().catch(console.error);
+                }
+              }}
             />
           </motion.div>
         </AnimatePresence>
@@ -375,9 +425,13 @@ export function WindowTravelView({
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.2}
+        dragPropagation={false}
         onDragEnd={handleDragEnd}
         style={{ x, opacity: windowOpacity }}
-        className="absolute inset-0 z-10 pointer-events-none"
+        className="absolute inset-0 z-10 pointer-events-none touch-none"
+        onTouchStart={(e) => e.preventDefault()}
+        onTouchMove={(e) => e.preventDefault()}
+        onTouchEnd={(e) => e.preventDefault()}
       >
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
@@ -385,9 +439,10 @@ export function WindowTravelView({
             {...getWindowVariants()}
             transition={{ 
               type: "spring", 
-              stiffness: 200, 
-              damping: 25,
-              mass: 0.8
+              stiffness: 150, 
+              damping: 20,
+              mass: 1.2,
+              duration: 0.6
             }}
             className="absolute inset-0 pointer-events-none"
           >
@@ -397,6 +452,12 @@ export function WindowTravelView({
               width={800}
               height={600}
               className="w-full h-full object-cover"
+              style={{
+                filter: isTransitioning ? "brightness(0.9) contrast(1.1)" : "brightness(1) contrast(1)",
+                transition: "filter 0.3s ease-out",
+                transformStyle: "preserve-3d",
+                backfaceVisibility: "hidden"
+              }}
             />
           </motion.div>
         </AnimatePresence>
@@ -432,6 +493,30 @@ export function WindowTravelView({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* 窗口指示器 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute top-6 left-6 flex gap-2"
+        >
+          {windowFrames.map((frame, index) => (
+            <motion.div
+              key={frame.id}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === currentWindowIndex 
+                  ? 'bg-white scale-125' 
+                  : 'bg-white/40 scale-100'
+              }`}
+              whileHover={{ scale: 1.2 }}
+              onClick={() => {
+                if (index !== currentWindowIndex) {
+                  setCurrentWindowIndex(index);
+                }
+              }}
+            />
+          ))}
+        </motion.div>
 
         {/* 视频标题 - 左下角，2秒后自动消失 */}
         <AnimatePresence>
