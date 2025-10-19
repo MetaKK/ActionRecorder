@@ -631,7 +631,7 @@ export function WindowTravelOptimized({
               autoPlay={autoPlay}
               onLoadedData={() => setIsLoading(false)}
               onError={() => setIsLoading(false)}
-              onEnded={() => {
+              onEnded={(event) => {
                 // 确保视频循环播放
                 const video = event.target as HTMLVideoElement;
                 if (loop && video) {

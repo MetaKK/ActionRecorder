@@ -21,7 +21,10 @@ export class AdapterFactory {
     const cacheKey = `${modelId}-${apiKey}`;
     
     if (this.adapters.has(cacheKey)) {
-      return this.adapters.get(cacheKey)!;
+      const adapter = this.adapters.get(cacheKey);
+      if (adapter) {
+        return adapter;
+      }
     }
 
     const modelConfig = getModelById(modelId);
