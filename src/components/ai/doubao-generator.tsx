@@ -142,7 +142,7 @@ export function DoubaoGenerator({ apiKey, onResult }: DoubaoGeneratorProps) {
           onClick={() => setGenerationType('image')}
           className="flex items-center gap-2"
         >
-          <Image className="w-4 h-4" />
+          <Image className="w-4 h-4" aria-hidden="true" />
           图片生成
         </Button>
         <Button

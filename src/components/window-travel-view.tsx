@@ -400,7 +400,7 @@ export function WindowTravelView({
               onLoadedData={handleVideoLoad}
               onCanPlay={handleCanPlay}
               onError={() => setIsLoading(false)}
-              onEnded={() => {
+              onEnded={(event) => {
                 // 确保视频循环播放
                 const video = event.target as HTMLVideoElement;
                 if (loop && video) {
