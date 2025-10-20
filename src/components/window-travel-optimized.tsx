@@ -58,23 +58,49 @@ export function WindowTravelOptimized({
   const nextVideoIndex = (currentVideoIndex + 1) % videos.length;
   const prevVideoIndex = (currentVideoIndex - 1 + videos.length) % videos.length;
 
-  // 预加载下一个视频 - 简化预加载策略
+  // 预加载下一个和上一个视频 - 参考travel-pov-app的预加载策略
+  const prevVideoRef = useRef<HTMLVideoElement>(null);
+  
   useEffect(() => {
+    // 预加载下一个视频
     if (nextVideoRef.current && videos[nextVideoIndex]) {
       nextVideoRef.current.src = videos[nextVideoIndex].videoUrl;
       nextVideoRef.current.load();
     }
-  }, [nextVideoIndex, videos]);
+    
+    // 预加载上一个视频
+    if (prevVideoRef.current && videos[prevVideoIndex]) {
+      prevVideoRef.current.src = videos[prevVideoIndex].videoUrl;
+      prevVideoRef.current.load();
+    }
+  }, [nextVideoIndex, prevVideoIndex, videos]);
 
-  // 初始化视频 - 简化初始化逻辑
+  // 初始化视频 - 参考travel-pov-app的循环播放处理
   useEffect(() => {
     if (videoRef.current && !showStartScreen) {
-      videoRef.current.muted = isMuted;
+      const video = videoRef.current;
+      video.muted = isMuted;
+      video.loop = loop; // 确保循环播放
+      
+      // 设置循环播放事件监听
+      const handleEnded = () => {
+        if (loop) {
+          video.currentTime = 0;
+          video.play().catch(console.error);
+        }
+      };
+      
+      video.addEventListener('ended', handleEnded);
+      
       if (autoPlay) {
-        videoRef.current.play().catch(console.error);
+        video.play().catch(console.error);
       }
+      
+      return () => {
+        video.removeEventListener('ended', handleEnded);
+      };
     }
-  }, [currentVideoIndex, isMuted, autoPlay, showStartScreen]);
+  }, [currentVideoIndex, isMuted, autoPlay, loop, showStartScreen]);
 
   // 标题自动隐藏
   useEffect(() => {
@@ -110,11 +136,13 @@ export function WindowTravelOptimized({
     y.set(clampedOffset);
   }, [isTransitioning, y]);
 
-  // 切换视频 - 简化切换逻辑
+  // 切换视频 - 参考travel-pov-app的切换逻辑
   const switchVideo = useCallback((direction: 'up' | 'down') => {
     if (isTransitioning) return;
     
     setIsTransitioning(true);
+    
+    // 立即更新索引，让预加载的视频生效
     setCurrentVideoIndex(prev => {
       if (direction === 'up') {
         return (prev + 1) % videos.length;
@@ -123,11 +151,11 @@ export function WindowTravelOptimized({
       }
     });
     
-    // 切换完成后重置状态
+    // 切换完成后重置状态 - 缩短时间提高响应性
     setTimeout(() => {
       setIsTransitioning(false);
       y.set(0);
-    }, 300);
+    }, 200); // 从300ms减少到200ms
   }, [videos.length, isTransitioning, y]);
 
   // 切换窗口 - 简化窗口切换
@@ -143,11 +171,11 @@ export function WindowTravelOptimized({
       }
     });
     
-    // 切换完成后重置状态
+    // 切换完成后重置状态 - 缩短时间提高响应性
     setTimeout(() => {
       setIsTransitioning(false);
       x.set(0);
-    }, 300);
+    }, 200); // 从300ms减少到200ms
   }, [windowFrames.length, isTransitioning, x]);
 
   const handleTouchEnd = useCallback(() => {
@@ -267,14 +295,14 @@ export function WindowTravelOptimized({
     }
   }, [showStartScreen, handleKeyDown]);
 
-  // 简化的动画变体 - 参考travel-pov-app的简洁动画
+  // 优化的动画变体 - 更丝滑的切换效果
   const getVideoVariants = (direction: string) => ({
     initial: direction === 'up' ? { 
       y: '100%', 
-      opacity: 0.8
+      opacity: 0.9
     } : { 
       y: '-100%', 
-      opacity: 0.8
+      opacity: 0.9
     },
     animate: { 
       y: 0, 
@@ -282,26 +310,26 @@ export function WindowTravelOptimized({
     },
     exit: direction === 'up' ? { 
       y: '-100%', 
-      opacity: 0.8
+      opacity: 0.9
     } : { 
       y: '100%', 
-      opacity: 0.8
+      opacity: 0.9
     },
     transition: { 
       type: "spring" as const, 
-      stiffness: 200, 
-      damping: 25,
-      mass: 0.8
+      stiffness: 300, // 提高弹性，更快的响应
+      damping: 30,    // 增加阻尼，减少震荡
+      mass: 0.6       // 减少质量，更轻快的动画
     }
   });
 
   const getWindowVariants = (direction: string) => ({
     initial: direction === 'left' ? { 
       x: '100%', 
-      opacity: 0.7
+      opacity: 0.8
     } : { 
       x: '-100%', 
-      opacity: 0.7
+      opacity: 0.8
     },
     animate: { 
       x: 0, 
@@ -309,16 +337,16 @@ export function WindowTravelOptimized({
     },
     exit: direction === 'left' ? { 
       x: '-100%', 
-      opacity: 0.7
+      opacity: 0.8
     } : { 
       x: '100%', 
-      opacity: 0.7
+      opacity: 0.8
     },
     transition: { 
       type: "spring" as const, 
-      stiffness: 150, 
-      damping: 20,
-      mass: 1.0
+      stiffness: 250, // 提高弹性
+      damping: 25,   // 增加阻尼
+      mass: 0.8      // 减少质量
     }
   });
 
@@ -414,7 +442,7 @@ export function WindowTravelOptimized({
         )}
       </AnimatePresence>
 
-      {/* 视频层 - 简化视频处理 */}
+      {/* 视频层 - 参考travel-pov-app的预加载策略 */}
       <motion.div
         drag="y"
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
@@ -424,43 +452,65 @@ export function WindowTravelOptimized({
         style={{ y }}
         className="absolute inset-0 z-0"
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentVideo.id}
-            {...getVideoVariants('up')}
-            className="absolute inset-0"
-          >
-            <video
-              ref={videoRef}
-              src={currentVideo.videoUrl}
-              className="w-full h-full object-cover"
-              loop={loop}
-              muted={isMuted}
-              playsInline
-              preload="auto"
-              autoPlay={autoPlay}
-              onLoadedData={() => {
-                setIsLoading(false);
-                console.log('视频加载完成:', currentVideo.videoUrl);
-              }}
-              onCanPlay={() => {
-                setIsLoading(false);
-                console.log('视频可以播放:', currentVideo.videoUrl);
-              }}
-              onError={(e) => {
-                console.error('视频加载失败:', currentVideo.videoUrl, e);
-                setIsLoading(false);
-              }}
-            />
-          </motion.div>
-        </AnimatePresence>
+        {/* 当前视频 */}
+        <div className="absolute inset-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentVideo.id}
+              {...getVideoVariants('up')}
+              className="absolute inset-0"
+            >
+              <video
+                ref={videoRef}
+                src={currentVideo.videoUrl}
+                className="w-full h-full object-cover"
+                loop={loop}
+                muted={isMuted}
+                playsInline
+                preload="auto"
+                autoPlay={autoPlay}
+                onLoadedData={() => {
+                  setIsLoading(false);
+                  console.log('视频加载完成:', currentVideo.videoUrl);
+                }}
+                onCanPlay={() => {
+                  setIsLoading(false);
+                  console.log('视频可以播放:', currentVideo.videoUrl);
+                }}
+                onError={(e) => {
+                  console.error('视频加载失败:', currentVideo.videoUrl, e);
+                  setIsLoading(false);
+                }}
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
-        {/* 预加载下一个视频 */}
-        <video
-          ref={nextVideoRef}
-          className="hidden"
-          preload="auto"
-        />
+        {/* 预加载下一个视频（无限循环） */}
+        <div className="absolute top-full w-full h-full">
+          <video
+            ref={nextVideoRef}
+            src={videos[nextVideoIndex]?.videoUrl}
+            className="w-full h-full object-cover"
+            loop={loop}
+            muted={isMuted}
+            playsInline
+            preload="auto"
+          />
+        </div>
+
+        {/* 预加载上一个视频（无限循环） */}
+        <div className="absolute bottom-full w-full h-full">
+          <video
+            ref={prevVideoRef}
+            src={videos[prevVideoIndex]?.videoUrl}
+            className="w-full h-full object-cover"
+            loop={loop}
+            muted={isMuted}
+            playsInline
+            preload="auto"
+          />
+        </div>
       </motion.div>
 
       {/* 窗口框架层 - 简化窗口处理 */}
