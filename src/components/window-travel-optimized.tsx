@@ -211,10 +211,10 @@ export function WindowTravelOptimized({
     }
     
     // 重置位置
-    setTimeout(() => {
-      y.set(0);
-      x.set(0);
-    }, 300);
+      setTimeout(() => {
+        y.set(0);
+        x.set(0);
+      }, 300);
   }, [switchVideo, switchWindow, y, x]);
 
   // 开始体验
@@ -444,46 +444,33 @@ export function WindowTravelOptimized({
       >
         {/* 当前视频 */}
         <div className="absolute inset-0">
-          <video
+            <video
             ref={videoRef}
-            src={currentVideo.videoUrl}
-            className="w-full h-full object-cover"
-            loop={loop}
-            muted={isMuted}
-            playsInline
-            preload="auto"
-            autoPlay={autoPlay}
-            onLoadedData={() => {
-              setIsLoading(false);
-              console.log('视频加载完成:', currentVideo.videoUrl);
-            }}
-            onCanPlay={() => {
-              setIsLoading(false);
-              console.log('视频可以播放:', currentVideo.videoUrl);
-            }}
-            onError={(e) => {
-              console.error('视频加载失败:', currentVideo.videoUrl, e);
-              setIsLoading(false);
-            }}
+              src={currentVideo.videoUrl}
+              className="w-full h-full object-cover"
+              loop={loop}
+              muted={isMuted}
+              playsInline
+              preload="auto"
+              autoPlay={autoPlay}
+              onLoadedData={() => {
+                setIsLoading(false);
+                console.log('视频加载完成:', currentVideo.videoUrl);
+              }}
+              onCanPlay={() => {
+                setIsLoading(false);
+                console.log('视频可以播放:', currentVideo.videoUrl);
+              }}
+              onError={(e) => {
+                console.error('视频加载失败:', currentVideo.videoUrl, e);
+                setIsLoading(false);
+              }}
             onEnded={() => {
               // 确保循环播放 - 移动端兼容性处理
               if (loop && videoRef.current) {
                 console.log('视频播放结束，重新开始循环');
                 videoRef.current.currentTime = 0;
                 videoRef.current.play().catch(console.error);
-              }
-            }}
-            onTimeUpdate={() => {
-              // 额外的循环播放保障 - 确保视频在接近结束时重新开始
-              if (loop && videoRef.current) {
-                const video = videoRef.current;
-                const duration = video.duration;
-                const currentTime = video.currentTime;
-                
-                // 如果视频接近结束（最后0.1秒），重新开始
-                if (duration > 0 && currentTime >= duration - 0.1) {
-                  video.currentTime = 0;
-                }
               }
             }}
           />
@@ -506,18 +493,6 @@ export function WindowTravelOptimized({
                 nextVideoRef.current.play().catch(console.error);
               }
             }}
-            onTimeUpdate={() => {
-              // 预加载视频的循环播放保障
-              if (loop && nextVideoRef.current) {
-                const video = nextVideoRef.current;
-                const duration = video.duration;
-                const currentTime = video.currentTime;
-                
-                if (duration > 0 && currentTime >= duration - 0.1) {
-                  video.currentTime = 0;
-                }
-              }
-            }}
           />
         </div>
 
@@ -538,19 +513,7 @@ export function WindowTravelOptimized({
                 prevVideoRef.current.play().catch(console.error);
               }
             }}
-            onTimeUpdate={() => {
-              // 预加载视频的循环播放保障
-              if (loop && prevVideoRef.current) {
-                const video = prevVideoRef.current;
-                const duration = video.duration;
-                const currentTime = video.currentTime;
-                
-                if (duration > 0 && currentTime >= duration - 0.1) {
-                  video.currentTime = 0;
-                }
-              }
-            }}
-          />
+            />
         </div>
       </motion.div>
 
