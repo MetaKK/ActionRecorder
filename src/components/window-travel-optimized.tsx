@@ -56,7 +56,10 @@ class VideoCache {
   preloadVideo(url: string): Promise<HTMLVideoElement> {
     // 如果正在加载，返回现有的Promise
     if (this.loadingPromises.has(url)) {
-      return this.loadingPromises.get(url)!;
+      const existingPromise = this.loadingPromises.get(url);
+      if (existingPromise) {
+        return existingPromise;
+      }
     }
 
     const promise = new Promise<HTMLVideoElement>((resolve, reject) => {
@@ -337,10 +340,12 @@ export function WindowTravelOptimized({
         // 移动端循环播放强化处理
         if (loop) {
           // 移除旧的事件监听器
-          video.removeEventListener('ended', video._loopHandler);
+          if ((video as any)._loopHandler) {
+            video.removeEventListener('ended', (video as any)._loopHandler);
+          }
           
           // 创建新的循环处理器
-          video._loopHandler = () => {
+          (video as any)._loopHandler = () => {
             console.log('视频播放结束，重新开始循环');
             video.currentTime = 0;
             video.play().catch((error) => {
@@ -351,7 +356,7 @@ export function WindowTravelOptimized({
             });
           };
           
-          video.addEventListener('ended', video._loopHandler);
+          video.addEventListener('ended', (video as any)._loopHandler);
         }
         
         // 智能播放策略：移动端极致优化
@@ -531,18 +536,23 @@ export function WindowTravelOptimized({
     }
   }, [showStartScreen, initializeVideo]);
 
-  // 激进预加载 - 移动端极致优化
+  // 智能预加载 - 优化时机，不影响首页性能
   useEffect(() => {
-    // 立即开始激进预加载所有视频
-    preloadVideos();
-    
-    // 延迟智能预加载，确保当前视频优先
-    const timer = setTimeout(() => {
+    // 只有在用户点击"开始体验"后才开始预加载
+    if (!showStartScreen) {
+      console.log('用户开始体验，开始智能预加载');
+      // 立即预加载当前视频
       smartPreload();
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [preloadVideos, smartPreload]);
+      
+      // 延迟激进预加载，避免影响当前视频播放
+      const timer = setTimeout(() => {
+        console.log('开始激进预加载所有视频');
+        preloadVideos();
+      }, 2000); // 延迟2秒，确保当前视频优先
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showStartScreen, preloadVideos, smartPreload]);
 
   // 视频切换时的智能预加载
   useEffect(() => {
@@ -782,10 +792,12 @@ export function WindowTravelOptimized({
                   // 移动端循环播放强化处理
                   if (loop) {
                     // 移除旧的事件监听器
-                    el.removeEventListener('ended', el._mobileLoopHandler);
+                    if ((el as any)._mobileLoopHandler) {
+                      el.removeEventListener('ended', (el as any)._mobileLoopHandler);
+                    }
                     
                     // 创建新的循环处理器
-                    el._mobileLoopHandler = () => {
+                    (el as any)._mobileLoopHandler = () => {
                       console.log('移动端视频播放结束，重新开始循环');
                       el.currentTime = 0;
                       el.play().catch((error) => {
@@ -796,7 +808,7 @@ export function WindowTravelOptimized({
                       });
                     };
                     
-                    el.addEventListener('ended', el._mobileLoopHandler);
+                    el.addEventListener('ended', (el as any)._mobileLoopHandler);
                   }
                 }
               }}
