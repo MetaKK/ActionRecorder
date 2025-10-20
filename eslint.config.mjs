@@ -72,6 +72,9 @@ const eslintConfig = [
 
       // 嵌套深度 - 不限制
       "max-depth": "off",
+
+      // 无障碍访问 - 关闭alt属性要求
+      "jsx-a11y/alt-text": "off",
     },
   },
 ];
