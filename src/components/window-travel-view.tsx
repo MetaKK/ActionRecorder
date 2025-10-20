@@ -105,16 +105,16 @@ export function WindowTravelView({
       const absY = Math.abs(offset.y);
       const totalDistance = Math.sqrt(absX * absX + absY * absY);
       
-      // 降低移动端阈值，更容易触发
-      const mobileThreshold = 30; // 降低滑动距离阈值
-      const mobileVelocityThreshold = 100; // 降低速度阈值
+      // TikTok风格极致优化阈值
+      const mobileThreshold = 15; // 极低滑动距离阈值 - 轻轻一划就能触发
+      const mobileVelocityThreshold = 50; // 极低速度阈值 - 慢速滑动也能触发
       
       // 如果移动距离太小，忽略
-      if (totalDistance < 15) return;
+      if (totalDistance < 8) return;
       
-      // 简化方向判断 - 优先垂直滑动
-      const isVerticalSwipe = absY > absX;
-      const isHorizontalSwipe = absX > absY && absX > 20;
+      // TikTok风格方向判断 - 更宽松的条件
+      const isVerticalSwipe = absY > absX * 0.8; // 更宽松的垂直滑动判断
+      const isHorizontalSwipe = absX > absY * 0.8 && absX > 15; // 水平滑动需要更明显的距离
 
       // 垂直滑动 - 切换视频
       if (isVerticalSwipe) {

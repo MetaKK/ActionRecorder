@@ -84,7 +84,7 @@ class VideoCache {
   }
 }
 
-// 手势管理器 - 移动端优化版本
+// 手势管理器 - TikTok风格极致优化版本
 class GestureManager {
   private isDragging = false;
   private startTime = 0;
@@ -93,17 +93,20 @@ class GestureManager {
   private lastMoveTime = 0;
   private touchStartY = 0;
   private touchStartX = 0;
+  private hasTriggered = false; // 防止重复触发
   
-  // 移动端优化的阈值设置 - 降低阈值，更容易触发
-  private readonly SWIPE_THRESHOLD = 30; // 降低滑动距离阈值
-  private readonly VELOCITY_THRESHOLD = 100; // 降低速度阈值
-  private readonly SWIPE_TIMEOUT = 300; // 移动端需要更长的超时时间
-  private readonly MIN_DRAG_DISTANCE = 15; // 降低最小拖拽距离
-  private readonly DIRECTION_RATIO = 1.0; // 降低方向判断比例，更容易识别垂直滑动
+  // TikTok风格极致优化阈值设置
+  private readonly SWIPE_THRESHOLD = 15; // 极低滑动距离阈值 - 轻轻一划就能触发
+  private readonly VELOCITY_THRESHOLD = 50; // 极低速度阈值 - 慢速滑动也能触发
+  private readonly SWIPE_TIMEOUT = 200; // 缩短超时时间，更快响应
+  private readonly MIN_DRAG_DISTANCE = 8; // 极低最小拖拽距离
+  private readonly DIRECTION_RATIO = 0.8; // 更宽松的方向判断，更容易识别垂直滑动
+  private readonly INSTANT_SWIPE_THRESHOLD = 25; // 即时切换阈值
 
   handleDragStart(event: MouseEvent | TouchEvent | PointerEvent): void {
     this.isDragging = true;
     this.startTime = Date.now();
+    this.hasTriggered = false; // 重置触发状态
     
     // 记录触摸起始位置
     if (event.type === 'touchstart' && 'touches' in event) {
@@ -113,13 +116,37 @@ class GestureManager {
   }
 
   handleDragMove(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo): void {
-    if (!this.isDragging) return;
+    if (!this.isDragging || this.hasTriggered) return;
     
     this.lastMoveTime = Date.now();
     this.velocity = {
       x: info.velocity.x,
       y: info.velocity.y
     };
+
+    // TikTok风格即时检测 - 滑动过程中就触发切换
+    const { offset } = info;
+    const absX = Math.abs(offset.x);
+    const absY = Math.abs(offset.y);
+    
+    // 即时切换检测 - 达到阈值立即触发
+    if (absY > this.INSTANT_SWIPE_THRESHOLD && absY > absX * this.DIRECTION_RATIO) {
+      this.hasTriggered = true;
+      if (offset.y < 0) {
+        // 向上滑动 - 下一个视频
+        this.triggerSwipe('up');
+      } else {
+        // 向下滑动 - 上一个视频
+        this.triggerSwipe('down');
+      }
+    }
+  }
+
+  // 触发滑动的回调函数
+  private triggerSwipe: ((direction: 'up' | 'down' | 'left' | 'right') => void) | null = null;
+
+  setSwipeCallback(callback: (direction: 'up' | 'down' | 'left' | 'right') => void) {
+    this.triggerSwipe = callback;
   }
 
   handleDragEnd(
@@ -133,22 +160,25 @@ class GestureManager {
     const { offset, velocity } = info;
     const duration = Date.now() - this.startTime;
 
-    // 移动端防抖：更宽松的条件
-    if (duration < 50) return;
+    // 如果已经触发过即时切换，不再处理
+    if (this.hasTriggered) return;
+
+    // TikTok风格防抖：极短防抖时间
+    if (duration < 30) return;
 
     // 计算实际移动距离
     const absX = Math.abs(offset.x);
     const absY = Math.abs(offset.y);
     const totalDistance = Math.sqrt(absX * absX + absY * absY);
     
-    // 如果移动距离太小，忽略
+    // 极低距离阈值 - 轻轻一划就能触发
     if (totalDistance < this.MIN_DRAG_DISTANCE) return;
 
-    // 简化的方向判断 - 优先垂直滑动
-    const isVerticalSwipe = absY > absX;
-    const isHorizontalSwipe = absX > absY && absX > 20; // 水平滑动需要更明显的距离
+    // TikTok风格方向判断 - 更宽松的条件
+    const isVerticalSwipe = absY > absX * this.DIRECTION_RATIO;
+    const isHorizontalSwipe = absX > absY * this.DIRECTION_RATIO && absX > 15;
 
-    // 垂直滑动 - 切换视频（优先处理）
+    // 垂直滑动 - 切换视频（优先处理，极低阈值）
     if (isVerticalSwipe) {
       if (offset.y < -this.SWIPE_THRESHOLD || velocity.y < -this.VELOCITY_THRESHOLD) {
         onSwipe('up');
@@ -311,13 +341,13 @@ export function WindowTravelOptimized({
     const absY = Math.abs(offset.y);
     const totalDistance = Math.sqrt(absX * absX + absY * absY);
     
-    // 更新拖拽进度
-    setDragProgress(Math.min(totalDistance / 100, 1));
+    // 更新拖拽进度 - 更敏感的进度显示
+    setDragProgress(Math.min(totalDistance / 50, 1));
     
-    // 设置手势方向提示
-    if (absY > absX * 1.2) {
+    // 设置手势方向提示 - 更宽松的条件
+    if (absY > absX * 0.8) {
       setGestureDirection(offset.y < 0 ? 'up' : 'down');
-    } else if (absX > absY * 1.2) {
+    } else if (absX > absY * 0.8) {
       setGestureDirection(offset.x < 0 ? 'left' : 'right');
     } else {
       setGestureDirection(null);
@@ -341,6 +371,17 @@ export function WindowTravelOptimized({
       }, 300);
     });
   }, [switchVideo, switchWindow, y, x]);
+
+  // 设置即时切换回调 - TikTok风格即时响应
+  useEffect(() => {
+    gestureManagerRef.current.setSwipeCallback((direction) => {
+      if (direction === 'up' || direction === 'down') {
+        switchVideo(direction);
+      } else if (direction === 'left' || direction === 'right') {
+        switchWindow(direction);
+      }
+    });
+  }, [switchVideo, switchWindow]);
 
   // 开始体验
   const handleStartExperience = useCallback(() => {
