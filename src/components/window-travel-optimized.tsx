@@ -132,12 +132,14 @@ class GestureManager {
     // 即时切换检测 - 达到阈值立即触发
     if (absY > this.INSTANT_SWIPE_THRESHOLD && absY > absX * this.DIRECTION_RATIO) {
       this.hasTriggered = true;
-      if (offset.y < 0) {
-        // 向上滑动 - 下一个视频
-        this.triggerSwipe('up');
-      } else {
-        // 向下滑动 - 上一个视频
-        this.triggerSwipe('down');
+      if (this.triggerSwipe) {
+        if (offset.y < 0) {
+          // 向上滑动 - 下一个视频
+          this.triggerSwipe('up');
+        } else {
+          // 向下滑动 - 上一个视频
+          this.triggerSwipe('down');
+        }
       }
     }
   }
