@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, PanInfo, useMotionValue } from "framer-motion";
-import { Loader2, Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX } from "lucide-react";
 
 export interface TravelContent {
   id: string;
@@ -26,223 +26,6 @@ interface WindowTravelViewProps {
   className?: string;
 }
 
-// 视频缓存管理器
-class VideoCache {
-  private cache = new Map<string, HTMLVideoElement>();
-  private loadingPromises = new Map<string, Promise<HTMLVideoElement>>();
-  private maxSize = 5; // 增加缓存大小，移动端需要更多缓存
-
-  getVideo(url: string): HTMLVideoElement | null {
-    return this.cache.get(url) || null;
-  }
-
-  setVideo(url: string, video: HTMLVideoElement): void {
-    if (this.cache.size >= this.maxSize) {
-      // 移除最旧的视频
-      const firstKey = this.cache.keys().next().value;
-      if (firstKey) {
-        const oldVideo = this.cache.get(firstKey);
-        if (oldVideo) {
-          oldVideo.pause();
-          oldVideo.src = '';
-        }
-        this.cache.delete(firstKey);
-      }
-    }
-    this.cache.set(url, video);
-  }
-
-  // 移动端极致优化的视频预加载
-  preloadVideo(url: string): Promise<HTMLVideoElement> {
-    // 如果正在加载，返回现有的Promise
-    if (this.loadingPromises.has(url)) {
-      const existingPromise = this.loadingPromises.get(url);
-      if (existingPromise) {
-        return existingPromise;
-      }
-    }
-
-    const promise = new Promise<HTMLVideoElement>((resolve, reject) => {
-      const cached = this.getVideo(url);
-      if (cached && cached.readyState >= 3) {
-        resolve(cached);
-        return;
-      }
-
-      const video = document.createElement('video');
-      
-      // 移动端极致优化属性
-      video.src = url;
-      video.preload = 'auto';
-      video.muted = true;
-      video.playsInline = true;
-      video.setAttribute('webkit-playsinline', 'true');
-      video.setAttribute('playsinline', 'true');
-      video.setAttribute('x-webkit-airplay', 'allow');
-      video.loop = true; // 预加载时就设置循环
-      
-      // 移动端循环播放强化处理
-      const handleEnded = () => {
-        video.currentTime = 0;
-        video.play().catch(console.error);
-      };
-      video.addEventListener('ended', handleEnded);
-      
-      // 多重加载事件监听 - 确保加载完成
-      const handleLoad = () => {
-        this.setVideo(url, video);
-        this.loadingPromises.delete(url);
-        resolve(video);
-      };
-      
-      video.addEventListener('loadeddata', handleLoad, { once: true });
-      video.addEventListener('canplay', handleLoad, { once: true });
-      video.addEventListener('canplaythrough', handleLoad, { once: true });
-      
-      video.addEventListener('error', (e) => {
-        console.error('视频预加载失败:', url, e);
-        this.loadingPromises.delete(url);
-        reject(e);
-      }, { once: true });
-      
-      video.load();
-    });
-
-    this.loadingPromises.set(url, promise);
-    return promise;
-  }
-
-  // 批量预加载 - 移动端优化
-  async preloadMultipleVideos(urls: string[]): Promise<HTMLVideoElement[]> {
-    const promises = urls.map(url => this.preloadVideo(url));
-    return Promise.all(promises);
-  }
-
-  clear(): void {
-    this.cache.forEach(video => {
-      video.pause();
-      video.src = '';
-    });
-    this.cache.clear();
-    this.loadingPromises.clear();
-  }
-}
-
-// 手势管理器 - TikTok风格极致优化版本
-class GestureManager {
-  private isDragging = false;
-  private startTime = 0;
-  private startPosition = { x: 0, y: 0 };
-  private velocity = { x: 0, y: 0 };
-  private lastMoveTime = 0;
-  private touchStartY = 0;
-  private touchStartX = 0;
-  private hasTriggered = false; // 防止重复触发
-  
-  // TikTok风格极致优化阈值设置
-  private readonly SWIPE_THRESHOLD = 15; // 极低滑动距离阈值 - 轻轻一划就能触发
-  private readonly VELOCITY_THRESHOLD = 50; // 极低速度阈值 - 慢速滑动也能触发
-  private readonly SWIPE_TIMEOUT = 200; // 缩短超时时间，更快响应
-  private readonly MIN_DRAG_DISTANCE = 8; // 极低最小拖拽距离
-  private readonly DIRECTION_RATIO = 0.8; // 更宽松的方向判断，更容易识别垂直滑动
-  private readonly INSTANT_SWIPE_THRESHOLD = 25; // 即时切换阈值
-
-  handleDragStart(event: MouseEvent | TouchEvent | PointerEvent): void {
-    this.isDragging = true;
-    this.startTime = Date.now();
-    this.hasTriggered = false; // 重置触发状态
-    
-    // 记录触摸起始位置
-    if (event.type === 'touchstart' && 'touches' in event) {
-      this.touchStartX = event.touches[0].clientX;
-      this.touchStartY = event.touches[0].clientY;
-    }
-  }
-
-  handleDragMove(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo): void {
-    if (!this.isDragging || this.hasTriggered) return;
-    
-    this.lastMoveTime = Date.now();
-    this.velocity = {
-      x: info.velocity.x,
-      y: info.velocity.y
-    };
-
-    // TikTok风格即时检测 - 滑动过程中就触发切换
-    const { offset } = info;
-    const absX = Math.abs(offset.x);
-    const absY = Math.abs(offset.y);
-    
-    // 即时切换检测 - 达到阈值立即触发
-    if (absY > this.INSTANT_SWIPE_THRESHOLD && absY > absX * this.DIRECTION_RATIO) {
-      this.hasTriggered = true;
-      if (this.triggerSwipe) {
-        if (offset.y < 0) {
-          // 向上滑动 - 下一个视频
-          this.triggerSwipe('up');
-        } else {
-          // 向下滑动 - 上一个视频
-          this.triggerSwipe('down');
-        }
-      }
-    }
-  }
-
-  // 触发滑动的回调函数
-  private triggerSwipe: ((direction: 'up' | 'down' | 'left' | 'right') => void) | null = null;
-
-  setSwipeCallback(callback: (direction: 'up' | 'down' | 'left' | 'right') => void) {
-    this.triggerSwipe = callback;
-  }
-
-  handleDragEnd(
-    event: MouseEvent | TouchEvent | PointerEvent, 
-    info: PanInfo,
-    onSwipe: (direction: 'up' | 'down' | 'left' | 'right') => void
-  ): void {
-    if (!this.isDragging) return;
-    
-    this.isDragging = false;
-    const { offset, velocity } = info;
-    const duration = Date.now() - this.startTime;
-
-    // 如果已经触发过即时切换，不再处理
-    if (this.hasTriggered) return;
-
-    // TikTok风格防抖：极短防抖时间
-    if (duration < 30) return;
-
-    // 计算实际移动距离
-    const absX = Math.abs(offset.x);
-    const absY = Math.abs(offset.y);
-    const totalDistance = Math.sqrt(absX * absX + absY * absY);
-    
-    // 极低距离阈值 - 轻轻一划就能触发
-    if (totalDistance < this.MIN_DRAG_DISTANCE) return;
-
-    // TikTok风格方向判断 - 更宽松的条件
-    const isVerticalSwipe = absY > absX * this.DIRECTION_RATIO;
-    const isHorizontalSwipe = absX > absY * this.DIRECTION_RATIO && absX > 15;
-
-    // 垂直滑动 - 切换视频（优先处理，极低阈值）
-    if (isVerticalSwipe) {
-      if (offset.y < -this.SWIPE_THRESHOLD || velocity.y < -this.VELOCITY_THRESHOLD) {
-        onSwipe('up');
-      } else if (offset.y > this.SWIPE_THRESHOLD || velocity.y > this.VELOCITY_THRESHOLD) {
-        onSwipe('down');
-      }
-    } 
-    // 水平滑动 - 切换窗口（次要处理）
-    else if (isHorizontalSwipe) {
-      if (offset.x < -this.SWIPE_THRESHOLD || velocity.x < -this.VELOCITY_THRESHOLD) {
-        onSwipe('left');
-      } else if (offset.x > this.SWIPE_THRESHOLD || velocity.x > this.VELOCITY_THRESHOLD) {
-        onSwipe('right');
-      }
-    }
-  }
-}
-
 export function WindowTravelOptimized({
   videos,
   windowFrames,
@@ -250,147 +33,87 @@ export function WindowTravelOptimized({
   loop = true,
   className = "",
 }: WindowTravelViewProps) {
-  // 核心状态
+  // 核心状态 - 简化状态管理
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [currentWindowIndex, setCurrentWindowIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [showStartScreen, setShowStartScreen] = useState(true);
   const [showTitle, setShowTitle] = useState(true);
-  const [isMuted, setIsMuted] = useState(true); // 默认静音，用户点击后取消静音
-  const [isTransitioning, setIsTransitioning] = useState(false); // 切换状态
-  const [gestureDirection, setGestureDirection] = useState<'up' | 'down' | 'left' | 'right' | null>(null); // 手势方向提示
-  const [dragProgress, setDragProgress] = useState(0); // 拖拽进度
+  const [isMuted, setIsMuted] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   
-  // Refs
+  // Refs - 简化引用管理
   const containerRef = useRef<HTMLDivElement>(null);
-  const videoCacheRef = useRef(new VideoCache());
-  const gestureManagerRef = useRef(new GestureManager());
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const nextVideoRef = useRef<HTMLVideoElement>(null);
+  const startTouchRef = useRef<{ y: number; time: number } | null>(null);
   
-  // Motion values
+  // Motion values - 简化动画值
   const y = useMotionValue(0);
   const x = useMotionValue(0);
   
-  // 计算属性 - 性能优化
-  const currentVideo = useMemo(() => videos[currentVideoIndex], [videos, currentVideoIndex]);
-  const currentWindow = useMemo(() => windowFrames[currentWindowIndex], [windowFrames, currentWindowIndex]);
-  
-  // 预计算下一个和上一个索引
-  const nextVideoIndex = useMemo(() => (currentVideoIndex + 1) % videos.length, [currentVideoIndex, videos.length]);
-  const prevVideoIndex = useMemo(() => (currentVideoIndex - 1 + videos.length) % videos.length, [currentVideoIndex, videos.length]);
-  const nextWindowIndex = useMemo(() => (currentWindowIndex + 1) % windowFrames.length, [currentWindowIndex, windowFrames.length]);
-  const prevWindowIndex = useMemo(() => (currentWindowIndex - 1 + windowFrames.length) % windowFrames.length, [currentWindowIndex, windowFrames.length]);
-  
-  // 预加载视频 - 移动端极致优化版本
-  const preloadVideos = useCallback(async () => {
-    if (!videos.length) return;
-    
-    try {
-      // 激进的预加载策略：预加载所有视频
-      const allUrls = videos.map(v => v.videoUrl).filter(Boolean);
-      console.log('开始激进预加载所有视频:', allUrls);
-      
-      // 批量预加载所有视频
-      await videoCacheRef.current.preloadMultipleVideos(allUrls);
-      console.log('所有视频预加载完成');
-    } catch (error) {
-      console.error('视频预加载失败:', error);
-    }
-  }, [videos]);
+  // 计算属性
+  const currentVideo = videos[currentVideoIndex];
+  const currentWindow = windowFrames[currentWindowIndex];
+  const nextVideoIndex = (currentVideoIndex + 1) % videos.length;
+  const prevVideoIndex = (currentVideoIndex - 1 + videos.length) % videos.length;
 
-  // 智能预加载 - 根据用户行为预测
-  const smartPreload = useCallback(async () => {
-    if (!videos.length) return;
-    
-    try {
-      // 预加载当前、下一个和上一个视频
-      const currentUrl = videos[currentVideoIndex]?.videoUrl;
-      const nextUrl = videos[nextVideoIndex]?.videoUrl;
-      const prevUrl = videos[prevVideoIndex]?.videoUrl;
-      
-      const urlsToPreload = [currentUrl, nextUrl, prevUrl].filter(Boolean);
-      console.log('智能预加载视频:', urlsToPreload);
-      
-      await videoCacheRef.current.preloadMultipleVideos(urlsToPreload);
-      console.log('智能预加载完成');
-    } catch (error) {
-      console.error('智能预加载失败:', error);
+  // 预加载下一个视频 - 简化预加载策略
+  useEffect(() => {
+    if (nextVideoRef.current && videos[nextVideoIndex]) {
+      nextVideoRef.current.src = videos[nextVideoIndex].videoUrl;
+      nextVideoRef.current.load();
     }
-  }, [videos, currentVideoIndex, nextVideoIndex, prevVideoIndex]);
+  }, [nextVideoIndex, videos]);
 
-  // 初始化视频播放 - 移动端极致优化版本
-  const initializeVideo = useCallback(async () => {
-    if (!currentVideo?.videoUrl) return;
-    
-    setIsLoading(true);
-    console.log('开始初始化视频:', currentVideo.videoUrl);
-    
-    try {
-      const video = await videoCacheRef.current.preloadVideo(currentVideo.videoUrl);
-      
-      if (video) {
-        // 移动端视频属性极致优化
-        video.currentTime = 0;
-        video.loop = loop;
-        video.muted = isMuted;
-        video.playsInline = true;
-        video.setAttribute('webkit-playsinline', 'true');
-        video.setAttribute('playsinline', 'true');
-        video.setAttribute('x-webkit-airplay', 'allow');
-        
-        // 移动端循环播放强化处理
-        if (loop) {
-          // 移除旧的事件监听器
-          if ((video as any)._loopHandler) {
-            video.removeEventListener('ended', (video as any)._loopHandler);
-          }
-          
-          // 创建新的循环处理器
-          (video as any)._loopHandler = () => {
-            console.log('视频播放结束，重新开始循环');
-            video.currentTime = 0;
-            video.play().catch((error) => {
-              console.error('循环播放失败:', error);
-              // 如果播放失败，尝试重新加载
-              video.load();
-              video.play().catch(console.error);
-            });
-          };
-          
-          video.addEventListener('ended', (video as any)._loopHandler);
-        }
-        
-        // 智能播放策略：移动端极致优化
-        if (autoPlay) {
-          try {
-            console.log('尝试播放视频:', currentVideo.videoUrl);
-            await video.play();
-            console.log('视频播放成功');
-          } catch (error) {
-            console.warn('播放失败，尝试静音播放:', error);
-            // 移动端通常需要静音才能自动播放
-            try {
-              video.muted = true;
-              await video.play();
-              console.log('静音播放成功');
-            } catch (mutedError) {
-              console.error('静音播放也失败:', mutedError);
-              // 最后尝试：重新加载视频
-              video.load();
-              video.play().catch(console.error);
-            }
-          }
-        }
-        
-        setIsLoading(false);
+  // 初始化视频 - 简化初始化逻辑
+  useEffect(() => {
+    if (videoRef.current && !showStartScreen) {
+      videoRef.current.muted = isMuted;
+      if (autoPlay) {
+        videoRef.current.play().catch(console.error);
       }
-    } catch (error) {
-      console.error('视频初始化失败:', error);
-      setIsLoading(false);
     }
-  }, [currentVideo, autoPlay, loop, isMuted]);
+  }, [currentVideoIndex, isMuted, autoPlay, showStartScreen]);
 
-  // 切换视频
+  // 标题自动隐藏
+  useEffect(() => {
+    setShowTitle(true);
+    const timer = setTimeout(() => {
+      setShowTitle(false);
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, [currentVideoIndex]);
+
+  // 简化的手势处理 - 参考travel-pov-app的实现
+  const handleTouchStart = useCallback((e: TouchEvent | React.TouchEvent) => {
+    if (isTransitioning) return;
+    
+    const touch = 'touches' in e ? e.touches[0] : e;
+    startTouchRef.current = {
+      y: touch.clientY,
+      time: Date.now()
+    };
+  }, [isTransitioning]);
+
+  const handleTouchMove = useCallback((e: TouchEvent | React.TouchEvent) => {
+    if (!startTouchRef.current || isTransitioning) return;
+    
+    e.preventDefault();
+    const touch = 'touches' in e ? e.touches[0] : e;
+    const deltaY = touch.clientY - startTouchRef.current.y;
+    
+    // 限制滑动范围
+    const maxOffset = window.innerHeight * 0.3;
+    const clampedOffset = Math.max(-maxOffset, Math.min(maxOffset, deltaY));
+    y.set(clampedOffset);
+  }, [isTransitioning, y]);
+
+  // 切换视频 - 简化切换逻辑
   const switchVideo = useCallback((direction: 'up' | 'down') => {
+    if (isTransitioning) return;
+    
     setIsTransitioning(true);
     setCurrentVideoIndex(prev => {
       if (direction === 'up') {
@@ -403,11 +126,14 @@ export function WindowTravelOptimized({
     // 切换完成后重置状态
     setTimeout(() => {
       setIsTransitioning(false);
-    }, 500);
-  }, [videos.length]);
+      y.set(0);
+    }, 300);
+  }, [videos.length, isTransitioning, y]);
 
-  // 切换窗口
+  // 切换窗口 - 简化窗口切换
   const switchWindow = useCallback((direction: 'left' | 'right') => {
+    if (isTransitioning) return;
+    
     setIsTransitioning(true);
     setCurrentWindowIndex(prev => {
       if (direction === 'left') {
@@ -420,64 +146,62 @@ export function WindowTravelOptimized({
     // 切换完成后重置状态
     setTimeout(() => {
       setIsTransitioning(false);
-    }, 500);
-  }, [windowFrames.length]);
+      x.set(0);
+    }, 300);
+  }, [windowFrames.length, isTransitioning, x]);
 
-  // 手势处理 - 移动端优化
-  const handleDragStart = useCallback((event: MouseEvent | TouchEvent | PointerEvent) => {
-    gestureManagerRef.current.handleDragStart(event);
-  }, []);
-
-  const handleDragMove = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    gestureManagerRef.current.handleDragMove(event, info);
+  const handleTouchEnd = useCallback(() => {
+    if (!startTouchRef.current || isTransitioning) return;
     
-    // 计算拖拽进度和方向提示
-    const { offset } = info;
+    const threshold = window.innerHeight * 0.15; // 15% 的屏幕高度作为阈值
+    const velocity = Math.abs(y.get() / (Date.now() - startTouchRef.current.time));
+    
+    // 根据滑动距离和速度决定是否切换视频
+    if (Math.abs(y.get()) > threshold || velocity > 0.5) {
+      if (y.get() > 0) {
+        // 向下滑动 - 上一个视频
+        switchVideo('down');
+      } else if (y.get() < 0) {
+        // 向上滑动 - 下一个视频
+        switchVideo('up');
+      }
+    }
+    
+    // 重置状态
+    y.set(0);
+    startTouchRef.current = null;
+  }, [y, isTransitioning, switchVideo]);
+
+  // 简化的拖拽处理
+  const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const { offset, velocity } = info;
     const absX = Math.abs(offset.x);
     const absY = Math.abs(offset.y);
-    const totalDistance = Math.sqrt(absX * absX + absY * absY);
     
-    // 更新拖拽进度 - 更敏感的进度显示
-    setDragProgress(Math.min(totalDistance / 50, 1));
+    // 简化的方向判断
+    const isVerticalSwipe = absY > absX;
+    const isHorizontalSwipe = absX > absY && absX > 20;
     
-    // 设置手势方向提示 - 更宽松的条件
-    if (absY > absX * 0.8) {
-      setGestureDirection(offset.y < 0 ? 'up' : 'down');
-    } else if (absX > absY * 0.8) {
-      setGestureDirection(offset.x < 0 ? 'left' : 'right');
-    } else {
-      setGestureDirection(null);
+    if (isVerticalSwipe) {
+      if (offset.y < -20 || velocity.y < -100) {
+        switchVideo('up');
+      } else if (offset.y > 20 || velocity.y > 100) {
+        switchVideo('down');
+      }
+    } else if (isHorizontalSwipe) {
+      if (offset.x < -20 || velocity.x < -100) {
+        switchWindow('left');
+      } else if (offset.x > 20 || velocity.x > 100) {
+        switchWindow('right');
+      }
     }
-  }, []);
-
-  const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    gestureManagerRef.current.handleDragEnd(event, info, (direction) => {
-      if (direction === 'up' || direction === 'down') {
-        switchVideo(direction);
-      } else if (direction === 'left' || direction === 'right') {
-        switchWindow(direction);
-      }
-      
-      // 重置位置和状态
-      setTimeout(() => {
-        y.set(0);
-        x.set(0);
-        setGestureDirection(null);
-        setDragProgress(0);
-      }, 300);
-    });
+    
+    // 重置位置
+    setTimeout(() => {
+      y.set(0);
+      x.set(0);
+    }, 300);
   }, [switchVideo, switchWindow, y, x]);
-
-  // 设置即时切换回调 - TikTok风格即时响应
-  useEffect(() => {
-    gestureManagerRef.current.setSwipeCallback((direction) => {
-      if (direction === 'up' || direction === 'down') {
-        switchVideo(direction);
-      } else if (direction === 'left' || direction === 'right') {
-        switchWindow(direction);
-      }
-    });
-  }, [switchVideo, switchWindow]);
 
   // 开始体验
   const handleStartExperience = useCallback(() => {
@@ -512,54 +236,28 @@ export function WindowTravelOptimized({
         event.preventDefault();
         toggleMute();
         break;
-      case 'Escape':
-        event.preventDefault();
-        setShowStartScreen(true);
-        break;
     }
   }, [switchVideo, switchWindow, toggleMute]);
 
-  // 标题自动隐藏
+  // 触摸事件监听
   useEffect(() => {
-    setShowTitle(true);
-    const timer = setTimeout(() => {
-      setShowTitle(false);
-    }, 2000);
-    
-    return () => clearTimeout(timer);
-  }, [currentVideoIndex]);
+    const container = containerRef.current;
+    if (!container) return;
 
-  // 初始化
-  useEffect(() => {
-    if (!showStartScreen) {
-      initializeVideo();
-    }
-  }, [showStartScreen, initializeVideo]);
+    const handleTouchStartCapture = (e: TouchEvent) => handleTouchStart(e);
+    const handleTouchMoveCapture = (e: TouchEvent) => handleTouchMove(e);
+    const handleTouchEndCapture = () => handleTouchEnd();
 
-  // 智能预加载 - 优化时机，不影响首页性能
-  useEffect(() => {
-    // 只有在用户点击"开始体验"后才开始预加载
-    if (!showStartScreen) {
-      console.log('用户开始体验，开始智能预加载');
-      // 立即预加载当前视频
-      smartPreload();
-      
-      // 延迟激进预加载，避免影响当前视频播放
-      const timer = setTimeout(() => {
-        console.log('开始激进预加载所有视频');
-        preloadVideos();
-      }, 2000); // 延迟2秒，确保当前视频优先
-      
-      return () => clearTimeout(timer);
-    }
-  }, [showStartScreen, preloadVideos, smartPreload]);
+    container.addEventListener('touchstart', handleTouchStartCapture, { passive: true });
+    container.addEventListener('touchmove', handleTouchMoveCapture, { passive: false });
+    container.addEventListener('touchend', handleTouchEndCapture, { passive: true });
 
-  // 视频切换时的智能预加载
-  useEffect(() => {
-    if (!showStartScreen) {
-      smartPreload();
-    }
-  }, [currentVideoIndex, showStartScreen, smartPreload]);
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStartCapture);
+      container.removeEventListener('touchmove', handleTouchMoveCapture);
+      container.removeEventListener('touchend', handleTouchEndCapture);
+    };
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   // 键盘事件监听
   useEffect(() => {
@@ -569,92 +267,58 @@ export function WindowTravelOptimized({
     }
   }, [showStartScreen, handleKeyDown]);
 
-  // 清理
-  useEffect(() => {
-    return () => {
-      videoCacheRef.current.clear();
-    };
-  }, []);
-
-  // 动画变体 - 极致流畅的切换效果
+  // 简化的动画变体 - 参考travel-pov-app的简洁动画
   const getVideoVariants = (direction: string) => ({
     initial: direction === 'up' ? { 
       y: '100%', 
-      opacity: 0.8,
-      scale: 0.95,
-      filter: "blur(4px)"
+      opacity: 0.8
     } : { 
       y: '-100%', 
-      opacity: 0.8,
-      scale: 0.95,
-      filter: "blur(4px)"
+      opacity: 0.8
     },
     animate: { 
       y: 0, 
-      opacity: 1,
-      scale: 1,
-      filter: "blur(0px)"
+      opacity: 1
     },
     exit: direction === 'up' ? { 
       y: '-100%', 
-      opacity: 0.8,
-      scale: 0.95,
-      filter: "blur(4px)"
+      opacity: 0.8
     } : { 
       y: '100%', 
-      opacity: 0.8,
-      scale: 0.95,
-      filter: "blur(4px)"
+      opacity: 0.8
     },
     transition: { 
       type: "spring" as const, 
-      stiffness: 180, 
-      damping: 22,
-      mass: 0.9,
-      duration: 0.6
+      stiffness: 200, 
+      damping: 25,
+      mass: 0.8
     }
   });
 
   const getWindowVariants = (direction: string) => ({
     initial: direction === 'left' ? { 
       x: '100%', 
-      opacity: 0.6,
-      scale: 0.9,
-      rotateY: 20,
-      filter: "blur(2px)"
+      opacity: 0.7
     } : { 
       x: '-100%', 
-      opacity: 0.6,
-      scale: 0.9,
-      rotateY: -20,
-      filter: "blur(2px)"
+      opacity: 0.7
     },
     animate: { 
       x: 0, 
-      opacity: 1,
-      scale: 1,
-      rotateY: 0,
-      filter: "blur(0px)"
+      opacity: 1
     },
     exit: direction === 'left' ? { 
       x: '-100%', 
-      opacity: 0.6,
-      scale: 0.9,
-      rotateY: -20,
-      filter: "blur(2px)"
+      opacity: 0.7
     } : { 
       x: '100%', 
-      opacity: 0.6,
-      scale: 0.9,
-      rotateY: 20,
-      filter: "blur(2px)"
+      opacity: 0.7
     },
     transition: { 
       type: "spring" as const, 
-      stiffness: 140, 
-      damping: 18,
-      mass: 1.0,
-      duration: 0.7
+      stiffness: 150, 
+      damping: 20,
+      mass: 1.0
     }
   });
 
@@ -732,14 +396,12 @@ export function WindowTravelOptimized({
               transition={{ delay: 0.1, duration: 0.5 }}
               className="flex flex-col items-center"
             >
-              {/* 自定义加载动画 */}
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                 className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full mb-6"
               />
               
-              {/* 脉冲效果 */}
               <motion.div
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -747,27 +409,17 @@ export function WindowTravelOptimized({
               >
                 正在加载旅行视频...
               </motion.div>
-              
-              {/* 进度指示器 */}
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: "60%" }}
-                transition={{ duration: 2, ease: "easeOut" }}
-                className="mt-4 h-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
-              />
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 视频层 */}
+      {/* 视频层 - 简化视频处理 */}
       <motion.div
         drag="y"
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
         dragElastic={0.2}
         dragPropagation={false}
-        onDragStart={handleDragStart}
-        onDrag={handleDragMove}
         onDragEnd={handleDragEnd}
         style={{ y }}
         className="absolute inset-0 z-0"
@@ -779,39 +431,7 @@ export function WindowTravelOptimized({
             className="absolute inset-0"
           >
             <video
-              ref={(el) => {
-                if (el) {
-                  // 移动端极致优化：确保视频属性正确设置
-                  el.loop = loop;
-                  el.muted = isMuted;
-                  el.playsInline = true;
-                  el.setAttribute('webkit-playsinline', 'true');
-                  el.setAttribute('playsinline', 'true');
-                  el.setAttribute('x-webkit-airplay', 'allow');
-                  
-                  // 移动端循环播放强化处理
-                  if (loop) {
-                    // 移除旧的事件监听器
-                    if ((el as any)._mobileLoopHandler) {
-                      el.removeEventListener('ended', (el as any)._mobileLoopHandler);
-                    }
-                    
-                    // 创建新的循环处理器
-                    (el as any)._mobileLoopHandler = () => {
-                      console.log('移动端视频播放结束，重新开始循环');
-                      el.currentTime = 0;
-                      el.play().catch((error) => {
-                        console.error('移动端循环播放失败:', error);
-                        // 如果播放失败，尝试重新加载
-                        el.load();
-                        el.play().catch(console.error);
-                      });
-                    };
-                    
-                    el.addEventListener('ended', (el as any)._mobileLoopHandler);
-                  }
-                }
-              }}
+              ref={videoRef}
               src={currentVideo.videoUrl}
               className="w-full h-full object-cover"
               loop={loop}
@@ -819,8 +439,6 @@ export function WindowTravelOptimized({
               playsInline
               preload="auto"
               autoPlay={autoPlay}
-              webkit-playsinline="true"
-              x-webkit-airplay="allow"
               onLoadedData={() => {
                 setIsLoading(false);
                 console.log('视频加载完成:', currentVideo.videoUrl);
@@ -833,34 +451,25 @@ export function WindowTravelOptimized({
                 console.error('视频加载失败:', currentVideo.videoUrl, e);
                 setIsLoading(false);
               }}
-              onEnded={(event) => {
-                // 移动端循环播放双重保障
-                const video = event.target as HTMLVideoElement;
-                if (loop && video) {
-                  console.log('视频播放结束，双重保障重新开始循环');
-                  video.currentTime = 0;
-                  video.play().catch((error) => {
-                    console.error('双重保障循环播放失败:', error);
-                    // 如果播放失败，尝试重新加载
-                    video.load();
-                    video.play().catch(console.error);
-                  });
-                }
-              }}
             />
           </motion.div>
         </AnimatePresence>
+
+        {/* 预加载下一个视频 */}
+        <video
+          ref={nextVideoRef}
+          className="hidden"
+          preload="auto"
+        />
       </motion.div>
 
-      {/* 窗口框架层 */}
+      {/* 窗口框架层 - 简化窗口处理 */}
       <motion.div
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.15}
         dragMomentum={false}
         dragPropagation={false}
-        onDragStart={handleDragStart}
-        onDrag={handleDragMove}
         onDragEnd={handleDragEnd}
         style={{ x }}
         className="absolute inset-0 z-10 pointer-events-none"
@@ -870,10 +479,6 @@ export function WindowTravelOptimized({
             key={currentWindow.id}
             {...getWindowVariants('left')}
             className="absolute inset-0 pointer-events-none"
-            style={{
-              transformStyle: "preserve-3d",
-              backfaceVisibility: "hidden"
-            }}
           >
             <Image
               src={currentWindow.imageUrl}
@@ -882,16 +487,12 @@ export function WindowTravelOptimized({
               height={600}
               className="w-full h-full object-cover"
               priority
-              style={{
-                filter: isTransitioning ? "brightness(0.9) contrast(1.1)" : "brightness(1) contrast(1)",
-                transition: "filter 0.3s ease-out"
-              }}
             />
           </motion.div>
         </AnimatePresence>
       </motion.div>
 
-      {/* UI层 */}
+      {/* UI层 - 简化UI */}
       <div className="absolute inset-0 z-20 pointer-events-none">
         {/* 音频控制按钮 */}
         <motion.button
@@ -922,61 +523,7 @@ export function WindowTravelOptimized({
           )}
         </AnimatePresence>
 
-        {/* 手势方向指示器 */}
-        <AnimatePresence>
-          {gestureDirection && dragProgress > 0.1 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.2 }}
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-            >
-              <motion.div
-                animate={{ 
-                  scale: [1, 1.1, 1],
-                  opacity: [0.7, 1, 0.7]
-                }}
-                transition={{ 
-                  duration: 0.8, 
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="flex items-center justify-center w-16 h-16 bg-black/50 backdrop-blur-sm rounded-full"
-              >
-                <span className="text-2xl text-white">
-                  {gestureDirection === 'up' && '↑'}
-                  {gestureDirection === 'down' && '↓'}
-                  {gestureDirection === 'left' && '←'}
-                  {gestureDirection === 'right' && '→'}
-                </span>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* 拖拽进度指示器 */}
-        <AnimatePresence>
-          {dragProgress > 0.1 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute top-4 left-1/2 transform -translate-x-1/2"
-            >
-              <div className="w-32 h-1 bg-white/20 rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${dragProgress * 100}%` }}
-                  transition={{ duration: 0.1 }}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-
+        {/* 视频标题 */}
         <AnimatePresence>
           {currentVideo.title && showTitle && (
             <motion.div
