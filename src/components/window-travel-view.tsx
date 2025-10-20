@@ -388,7 +388,25 @@ export function WindowTravelView({
             className="absolute inset-0"
           >
             <video
-              ref={videoRef}
+              ref={(el) => {
+                if (el) {
+                  // 移动端优化：确保视频属性正确设置
+                  el.loop = loop;
+                  el.muted = isMuted;
+                  el.playsInline = true;
+                  el.setAttribute('webkit-playsinline', 'true');
+                  el.setAttribute('playsinline', 'true');
+                  el.setAttribute('x-webkit-airplay', 'allow');
+                  
+                  // 移动端循环播放优化
+                  if (loop) {
+                    el.addEventListener('ended', () => {
+                      el.currentTime = 0;
+                      el.play().catch(console.error);
+                    }, { once: false });
+                  }
+                }
+              }}
               src={currentVideo.videoUrl}
               className="w-full h-full object-cover"
               loop={loop}
@@ -396,15 +414,32 @@ export function WindowTravelView({
               playsInline
               preload="auto"
               autoPlay={autoPlay}
-              onLoadedData={handleVideoLoad}
-              onCanPlay={handleCanPlay}
-              onError={() => setIsLoading(false)}
+              webkit-playsinline="true"
+              x-webkit-airplay="allow"
+              onLoadedData={() => {
+                handleVideoLoad();
+                console.log('视频加载完成:', currentVideo.videoUrl);
+              }}
+              onCanPlay={() => {
+                handleCanPlay();
+                console.log('视频可以播放:', currentVideo.videoUrl);
+              }}
+              onError={(e) => {
+                console.error('视频加载失败:', currentVideo.videoUrl, e);
+                setIsLoading(false);
+              }}
               onEnded={(event) => {
-                // 确保视频循环播放
+                // 移动端循环播放强化处理
                 const video = event.target as HTMLVideoElement;
                 if (loop && video) {
+                  console.log('视频播放结束，重新开始循环');
                   video.currentTime = 0;
-                  video.play().catch(console.error);
+                  video.play().catch((error) => {
+                    console.error('循环播放失败:', error);
+                    // 如果播放失败，尝试重新加载
+                    video.load();
+                    video.play().catch(console.error);
+                  });
                 }
               }}
             />

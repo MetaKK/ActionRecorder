@@ -236,7 +236,7 @@ export function WindowTravelOptimized({
   const nextWindowIndex = useMemo(() => (currentWindowIndex + 1) % windowFrames.length, [currentWindowIndex, windowFrames.length]);
   const prevWindowIndex = useMemo(() => (currentWindowIndex - 1 + windowFrames.length) % windowFrames.length, [currentWindowIndex, windowFrames.length]);
   
-  // 预加载视频 - 性能优化版本
+  // 预加载视频 - 移动端优化版本
   const preloadVideos = useCallback(async () => {
     if (!videos.length) return;
     
@@ -246,41 +246,82 @@ export function WindowTravelOptimized({
       const nextUrl = videos[nextVideoIndex]?.videoUrl;
       const prevUrl = videos[prevVideoIndex]?.videoUrl;
       
+      console.log('开始预加载视频:', { currentUrl, nextUrl, prevUrl });
+      
       const promises = [];
-      if (currentUrl) promises.push(videoCacheRef.current.preloadVideo(currentUrl));
-      if (nextUrl && nextUrl !== currentUrl) promises.push(videoCacheRef.current.preloadVideo(nextUrl));
-      if (prevUrl && prevUrl !== currentUrl && prevUrl !== nextUrl) promises.push(videoCacheRef.current.preloadVideo(prevUrl));
+      if (currentUrl) {
+        promises.push(
+          videoCacheRef.current.preloadVideo(currentUrl).then(() => {
+            console.log('当前视频预加载完成:', currentUrl);
+          })
+        );
+      }
+      if (nextUrl && nextUrl !== currentUrl) {
+        promises.push(
+          videoCacheRef.current.preloadVideo(nextUrl).then(() => {
+            console.log('下一个视频预加载完成:', nextUrl);
+          })
+        );
+      }
+      if (prevUrl && prevUrl !== currentUrl && prevUrl !== nextUrl) {
+        promises.push(
+          videoCacheRef.current.preloadVideo(prevUrl).then(() => {
+            console.log('上一个视频预加载完成:', prevUrl);
+          })
+        );
+      }
       
       await Promise.all(promises);
+      console.log('所有视频预加载完成');
     } catch (error) {
-      console.warn('视频预加载失败:', error);
+      console.error('视频预加载失败:', error);
     }
   }, [videos, currentVideoIndex, nextVideoIndex, prevVideoIndex]);
 
-  // 初始化视频播放
+  // 初始化视频播放 - 移动端优化版本
   const initializeVideo = useCallback(async () => {
     if (!currentVideo?.videoUrl) return;
     
     setIsLoading(true);
+    console.log('开始初始化视频:', currentVideo.videoUrl);
     
     try {
       const video = await videoCacheRef.current.preloadVideo(currentVideo.videoUrl);
       
       if (video) {
+        // 移动端视频属性优化
         video.currentTime = 0;
         video.loop = loop;
+        video.muted = isMuted;
+        video.playsInline = true;
+        video.setAttribute('webkit-playsinline', 'true');
+        video.setAttribute('playsinline', 'true');
+        video.setAttribute('x-webkit-airplay', 'allow');
         
-        // 智能播放策略：根据用户设置决定是否静音
+        // 移动端循环播放事件监听
+        if (loop) {
+          const handleEnded = () => {
+            console.log('视频播放结束，重新开始循环');
+            video.currentTime = 0;
+            video.play().catch(console.error);
+          };
+          video.removeEventListener('ended', handleEnded);
+          video.addEventListener('ended', handleEnded);
+        }
+        
+        // 智能播放策略：移动端优化
         if (autoPlay) {
           try {
-            video.muted = isMuted;
+            console.log('尝试播放视频:', currentVideo.videoUrl);
             await video.play();
+            console.log('视频播放成功');
           } catch (error) {
-            console.warn('播放失败:', error);
-            // 如果播放失败，尝试静音播放
+            console.warn('播放失败，尝试静音播放:', error);
+            // 移动端通常需要静音才能自动播放
             try {
               video.muted = true;
               await video.play();
+              console.log('静音播放成功');
             } catch (mutedError) {
               console.error('静音播放也失败:', mutedError);
             }
@@ -290,10 +331,10 @@ export function WindowTravelOptimized({
         setIsLoading(false);
       }
     } catch (error) {
-      console.error('视频播放失败:', error);
+      console.error('视频初始化失败:', error);
       setIsLoading(false);
     }
-  }, [currentVideo, autoPlay, loop]);
+  }, [currentVideo, autoPlay, loop, isMuted]);
 
   // 切换视频
   const switchVideo = useCallback((direction: 'up' | 'down') => {
@@ -665,6 +706,25 @@ export function WindowTravelOptimized({
             className="absolute inset-0"
           >
             <video
+              ref={(el) => {
+                if (el) {
+                  // 移动端优化：确保视频属性正确设置
+                  el.loop = loop;
+                  el.muted = isMuted;
+                  el.playsInline = true;
+                  el.setAttribute('webkit-playsinline', 'true');
+                  el.setAttribute('playsinline', 'true');
+                  el.setAttribute('x-webkit-airplay', 'allow');
+                  
+                  // 移动端循环播放优化
+                  if (loop) {
+                    el.addEventListener('ended', () => {
+                      el.currentTime = 0;
+                      el.play().catch(console.error);
+                    }, { once: false });
+                  }
+                }
+              }}
               src={currentVideo.videoUrl}
               className="w-full h-full object-cover"
               loop={loop}
@@ -672,14 +732,32 @@ export function WindowTravelOptimized({
               playsInline
               preload="auto"
               autoPlay={autoPlay}
-              onLoadedData={() => setIsLoading(false)}
-              onError={() => setIsLoading(false)}
+              webkit-playsinline="true"
+              x-webkit-airplay="allow"
+              onLoadedData={() => {
+                setIsLoading(false);
+                console.log('视频加载完成:', currentVideo.videoUrl);
+              }}
+              onCanPlay={() => {
+                setIsLoading(false);
+                console.log('视频可以播放:', currentVideo.videoUrl);
+              }}
+              onError={(e) => {
+                console.error('视频加载失败:', currentVideo.videoUrl, e);
+                setIsLoading(false);
+              }}
               onEnded={(event) => {
-                // 确保视频循环播放
+                // 移动端循环播放强化处理
                 const video = event.target as HTMLVideoElement;
                 if (loop && video) {
+                  console.log('视频播放结束，重新开始循环');
                   video.currentTime = 0;
-                  video.play().catch(console.error);
+                  video.play().catch((error) => {
+                    console.error('循环播放失败:', error);
+                    // 如果播放失败，尝试重新加载
+                    video.load();
+                    video.play().catch(console.error);
+                  });
                 }
               }}
             />
