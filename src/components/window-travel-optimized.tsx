@@ -448,30 +448,22 @@ export function WindowTravelOptimized({
             ref={videoRef}
               src={currentVideo.videoUrl}
               className="w-full h-full object-cover"
-              loop={loop}
-              muted={isMuted}
-              playsInline
-              preload="auto"
-              autoPlay={autoPlay}
-              onLoadedData={() => {
-                setIsLoading(false);
-                console.log('视频加载完成:', currentVideo.videoUrl);
-              }}
-              onCanPlay={() => {
-                setIsLoading(false);
-                console.log('视频可以播放:', currentVideo.videoUrl);
-              }}
-              onError={(e) => {
-                console.error('视频加载失败:', currentVideo.videoUrl, e);
-                setIsLoading(false);
-              }}
-            onEnded={() => {
-              // 确保循环播放 - 移动端兼容性处理
-              if (loop && videoRef.current) {
-                console.log('视频播放结束，重新开始循环');
-                videoRef.current.currentTime = 0;
-                videoRef.current.play().catch(console.error);
-              }
+            loop
+            muted={isMuted}
+            playsInline
+            preload="auto"
+            autoPlay={autoPlay}
+            onLoadedData={() => {
+              setIsLoading(false);
+              console.log('视频加载完成:', currentVideo.videoUrl);
+            }}
+            onCanPlay={() => {
+              setIsLoading(false);
+              console.log('视频可以播放:', currentVideo.videoUrl);
+            }}
+            onError={(e) => {
+              console.error('视频加载失败:', currentVideo.videoUrl, e);
+              setIsLoading(false);
             }}
           />
         </div>
@@ -482,17 +474,10 @@ export function WindowTravelOptimized({
             ref={nextVideoRef}
             src={videos[nextVideoIndex]?.videoUrl}
             className="w-full h-full object-cover"
-            loop={loop}
+            loop
             muted={isMuted}
             playsInline
             preload="auto"
-            onEnded={() => {
-              // 确保预加载视频也能循环播放
-              if (loop && nextVideoRef.current) {
-                nextVideoRef.current.currentTime = 0;
-                nextVideoRef.current.play().catch(console.error);
-              }
-            }}
           />
         </div>
 
@@ -502,17 +487,10 @@ export function WindowTravelOptimized({
             ref={prevVideoRef}
             src={videos[prevVideoIndex]?.videoUrl}
             className="w-full h-full object-cover"
-            loop={loop}
+            loop
             muted={isMuted}
             playsInline
             preload="auto"
-            onEnded={() => {
-              // 确保预加载视频也能循环播放
-              if (loop && prevVideoRef.current) {
-                prevVideoRef.current.currentTime = 0;
-                prevVideoRef.current.play().catch(console.error);
-              }
-            }}
             />
         </div>
       </motion.div>
