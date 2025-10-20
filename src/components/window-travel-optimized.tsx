@@ -465,6 +465,27 @@ export function WindowTravelOptimized({
               console.error('视频加载失败:', currentVideo.videoUrl, e);
               setIsLoading(false);
             }}
+            onEnded={() => {
+              // 确保循环播放 - 移动端兼容性处理
+              if (loop && videoRef.current) {
+                console.log('视频播放结束，重新开始循环');
+                videoRef.current.currentTime = 0;
+                videoRef.current.play().catch(console.error);
+              }
+            }}
+            onTimeUpdate={() => {
+              // 额外的循环播放保障 - 确保视频在接近结束时重新开始
+              if (loop && videoRef.current) {
+                const video = videoRef.current;
+                const duration = video.duration;
+                const currentTime = video.currentTime;
+                
+                // 如果视频接近结束（最后0.1秒），重新开始
+                if (duration > 0 && currentTime >= duration - 0.1) {
+                  video.currentTime = 0;
+                }
+              }
+            }}
           />
         </div>
 
@@ -478,6 +499,25 @@ export function WindowTravelOptimized({
             muted={isMuted}
             playsInline
             preload="auto"
+            onEnded={() => {
+              // 确保预加载视频也能循环播放
+              if (loop && nextVideoRef.current) {
+                nextVideoRef.current.currentTime = 0;
+                nextVideoRef.current.play().catch(console.error);
+              }
+            }}
+            onTimeUpdate={() => {
+              // 预加载视频的循环播放保障
+              if (loop && nextVideoRef.current) {
+                const video = nextVideoRef.current;
+                const duration = video.duration;
+                const currentTime = video.currentTime;
+                
+                if (duration > 0 && currentTime >= duration - 0.1) {
+                  video.currentTime = 0;
+                }
+              }
+            }}
           />
         </div>
 
@@ -491,6 +531,25 @@ export function WindowTravelOptimized({
             muted={isMuted}
             playsInline
             preload="auto"
+            onEnded={() => {
+              // 确保预加载视频也能循环播放
+              if (loop && prevVideoRef.current) {
+                prevVideoRef.current.currentTime = 0;
+                prevVideoRef.current.play().catch(console.error);
+              }
+            }}
+            onTimeUpdate={() => {
+              // 预加载视频的循环播放保障
+              if (loop && prevVideoRef.current) {
+                const video = prevVideoRef.current;
+                const duration = video.duration;
+                const currentTime = video.currentTime;
+                
+                if (duration > 0 && currentTime >= duration - 0.1) {
+                  video.currentTime = 0;
+                }
+              }
+            }}
           />
         </div>
       </motion.div>
