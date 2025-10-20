@@ -75,32 +75,17 @@ export function WindowTravelOptimized({
     }
   }, [nextVideoIndex, prevVideoIndex, videos]);
 
-  // 初始化视频 - 参考travel-pov-app的循环播放处理
+  // 初始化视频 - 简化循环播放处理，避免冲突
   useEffect(() => {
     if (videoRef.current && !showStartScreen) {
       const video = videoRef.current;
       video.muted = isMuted;
-      video.loop = loop; // 确保循环播放
-      
-      // 设置循环播放事件监听
-      const handleEnded = () => {
-        if (loop) {
-          video.currentTime = 0;
-          video.play().catch(console.error);
-        }
-      };
-      
-      video.addEventListener('ended', handleEnded);
       
       if (autoPlay) {
         video.play().catch(console.error);
       }
-      
-      return () => {
-        video.removeEventListener('ended', handleEnded);
-      };
     }
-  }, [currentVideoIndex, isMuted, autoPlay, loop, showStartScreen]);
+  }, [currentVideoIndex, isMuted, autoPlay, showStartScreen]);
 
   // 标题自动隐藏
   useEffect(() => {
@@ -142,7 +127,7 @@ export function WindowTravelOptimized({
     
     setIsTransitioning(true);
     
-    // 立即更新索引，让预加载的视频生效
+    // 立即更新索引
     setCurrentVideoIndex(prev => {
       if (direction === 'up') {
         return (prev + 1) % videos.length;
@@ -151,11 +136,11 @@ export function WindowTravelOptimized({
       }
     });
     
-    // 切换完成后重置状态 - 缩短时间提高响应性
+    // 过渡动画结束后重置状态 - 参考travel-pov-app的300ms
     setTimeout(() => {
       setIsTransitioning(false);
       y.set(0);
-    }, 200); // 从300ms减少到200ms
+    }, 300);
   }, [videos.length, isTransitioning, y]);
 
   // 切换窗口 - 简化窗口切换
@@ -181,16 +166,17 @@ export function WindowTravelOptimized({
   const handleTouchEnd = useCallback(() => {
     if (!startTouchRef.current || isTransitioning) return;
     
+    const touchOffset = y.get();
     const threshold = window.innerHeight * 0.15; // 15% 的屏幕高度作为阈值
-    const velocity = Math.abs(y.get() / (Date.now() - startTouchRef.current.time));
+    const velocity = Math.abs(touchOffset / (Date.now() - startTouchRef.current.time));
     
-    // 根据滑动距离和速度决定是否切换视频
-    if (Math.abs(y.get()) > threshold || velocity > 0.5) {
-      if (y.get() > 0) {
-        // 向下滑动 - 上一个视频
+    // 根据滑动距离和速度决定是否切换视频 - 参考travel-pov-app的逻辑
+    if (Math.abs(touchOffset) > threshold || velocity > 0.5) {
+      if (touchOffset > 0) {
+        // 向下滑动 - 上一个视频（无限循环）
         switchVideo('down');
-      } else if (y.get() < 0) {
-        // 向上滑动 - 下一个视频
+      } else if (touchOffset < 0) {
+        // 向上滑动 - 下一个视频（无限循环）
         switchVideo('up');
       }
     }
@@ -442,51 +428,47 @@ export function WindowTravelOptimized({
         )}
       </AnimatePresence>
 
-      {/* 视频层 - 参考travel-pov-app的预加载策略 */}
+      {/* 视频层 - 参考travel-pov-app的transform实现 */}
       <motion.div
         drag="y"
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
         dragElastic={0.2}
         dragPropagation={false}
         onDragEnd={handleDragEnd}
-        style={{ y }}
+        style={{ 
+          y,
+          transform: `translateY(${y.get()}px)`,
+          transition: isTransitioning ? 'transform 0.3s ease-out' : 'none'
+        }}
         className="absolute inset-0 z-0"
       >
         {/* 当前视频 */}
         <div className="absolute inset-0">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentVideo.id}
-              {...getVideoVariants('up')}
-              className="absolute inset-0"
-            >
-              <video
-                ref={videoRef}
-                src={currentVideo.videoUrl}
-                className="w-full h-full object-cover"
-                loop={loop}
-                muted={isMuted}
-                playsInline
-                preload="auto"
-                autoPlay={autoPlay}
-                onLoadedData={() => {
-                  setIsLoading(false);
-                  console.log('视频加载完成:', currentVideo.videoUrl);
-                }}
-                onCanPlay={() => {
-                  setIsLoading(false);
-                  console.log('视频可以播放:', currentVideo.videoUrl);
-                }}
-                onError={(e) => {
-                  console.error('视频加载失败:', currentVideo.videoUrl, e);
-                  setIsLoading(false);
-                }}
-              />
-            </motion.div>
-          </AnimatePresence>
+          <video
+            ref={videoRef}
+            src={currentVideo.videoUrl}
+            className="w-full h-full object-cover"
+            loop={loop}
+            muted={isMuted}
+            playsInline
+            preload="auto"
+            autoPlay={autoPlay}
+            onLoadedData={() => {
+              setIsLoading(false);
+              console.log('视频加载完成:', currentVideo.videoUrl);
+            }}
+            onCanPlay={() => {
+              setIsLoading(false);
+              console.log('视频可以播放:', currentVideo.videoUrl);
+            }}
+            onError={(e) => {
+              console.error('视频加载失败:', currentVideo.videoUrl, e);
+              setIsLoading(false);
+            }}
+          />
         </div>
 
-        {/* 预加载下一个视频（无限循环） */}
+        {/* 预加载下一个视频（无限循环） - 参考travel-pov-app的实现 */}
         <div className="absolute top-full w-full h-full">
           <video
             ref={nextVideoRef}
@@ -499,7 +481,7 @@ export function WindowTravelOptimized({
           />
         </div>
 
-        {/* 预加载上一个视频（无限循环） */}
+        {/* 预加载上一个视频（无限循环） - 参考travel-pov-app的实现 */}
         <div className="absolute bottom-full w-full h-full">
           <video
             ref={prevVideoRef}
