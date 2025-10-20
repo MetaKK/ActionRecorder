@@ -29,7 +29,8 @@ interface WindowTravelViewProps {
 // 视频缓存管理器
 class VideoCache {
   private cache = new Map<string, HTMLVideoElement>();
-  private maxSize = 3; // 最多缓存3个视频
+  private loadingPromises = new Map<string, Promise<HTMLVideoElement>>();
+  private maxSize = 5; // 增加缓存大小，移动端需要更多缓存
 
   getVideo(url: string): HTMLVideoElement | null {
     return this.cache.get(url) || null;
@@ -51,8 +52,14 @@ class VideoCache {
     this.cache.set(url, video);
   }
 
+  // 移动端极致优化的视频预加载
   preloadVideo(url: string): Promise<HTMLVideoElement> {
-    return new Promise((resolve, reject) => {
+    // 如果正在加载，返回现有的Promise
+    if (this.loadingPromises.has(url)) {
+      return this.loadingPromises.get(url)!;
+    }
+
+    const promise = new Promise<HTMLVideoElement>((resolve, reject) => {
       const cached = this.getVideo(url);
       if (cached && cached.readyState >= 3) {
         resolve(cached);
@@ -60,19 +67,52 @@ class VideoCache {
       }
 
       const video = document.createElement('video');
+      
+      // 移动端极致优化属性
       video.src = url;
       video.preload = 'auto';
       video.muted = true;
       video.playsInline = true;
+      video.setAttribute('webkit-playsinline', 'true');
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('x-webkit-airplay', 'allow');
+      video.loop = true; // 预加载时就设置循环
       
-      video.addEventListener('loadeddata', () => {
+      // 移动端循环播放强化处理
+      const handleEnded = () => {
+        video.currentTime = 0;
+        video.play().catch(console.error);
+      };
+      video.addEventListener('ended', handleEnded);
+      
+      // 多重加载事件监听 - 确保加载完成
+      const handleLoad = () => {
         this.setVideo(url, video);
+        this.loadingPromises.delete(url);
         resolve(video);
+      };
+      
+      video.addEventListener('loadeddata', handleLoad, { once: true });
+      video.addEventListener('canplay', handleLoad, { once: true });
+      video.addEventListener('canplaythrough', handleLoad, { once: true });
+      
+      video.addEventListener('error', (e) => {
+        console.error('视频预加载失败:', url, e);
+        this.loadingPromises.delete(url);
+        reject(e);
       }, { once: true });
       
-      video.addEventListener('error', reject, { once: true });
       video.load();
     });
+
+    this.loadingPromises.set(url, promise);
+    return promise;
+  }
+
+  // 批量预加载 - 移动端优化
+  async preloadMultipleVideos(urls: string[]): Promise<HTMLVideoElement[]> {
+    const promises = urls.map(url => this.preloadVideo(url));
+    return Promise.all(promises);
   }
 
   clear(): void {
@@ -81,6 +121,7 @@ class VideoCache {
       video.src = '';
     });
     this.cache.clear();
+    this.loadingPromises.clear();
   }
 }
 
@@ -236,8 +277,25 @@ export function WindowTravelOptimized({
   const nextWindowIndex = useMemo(() => (currentWindowIndex + 1) % windowFrames.length, [currentWindowIndex, windowFrames.length]);
   const prevWindowIndex = useMemo(() => (currentWindowIndex - 1 + windowFrames.length) % windowFrames.length, [currentWindowIndex, windowFrames.length]);
   
-  // 预加载视频 - 移动端优化版本
+  // 预加载视频 - 移动端极致优化版本
   const preloadVideos = useCallback(async () => {
+    if (!videos.length) return;
+    
+    try {
+      // 激进的预加载策略：预加载所有视频
+      const allUrls = videos.map(v => v.videoUrl).filter(Boolean);
+      console.log('开始激进预加载所有视频:', allUrls);
+      
+      // 批量预加载所有视频
+      await videoCacheRef.current.preloadMultipleVideos(allUrls);
+      console.log('所有视频预加载完成');
+    } catch (error) {
+      console.error('视频预加载失败:', error);
+    }
+  }, [videos]);
+
+  // 智能预加载 - 根据用户行为预测
+  const smartPreload = useCallback(async () => {
     if (!videos.length) return;
     
     try {
@@ -246,39 +304,17 @@ export function WindowTravelOptimized({
       const nextUrl = videos[nextVideoIndex]?.videoUrl;
       const prevUrl = videos[prevVideoIndex]?.videoUrl;
       
-      console.log('开始预加载视频:', { currentUrl, nextUrl, prevUrl });
+      const urlsToPreload = [currentUrl, nextUrl, prevUrl].filter(Boolean);
+      console.log('智能预加载视频:', urlsToPreload);
       
-      const promises = [];
-      if (currentUrl) {
-        promises.push(
-          videoCacheRef.current.preloadVideo(currentUrl).then(() => {
-            console.log('当前视频预加载完成:', currentUrl);
-          })
-        );
-      }
-      if (nextUrl && nextUrl !== currentUrl) {
-        promises.push(
-          videoCacheRef.current.preloadVideo(nextUrl).then(() => {
-            console.log('下一个视频预加载完成:', nextUrl);
-          })
-        );
-      }
-      if (prevUrl && prevUrl !== currentUrl && prevUrl !== nextUrl) {
-        promises.push(
-          videoCacheRef.current.preloadVideo(prevUrl).then(() => {
-            console.log('上一个视频预加载完成:', prevUrl);
-          })
-        );
-      }
-      
-      await Promise.all(promises);
-      console.log('所有视频预加载完成');
+      await videoCacheRef.current.preloadMultipleVideos(urlsToPreload);
+      console.log('智能预加载完成');
     } catch (error) {
-      console.error('视频预加载失败:', error);
+      console.error('智能预加载失败:', error);
     }
   }, [videos, currentVideoIndex, nextVideoIndex, prevVideoIndex]);
 
-  // 初始化视频播放 - 移动端优化版本
+  // 初始化视频播放 - 移动端极致优化版本
   const initializeVideo = useCallback(async () => {
     if (!currentVideo?.videoUrl) return;
     
@@ -289,7 +325,7 @@ export function WindowTravelOptimized({
       const video = await videoCacheRef.current.preloadVideo(currentVideo.videoUrl);
       
       if (video) {
-        // 移动端视频属性优化
+        // 移动端视频属性极致优化
         video.currentTime = 0;
         video.loop = loop;
         video.muted = isMuted;
@@ -298,18 +334,27 @@ export function WindowTravelOptimized({
         video.setAttribute('playsinline', 'true');
         video.setAttribute('x-webkit-airplay', 'allow');
         
-        // 移动端循环播放事件监听
+        // 移动端循环播放强化处理
         if (loop) {
-          const handleEnded = () => {
+          // 移除旧的事件监听器
+          video.removeEventListener('ended', video._loopHandler);
+          
+          // 创建新的循环处理器
+          video._loopHandler = () => {
             console.log('视频播放结束，重新开始循环');
             video.currentTime = 0;
-            video.play().catch(console.error);
+            video.play().catch((error) => {
+              console.error('循环播放失败:', error);
+              // 如果播放失败，尝试重新加载
+              video.load();
+              video.play().catch(console.error);
+            });
           };
-          video.removeEventListener('ended', handleEnded);
-          video.addEventListener('ended', handleEnded);
+          
+          video.addEventListener('ended', video._loopHandler);
         }
         
-        // 智能播放策略：移动端优化
+        // 智能播放策略：移动端极致优化
         if (autoPlay) {
           try {
             console.log('尝试播放视频:', currentVideo.videoUrl);
@@ -324,6 +369,9 @@ export function WindowTravelOptimized({
               console.log('静音播放成功');
             } catch (mutedError) {
               console.error('静音播放也失败:', mutedError);
+              // 最后尝试：重新加载视频
+              video.load();
+              video.play().catch(console.error);
             }
           }
         }
@@ -483,10 +531,25 @@ export function WindowTravelOptimized({
     }
   }, [showStartScreen, initializeVideo]);
 
-  // 预加载
+  // 激进预加载 - 移动端极致优化
   useEffect(() => {
+    // 立即开始激进预加载所有视频
     preloadVideos();
-  }, [preloadVideos]);
+    
+    // 延迟智能预加载，确保当前视频优先
+    const timer = setTimeout(() => {
+      smartPreload();
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [preloadVideos, smartPreload]);
+
+  // 视频切换时的智能预加载
+  useEffect(() => {
+    if (!showStartScreen) {
+      smartPreload();
+    }
+  }, [currentVideoIndex, showStartScreen, smartPreload]);
 
   // 键盘事件监听
   useEffect(() => {
@@ -708,7 +771,7 @@ export function WindowTravelOptimized({
             <video
               ref={(el) => {
                 if (el) {
-                  // 移动端优化：确保视频属性正确设置
+                  // 移动端极致优化：确保视频属性正确设置
                   el.loop = loop;
                   el.muted = isMuted;
                   el.playsInline = true;
@@ -716,12 +779,24 @@ export function WindowTravelOptimized({
                   el.setAttribute('playsinline', 'true');
                   el.setAttribute('x-webkit-airplay', 'allow');
                   
-                  // 移动端循环播放优化
+                  // 移动端循环播放强化处理
                   if (loop) {
-                    el.addEventListener('ended', () => {
+                    // 移除旧的事件监听器
+                    el.removeEventListener('ended', el._mobileLoopHandler);
+                    
+                    // 创建新的循环处理器
+                    el._mobileLoopHandler = () => {
+                      console.log('移动端视频播放结束，重新开始循环');
                       el.currentTime = 0;
-                      el.play().catch(console.error);
-                    }, { once: false });
+                      el.play().catch((error) => {
+                        console.error('移动端循环播放失败:', error);
+                        // 如果播放失败，尝试重新加载
+                        el.load();
+                        el.play().catch(console.error);
+                      });
+                    };
+                    
+                    el.addEventListener('ended', el._mobileLoopHandler);
                   }
                 }
               }}
@@ -747,13 +822,13 @@ export function WindowTravelOptimized({
                 setIsLoading(false);
               }}
               onEnded={(event) => {
-                // 移动端循环播放强化处理
+                // 移动端循环播放双重保障
                 const video = event.target as HTMLVideoElement;
                 if (loop && video) {
-                  console.log('视频播放结束，重新开始循环');
+                  console.log('视频播放结束，双重保障重新开始循环');
                   video.currentTime = 0;
                   video.play().catch((error) => {
-                    console.error('循环播放失败:', error);
+                    console.error('双重保障循环播放失败:', error);
                     // 如果播放失败，尝试重新加载
                     video.load();
                     video.play().catch(console.error);
