@@ -1,0 +1,187 @@
+// Prisma Schema for Life Recorder
+// Database: PostgreSQL (Neon Serverless)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// 用户表
+// ============================================
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String?  @map("password_hash")
+  username     String?  @db.VarChar(100)
+  tier         UserTier @default(FREE)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  records      Record[]
+  diaries      Diary[]
+  media        Media[]
+  chatSessions ChatSession[]
+  apiUsage     ApiUsage[]
+  
+  @@map("users")
+}
+
+enum UserTier {
+  FREE
+  PREMIUM
+  ENTERPRISE
+}
+
+// ============================================
+// 生活记录表
+// ============================================
+
+model Record {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  content       String   @db.Text
+  location      Json?    // {latitude, longitude, address, ...}
+  audioUrl      String?  @map("audio_url") @db.VarChar(500)
+  audioDuration Int?     @map("audio_duration")
+  audioFormat   String?  @map("audio_format") @db.VarChar(50)
+  timestamp     BigInt
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media         RecordMedia[]
+  
+  @@index([userId, timestamp(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("records")
+}
+
+// ============================================
+// 媒体文件表
+// ============================================
+
+model Media {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  type         MediaType
+  url          String    @db.VarChar(500)
+  thumbnailUrl String?   @map("thumbnail_url") @db.VarChar(500)
+  width        Int?
+  height       Int?
+  sizeBytes    BigInt    @map("size_bytes")
+  mimeType     String    @map("mime_type") @db.VarChar(100)
+  duration     Int?      // 视频时长（秒）
+  createdAt    DateTime  @default(now()) @map("created_at")
+  
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  records      RecordMedia[]
+  
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("media")
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+// ============================================
+// 记录-媒体关联表（多对多）
+// ============================================
+
+model RecordMedia {
+  id           String @id @default(uuid())
+  recordId     String @map("record_id")
+  mediaId      String @map("media_id")
+  displayOrder Int    @default(0) @map("display_order")
+  
+  // Relations
+  record       Record @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  media        Media  @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  
+  @@map("record_media")
+}
+
+// ============================================
+// AI日记表
+// ============================================
+
+model Diary {
+  id         String    @id @default(uuid())
+  userId     String    @map("user_id")
+  date       DateTime  @db.Date
+  diaryData  Json      @map("diary_data") // 完整 Diary 对象
+  mood       String?   @db.VarChar(50)
+  wordCount  Int       @map("word_count")
+  type       DiaryType @default(AUTO)
+  excerpt    String?   @db.Text
+  title      String?   @db.VarChar(200)
+  isDeleted  Boolean   @default(false) @map("is_deleted")
+  isPinned   Boolean   @default(false) @map("is_pinned")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  
+  // Relations
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // 支持同一天多篇日记
+  @@unique([userId, date, createdAt])
+  @@index([userId, date(sort: Desc)])
+  @@index([userId, isPinned, createdAt(sort: Desc)])
+  @@map("diaries")
+}
+
+enum DiaryType {
+  AUTO
+  MANUAL
+}
+
+// ============================================
+// AI聊天会话表
+// ============================================
+
+model ChatSession {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String?  @db.VarChar(200)
+  model     String   @db.VarChar(50)
+  messages  Json     // 消息数组
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, updatedAt(sort: Desc)])
+  @@map("chat_sessions")
+}
+
+// ============================================
+// API使用统计表（计费）
+// ============================================
+
+model ApiUsage {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  model        String   @db.VarChar(50)
+  inputTokens  Int      @map("input_tokens")
+  outputTokens Int      @map("output_tokens")
+  costUsd      Decimal  @map("cost_usd") @db.Decimal(10, 6)
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("api_usage")
+}
+
