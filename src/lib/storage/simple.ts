@@ -8,7 +8,7 @@ import { Record, MediaData } from '@/lib/types';
 class SimpleStorage {
   private db: IDBDatabase | null = null;
   private readonly DB_NAME = 'life-recorder';
-  private readonly VERSION = 1;
+  private readonly VERSION = 2; // ⭐ 升级版本以支持新索引
   private readonly STORE_RECORDS = 'records';
   private readonly STORE_MEDIA = 'media';
   
@@ -37,19 +37,49 @@ class SimpleStorage {
       
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
+        const oldVersion = event.oldVersion;
+        const transaction = (event.target as IDBOpenDBRequest).transaction;
         
-        // 记录表
+        console.log(`🔄 Upgrading database from v${oldVersion} to v${this.VERSION}...`);
+        
+        // 记录表 - v1
         if (!db.objectStoreNames.contains(this.STORE_RECORDS)) {
           const store = db.createObjectStore(this.STORE_RECORDS, { keyPath: 'id' });
           store.createIndex('timestamp', 'timestamp');
           store.createIndex('createdAt', 'createdAt');
+          
+          // ⭐ v2: 添加优化索引
+          store.createIndex('hasAudio', 'hasAudio', { unique: false });
+          store.createIndex('hasImages', 'hasImages', { unique: false });
+          store.createIndex('createdAt_id', ['createdAt', 'id'], { unique: false });
+          
+          console.log('✅ Created records store with v2 indexes');
+        } else if (oldVersion < 2 && transaction) {
+          // ⭐ 升级现有数据库到 v2：添加新索引
+          const recordStore = transaction.objectStore(this.STORE_RECORDS);
+          
+          if (!recordStore.indexNames.contains('hasAudio')) {
+            recordStore.createIndex('hasAudio', 'hasAudio', { unique: false });
+            console.log('✅ Added hasAudio index');
+          }
+          if (!recordStore.indexNames.contains('hasImages')) {
+            recordStore.createIndex('hasImages', 'hasImages', { unique: false });
+            console.log('✅ Added hasImages index');
+          }
+          if (!recordStore.indexNames.contains('createdAt_id')) {
+            recordStore.createIndex('createdAt_id', ['createdAt', 'id'], { unique: false });
+            console.log('✅ Added createdAt_id index');
+          }
         }
         
         // 媒体表
         if (!db.objectStoreNames.contains(this.STORE_MEDIA)) {
           const store = db.createObjectStore(this.STORE_MEDIA, { keyPath: 'id' });
           store.createIndex('type', 'type');
+          console.log('✅ Created media store');
         }
+        
+        console.log('✅ Database upgrade complete');
       };
     });
   }

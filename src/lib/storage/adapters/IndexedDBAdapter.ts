@@ -20,7 +20,7 @@ export class IndexedDBAdapter implements IStorageAdapter {
   };
   
   private db: IDBDatabase | null = null;
-  private readonly dbName = 'life-recorder-db';
+  private readonly dbName = 'life-recorder'; // ⭐ 统一数据库名称
   private readonly version = 2; // 增加版本以添加新索引
   
   // Object Store names

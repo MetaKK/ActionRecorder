@@ -147,10 +147,33 @@ export function AIInputMinimal({
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLoading && value.trim() && !disabled) {
-      onSubmit(value.trim());
+    
+    // ⭐ 如果有临时文本，先将其确认为最终文本
+    if (interimText) {
+      const fullText = value + interimText;
+      onChange(fullText);
+      setInterimText('');
+      
+      // 如果正在录音，先停止
+      if (isVoiceRecording) {
+        stopRecording();
+      }
+      
+      // 提交完整文本
+      if (!isLoading && fullText.trim() && !disabled) {
+        onSubmit(fullText.trim());
+      }
+    } else {
+      // 如果正在录音，先停止
+      if (isVoiceRecording) {
+        stopRecording();
+      }
+      
+      if (!isLoading && value.trim() && !disabled) {
+        onSubmit(value.trim());
+      }
     }
-  }, [onSubmit, isLoading, value, disabled]);
+  }, [onSubmit, isLoading, value, interimText, disabled, isVoiceRecording, stopRecording, onChange]);
 
   const handleVoiceToggle = useCallback(() => {
     if (isVoiceRecording) {

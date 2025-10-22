@@ -7,6 +7,8 @@ import { create } from 'zustand';
 import { Record, RecordsStore, Location, ImageData } from '@/lib/types';
 import { getStorage } from '@/lib/storage/simple';
 import { differenceInDays } from 'date-fns';
+// ⭐ 导入数据迁移工具（自动执行）
+import '@/lib/storage/migrate-data';
 
 export const useRecordsStore = create<RecordsStore>((set, get) => ({
   records: [],

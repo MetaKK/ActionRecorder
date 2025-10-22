@@ -167,9 +167,17 @@ export function RecordInput() {
   
   // 保存记录
   const handleSave = useCallback(async () => {
+    // ⭐ 如果有临时文本，先将其确认为最终文本
+    if (interimText) {
+      setInputText(prev => prev + interimText);
+      setInterimText('');
+    }
+    
     // 如果正在语音转文字，先停止
     if (isRecording) {
       stopRecording();
+      // 等待语音识别停止并处理最终结果
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
     
     // 如果正在录制音频，先停止并获取 Blob
@@ -184,7 +192,8 @@ export function RecordInput() {
       }
     }
     
-    const content = inputText.trim();
+    // ⭐ 使用包含临时文本后的完整内容
+    const content = (inputText + interimText).trim();
     
     // 至少需要内容、音频或图片之一
     if (!content && !finalAudioBlob && images.length === 0) {
@@ -234,6 +243,7 @@ export function RecordInput() {
       
       addRecord(content, currentLocation, audioData, imageData);
       setInputText('');
+      setInterimText(''); // ⭐ 清空临时文本
       clearAudio();
       clearImages();
       
@@ -258,7 +268,7 @@ export function RecordInput() {
       console.error('保存失败:', error);
       toast.error('保存失败，请重试');
     }
-  }, [inputText, audioBlob, audioDuration, images, addRecord, isRecording, stopRecording, isRecordingAudio, stopAudioRecording, clearAudio, clearImages, isLocationEnabled, location]);
+  }, [inputText, interimText, audioBlob, audioDuration, images, addRecord, isRecording, stopRecording, isRecordingAudio, stopAudioRecording, clearAudio, clearImages, isLocationEnabled, location]);
   
   // 处理键盘快捷键
   const handleKeyDown = useCallback(
