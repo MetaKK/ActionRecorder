@@ -562,9 +562,12 @@ Example output:
   const handleViewAnalysis = () => {
     if (!scene) return;
     
+    // 生成唯一ID
+    const analysisId = `analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
     // 保存完整会话数据到 localStorage
     const sessionData = {
-      id: `session_${Date.now()}`,
+      id: analysisId,
       scene,
       messages: messages.filter(m => m.role === 'user' || m.role === 'assistant'),
       totalScore,
@@ -575,8 +578,8 @@ Example output:
     
     localStorage.setItem('scene_practice_session', JSON.stringify(sessionData));
     
-    // 跳转到分析页面
-    window.location.href = '/ai/scene-practice/analysis';
+    // 跳转到动态分析页面
+    window.location.href = `/ai/scene-practice/analysis/${analysisId}`;
   };
   
   // 重新开始

@@ -18,6 +18,7 @@ import { useMemo, useEffect, useState } from 'react';
 import { Clock, Loader2 } from 'lucide-react';
 import { TimelineItem } from './timeline-item';
 import { DiaryCard } from './diary-card';
+import { EnglishAnalysisCard } from './english-analysis-card';
 import { useRecords } from '@/lib/hooks/use-records';
 import { useProgressiveLoading } from '@/lib/hooks/use-intersection-observer';
 import { groupByDate, formatDate, getDateLabel } from '@/lib/utils/date';
@@ -126,6 +127,35 @@ export function Timeline() {
       alert('删除日记失败，请重试');
     }
   };
+
+  const handleShareAnalysis = (url: string) => {
+    if (navigator.share) {
+      navigator.share({
+        title: '英语学习分析报告',
+        text: '查看我的英语学习分析报告',
+        url: url
+      });
+    } else {
+      navigator.clipboard.writeText(url);
+      alert('分析链接已复制到剪贴板');
+    }
+  };
+
+  const handleDeleteAnalysis = async (url: string) => {
+    // 从URL中提取分析ID
+    const analysisId = url.split('/').pop();
+    if (!analysisId) return;
+    
+    try {
+      // 从localStorage中删除缓存
+      localStorage.removeItem(`analysis_${analysisId}`);
+      console.log('✅ Analysis cache deleted:', analysisId);
+      alert('分析记录已删除');
+    } catch (error) {
+      console.error('❌ Failed to delete analysis:', error);
+      alert('删除分析记录失败，请重试');
+    }
+  };
   
   // 空状态
   if (records.length === 0) {
@@ -154,8 +184,8 @@ export function Timeline() {
           // 获取当天的所有日记
           const dayDiaries = diaryMap.get(dateKey) || [];
           
-          // 创建混合数组：日记 + 记录
-          const mixedItems: Array<{ type: 'diary' | 'record'; id: string; data: unknown; createdAt: Date }> = [];
+          // 创建混合数组：日记 + 记录 + 英语学习分析
+          const mixedItems: Array<{ type: 'diary' | 'record' | 'english_analysis'; id: string; data: unknown; createdAt: Date }> = [];
           
           // 添加所有日记
           dayDiaries.forEach(diary => {
@@ -168,14 +198,35 @@ export function Timeline() {
             });
           });
           
-          // 添加记录
+          // 添加记录，检查是否为英语学习分析
           items.forEach(record => {
-            mixedItems.push({
-              type: 'record' as const,
-              id: record.id,
-              createdAt: record.createdAt,
-              data: record
-            });
+            try {
+              // 尝试解析记录内容，检查是否为英语学习分析
+              const parsedContent = JSON.parse(record.content);
+              if (parsedContent.type === 'english_analysis') {
+                mixedItems.push({
+                  type: 'english_analysis' as const,
+                  id: record.id,
+                  createdAt: record.createdAt,
+                  data: parsedContent
+                });
+              } else {
+                mixedItems.push({
+                  type: 'record' as const,
+                  id: record.id,
+                  createdAt: record.createdAt,
+                  data: record
+                });
+              }
+            } catch {
+              // 如果不是JSON格式，按普通记录处理
+              mixedItems.push({
+                type: 'record' as const,
+                id: record.id,
+                createdAt: record.createdAt,
+                data: record
+              });
+            }
           });
           
           // 按时间排序（最新的在前）
@@ -216,6 +267,15 @@ export function Timeline() {
                         onShare={handleShareDiary}
                         onExport={handleExportDiary}
                         onDelete={handleDeleteDiary}
+                      />
+                    );
+                  } else if (item.type === 'english_analysis') {
+                    return (
+                      <EnglishAnalysisCard
+                        key={`analysis-${item.id}`}
+                        analysis={item.data as any}
+                        onShare={handleShareAnalysis}
+                        onDelete={handleDeleteAnalysis}
                       />
                     );
                   } else {
