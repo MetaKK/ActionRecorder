@@ -251,6 +251,7 @@ export interface DiaryGenerationOptions {
     end: Date;
   };
   customPrompt?: string;  // 自定义写作风格prompt
+  writerStyleId?: string; // 作家风格ID (hemingway, woolf, murakami, anfang, etc.)
 }
 
 /**

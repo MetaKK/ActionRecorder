@@ -31,7 +31,7 @@ import {
   analyzeHistoricalContext,
 } from './analyzer';
 // import { generateDiaryPrompt } from './prompts';
-import { generateMasterDiaryPrompt } from './prompts-master';
+import { generateMasterDiaryPrompt, generateWriterStylePrompt } from './prompts-master';
 import { validateTiptapJSON, countWords } from './tiptap-config';
 import { formatDate } from '@/lib/utils/date';
 import { deepFixTiptapJSON } from './json-fixer';
@@ -88,7 +88,7 @@ export async function generateDiary(
       currentStep: '日记生成',
     });
 
-    const diaryContent = await generateDiaryContent(context, options.style, onProgress);
+    const diaryContent = await generateDiaryContent(context, options, onProgress);
 
     // 5. 构建完整的日记对象
     onProgress?.({
@@ -154,7 +154,7 @@ export async function generateDiary(
  */
 async function generateDiaryContent(
   context: DiaryContext,
-  style: DiaryStyle,
+  options: DiaryGenerationOptions,
   onProgress?: (progress: DiaryGenerationProgress) => void
 ): Promise<DiaryContent> {
   // 获取 API Key
@@ -163,10 +163,11 @@ async function generateDiaryContent(
     throw new Error('未配置 API Key，请在设置中配置');
   }
 
-  // 使用大师级 Prompt（世界级传记作家风格）
-  const prompt = generateMasterDiaryPrompt(context);
+  // 根据作家风格ID生成对应的 Prompt
+  const prompt = generateWriterStylePrompt(context, options.writerStyleId);
   
-  console.log('🎨 Using Master Diary Prompt');
+  const styleName = options.writerStyleId || 'Master';
+  console.log(`🎨 Using ${styleName} Style Prompt`);
   console.log('Prompt length:', prompt.length, 'characters');
 
   // 调用 AI

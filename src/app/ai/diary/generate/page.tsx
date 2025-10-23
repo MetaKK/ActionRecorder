@@ -111,7 +111,8 @@ export default function DiaryGeneratePage() {
         style: DiaryStyle.NARRATIVE,
         includeImages: true,
         includeCitations: true,
-        customPrompt: stylePrompt, // 传入风格prompt
+        writerStyleId: selectedStyleId === 'custom' ? undefined : selectedStyleId, // 传入作家风格ID
+        customPrompt: stylePrompt, // 传入风格prompt（仅用于自定义）
       };
 
       const newDiary = await generateDiary(records, options, setProgress);
@@ -278,7 +279,7 @@ export default function DiaryGeneratePage() {
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
-                  className="text-center mb-8"
+                  className="text-center"
                 >
                   <motion.div
                     animate={{
