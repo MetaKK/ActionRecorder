@@ -36,21 +36,43 @@ import {
 } from 'lucide-react';
 import { WriterStyleCarousel } from '@/components/ai/writer-style-carousel';
 import { CustomStyleCreator } from '@/components/ai/custom-style-creator';
+import { DateRangeSelector } from '@/components/ai/date-range-selector';
 import { getAllWriterStyles } from '@/lib/ai/diary/writer-styles';
 
 type GenerationStep = 'style-select' | 'custom-style' | 'generating' | 'complete';
 
 export default function DiaryGeneratePage() {
   const router = useRouter();
-  const { records } = useRecords();
+  const { records, getRecordsByDateRange } = useRecords();
   const [currentStep, setCurrentStep] = useState<GenerationStep>('style-select');
   const [selectedStyleId, setSelectedStyleId] = useState<string | null>(null);
   const [customPrompt, setCustomPrompt] = useState<string>('');
   const [progress, setProgress] = useState<DiaryGenerationProgress | null>(null);
   const [apiKey, setApiKey] = useState<string>('');
   const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
+  const [dateRange, setDateRange] = useState<'today' | '7days' | '30days'>('today');
   
   const writerStyles = getAllWriterStyles();
+
+  // 获取当前日期范围的记录
+  const getCurrentRangeRecords = () => {
+    switch (dateRange) {
+      case 'today':
+        return records.filter(record => {
+          const today = new Date();
+          const recordDate = new Date(record.createdAt);
+          return recordDate.toDateString() === today.toDateString();
+        });
+      case '7days':
+        return getRecordsByDateRange(7);
+      case '30days':
+        return getRecordsByDateRange(30);
+      default:
+        return records;
+    }
+  };
+
+  const currentRecords = getCurrentRangeRecords();
 
   // 检查 API Key
   useEffect(() => {
@@ -84,8 +106,9 @@ export default function DiaryGeneratePage() {
 
   // 开始生成
   const handleGenerate = async () => {
-    if (records.length === 0) {
-      alert('今天还没有记录，请先添加一些生活片段');
+    if (currentRecords.length === 0) {
+      const rangeText = dateRange === 'today' ? '今天' : dateRange === '7days' ? '最近7天' : '最近30天';
+      alert(`${rangeText}还没有记录，请先添加一些生活片段`);
       return;
     }
 
@@ -115,7 +138,7 @@ export default function DiaryGeneratePage() {
         customPrompt: stylePrompt, // 传入风格prompt（仅用于自定义）
       };
 
-      const newDiary = await generateDiary(records, options, setProgress);
+      const newDiary = await generateDiary(currentRecords, options, setProgress);
 
       if (!newDiary || !newDiary.content || !newDiary.metadata) {
         throw new Error('生成的日记数据无效');
@@ -221,7 +244,7 @@ export default function DiaryGeneratePage() {
           </div>
         </motion.div>
 
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center pb-32">
           <AnimatePresence mode="wait">
             {/* API Key 配置 */}
             {showApiKeyInput && (
@@ -299,7 +322,7 @@ export default function DiaryGeneratePage() {
                   <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                     选择写作风格
                   </h1>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm max-w-xl mx-auto">
+                  <p className="text-gray-600 dark:text-gray-400 text-sm max-w-xl mx-auto m-0">
                     从10位文学大师中选择你喜欢的风格，或创建自定义风格
                   </p>
                 </motion.div>
@@ -344,12 +367,12 @@ export default function DiaryGeneratePage() {
                   />
                 </div>
 
-                {/* 底部操作区 */}
+                {/* 底部操作区 - 固定布局 */}
                 {selectedStyleId && selectedStyleId !== 'custom' && (
                   <motion.div
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="mt-0"
+                    className="fixed bottom-6 left-6 right-6 z-30"
                   >
                     <div className="p-4 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
                       <div className="flex items-center justify-between">
@@ -357,17 +380,18 @@ export default function DiaryGeneratePage() {
                           <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
                             {writerStyles.find(s => s.id === selectedStyleId)?.name}
                           </h3>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">
-                            今日数据：{records.length} 个片段，
-                            {records.reduce((acc, r) => {
-                              const content = r.content as { text?: string };
-                              return acc + (content.text?.length || 0);
-                            }, 0)} 字
-                          </p>
+                          <DateRangeSelector
+                            selectedRange={dateRange}
+                            onRangeChange={setDateRange}
+                            recordCount={currentRecords.length}
+                            wordCount={currentRecords.reduce((acc, r) => {
+                              return acc + (r.content?.length || 0);
+                            }, 0)}
+                          />
                         </div>
                         <Button
                           onClick={handleGenerate}
-                          disabled={records.length === 0}
+                          disabled={currentRecords.length === 0}
                           size="sm"
                           className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg"
                         >
@@ -376,10 +400,12 @@ export default function DiaryGeneratePage() {
                         </Button>
                       </div>
                       
-                      {records.length === 0 && (
+                      {currentRecords.length === 0 && (
                         <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded-lg mt-3">
                           <AlertCircle className="w-4 h-4" />
-                          今天还没有记录，先去添加一些生活片段吧
+                          {dateRange === 'today' ? '今天还没有记录，先去添加一些生活片段吧' :
+                           dateRange === '7days' ? '最近7天还没有记录，先去添加一些生活片段吧' :
+                           '最近30天还没有记录，先去添加一些生活片段吧'}
                         </div>
                       )}
                     </div>

@@ -56,8 +56,8 @@ export async function generateDiary(
     const recordSources = extractRecordSources(records);
     const chatSources = extractChatSources();
     const allSources = mergeSources(recordSources, chatSources);
-    const todaySources = filterTodaySources(allSources);
-    const groupedSources = groupSourcesByType(todaySources);
+    // 不再强制过滤今日数据，使用传入的records（已按日期范围过滤）
+    const groupedSources = groupSourcesByType(allSources);
 
     // 2. 分析数据
     onProgress?.({
