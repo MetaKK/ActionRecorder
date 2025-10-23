@@ -520,25 +520,84 @@ export function RecordInput() {
                 {inputText.length} 字
               </span>
               
-              {/* 语音转文本按钮 */}
+              {/* 语音转文本按钮 - 科技感效果 */}
               <button
                 type="button"
                 className={cn(
-                  "inline-flex items-center justify-center h-11 w-11 md:h-10 md:w-10 rounded-full p-0",
-                  "border border-input bg-muted transition-all duration-150 ease-in-out",
+                  "inline-flex items-center justify-center h-11 w-11 md:h-10 md:w-10 rounded-full p-0 relative overflow-hidden",
+                  "border border-input bg-muted transition-all duration-300 ease-out",
                   "hover:bg-accent hover:border-accent",
                   "text-muted-foreground hover:text-foreground",
-                  isRecording && "border-purple-500/50 bg-purple-500/10 text-purple-600 dark:text-purple-400 animate-pulse"
+                  isRecording && [
+                    "border-purple-500/60 bg-gradient-to-br from-purple-500/20 via-fuchsia-500/15 to-blue-500/20",
+                    "text-purple-600 dark:text-purple-400",
+                    "shadow-lg shadow-purple-500/25",
+                    "ring-2 ring-purple-500/30",
+                    "animate-pulse"
+                  ]
                 )}
                 onClick={toggleRecording}
                 disabled={!isSupported}
                 title={!isSupported ? '浏览器不支持' : isRecording ? '停止语音转文本' : '语音转文本'}
               >
-                {isRecording ? (
-                  <MicOff className="h-5 w-5" />
-                ) : (
-                  <Mic className="h-5 w-5" />
+                {/* 科技感光晕效果 - 仅在录音时显示 */}
+                {isRecording && (
+                  <>
+                    {/* 最外层扩散光晕 - 呼吸效果 */}
+                    <div 
+                      className="absolute -inset-3 rounded-full bg-gradient-to-r from-purple-400/15 via-fuchsia-400/15 to-blue-400/15 tech-glow-layer tech-animation"
+                      style={{
+                        animation: 'tech-breathe 3s ease-in-out infinite',
+                      }}
+                    />
+                    {/* 中层光晕 - 脉冲效果 */}
+                    <div 
+                      className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-500/20 via-fuchsia-500/20 to-blue-500/20 tech-glow-layer tech-animation"
+                      style={{
+                        animation: 'tech-pulse 2s ease-in-out infinite',
+                      }}
+                    />
+                    {/* 内层光晕 - 发光效果 */}
+                    <div 
+                      className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-400/25 via-fuchsia-400/25 to-blue-400/25 tech-glow-layer tech-animation"
+                      style={{
+                        animation: 'tech-glow 1.5s ease-in-out infinite',
+                      }}
+                    />
+                    {/* 中心高亮光点 - 快速脉冲 */}
+                    <div 
+                      className="absolute inset-1 rounded-full bg-gradient-to-r from-purple-300/40 via-fuchsia-300/40 to-blue-300/40 tech-glow-layer tech-animation"
+                      style={{
+                        animation: 'tech-pulse 0.8s ease-in-out infinite',
+                      }}
+                    />
+                    {/* 科技感扫描线效果 */}
+                    <div 
+                      className="absolute inset-0 rounded-full overflow-hidden tech-glow-layer tech-animation"
+                      style={{
+                        background: 'conic-gradient(from 0deg, transparent 0deg, rgba(168, 85, 247, 0.4) 45deg, rgba(236, 72, 153, 0.4) 90deg, transparent 135deg, rgba(59, 130, 246, 0.4) 180deg, transparent 225deg, rgba(168, 85, 247, 0.4) 270deg, transparent 315deg, transparent 360deg)',
+                        animation: 'tech-scan 4s linear infinite',
+                      }}
+                    />
+                    {/* 数据流效果 - 模拟数据传输 */}
+                    <div 
+                      className="absolute inset-0 rounded-full tech-glow-layer tech-animation"
+                      style={{
+                        background: 'radial-gradient(circle at 30% 30%, rgba(168, 85, 247, 0.2) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(236, 72, 153, 0.2) 0%, transparent 50%)',
+                        animation: 'tech-breathe 2.5s ease-in-out infinite reverse',
+                      }}
+                    />
+                  </>
                 )}
+                
+                {/* Icon 容器 - 确保在光晕之上 */}
+                <div className="relative z-10 flex items-center justify-center">
+                  {isRecording ? (
+                    <MicOff className="h-5 w-5 drop-shadow-lg" />
+                  ) : (
+                    <Mic className="h-5 w-5" />
+                  )}
+                </div>
               </button>
         
               {/* 发送按钮 */}

@@ -1,6 +1,72 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* 科技感语音转文本动画 */
+@keyframes tech-glow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes tech-scan {
+  0% {
+    transform: rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes tech-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes tech-breathe {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
+/* 移动端性能优化 */
+@media (prefers-reduced-motion: reduce) {
+  .tech-animation {
+    animation: none !important;
+  }
+}
+
+/* 移动端硬件加速优化 */
+.tech-glow-layer {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+}
+
 /* 3D perspective utilities for carousel */
 .perspective-\[2000px\] {
   perspective: 2000px;
