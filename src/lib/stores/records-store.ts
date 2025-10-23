@@ -85,20 +85,36 @@ export const useRecordsStore = create<RecordsStore>((set, get) => ({
   },
   
   /**
-   * 删除记录
+   * 删除记录（乐观更新）
    */
   deleteRecord: async (id: string) => {
+    const originalRecords = get().records;
+    const recordToDelete = originalRecords.find(r => r.id === id);
+    
+    if (!recordToDelete) {
+      console.warn('Record not found for deletion:', id);
+      return;
+    }
+    
+    // 乐观更新：立即从状态中移除
+    set(state => ({
+      records: state.records.filter(record => record.id !== id),
+    }));
+    
     try {
       const storage = await getStorage();
       await storage.deleteRecord(id);
-      
-      set(state => ({
-        records: state.records.filter(record => record.id !== id),
-      }));
-      
       console.log('✅ Record deleted:', id);
     } catch (error) {
       console.error('❌ Failed to delete record:', error);
+      
+      // 回滚：恢复记录
+      set(state => ({
+        records: [...state.records, recordToDelete].sort(
+          (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+        ),
+      }));
+      
       throw error;
     }
   },

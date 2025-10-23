@@ -358,11 +358,26 @@ Example output:
         ? Math.sqrt(historicalScores.reduce((sum: number, score: number) => sum + Math.pow(score - averageHistoricalScore, 2), 0) / historicalScores.length)
         : 10;
 
+      // 构建对话历史上下文
+      const conversationContext = messages
+        .filter(m => m.role === 'assistant' || m.role === 'user')
+        .slice(-6) // 只保留最近6条消息，避免prompt过长
+        .map(m => `${m.role === 'assistant' ? 'AI' : 'Student'}: ${m.content}`)
+        .join('\n');
+
       const evaluationPrompt = `You are an advanced English teacher with expertise in adaptive assessment. Evaluate the student's response using a sophisticated, dynamic scoring system.
 
-**Context:**
-- Scenario: ${scene.title}
+**SCENARIO CONTEXT:**
+- Title: ${scene.title}
+- Description: ${scene.description}
+- Context: ${scene.context}
 - Goal: ${scene.goal}
+- Difficulty: ${scene.difficulty}
+
+**CONVERSATION HISTORY:**
+${conversationContext}
+
+**CURRENT TURN:**
 - Turn: ${currentTurn + 1}/${MAX_TURNS}
 - Current Score: ${totalScore}/100
 - Historical Average: ${Math.round(averageHistoricalScore)}
@@ -474,6 +489,22 @@ After scoring, evaluate if the conversation should end:
 - "Hey, I'm looking for some fresh apples" → Natural 80, Vocab 80, Relevance 85, Flow 80 = 81 points (BONUS for "Hey")
 - "I wanna get some fresh apples" → Natural 85, Vocab 85, Relevance 85, Flow 85 = 85 points (BONUS for "wanna")
 - "Sure thing! We've got some great organic apples" → Natural 90, Vocab 90, Relevance 90, Flow 90 = 90 points (BONUS for natural response)
+
+**CRITICAL INSTRUCTIONS FOR AI RESPONSE:**
+1. **Stay in Character**: You are the AI teacher playing the role in this scenario. Respond as the character you're supposed to be (shop assistant, waiter, hotel clerk, etc.)
+2. **Use Conversation History**: Reference what was said before. Don't start over with generic greetings.
+3. **Stay on Topic**: Keep responses relevant to the scenario and conversation flow.
+4. **Natural Progression**: Build on the conversation naturally, don't repeat previous questions.
+5. **A2-B1 Level**: Use simple, clear English appropriate for intermediate learners.
+6. **Engaging**: Ask follow-up questions or make suggestions to continue the conversation.
+7. **Contextual**: Your response should make sense given the scenario and what the student just said.
+
+**Response Guidelines:**
+- If student asks a question, answer it directly
+- If student makes a statement, respond appropriately and ask a follow-up
+- If student seems confused, offer help or clarification
+- If conversation is ending naturally, acknowledge and wrap up
+- NEVER use generic greetings like "What can I help you find today?" unless it's the very first interaction
 
 **Conversation Tips:**
 - Keep your response natural and in-character

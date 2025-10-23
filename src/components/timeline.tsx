@@ -14,7 +14,7 @@
 
 'use client';
 
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState, useCallback } from 'react';
 import { Clock, Loader2 } from 'lucide-react';
 import { TimelineItem } from './timeline-item';
 import { DiaryCard } from './diary-card';
@@ -28,7 +28,7 @@ import { Record } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 
 export function Timeline() {
-  const { records } = useRecords();
+  const { records, deleteRecord } = useRecords();
   const router = useRouter();
   const [diaries, setDiaries] = useState<DiaryPreview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -141,21 +141,46 @@ export function Timeline() {
     }
   };
 
-  const handleDeleteAnalysis = async (url: string) => {
+  // 防抖删除函数，避免重复操作
+  const handleDeleteAnalysis = useCallback(async (url: string) => {
     // 从URL中提取分析ID
     const analysisId = url.split('/').pop();
     if (!analysisId) return;
     
+    // 先找到要删除的记录
+    const recordToDelete = records.find(record => {
+      try {
+        const parsedContent = JSON.parse(record.content);
+        return parsedContent.type === 'english_analysis' && 
+               parsedContent.analysisUrl === url;
+      } catch {
+        return false;
+      }
+    });
+    
+    if (!recordToDelete) {
+      console.warn('Analysis record not found for URL:', url);
+      return; // 静默处理，不显示alert
+    }
+    
     try {
-      // 从localStorage中删除缓存
+      // 乐观更新：立即从UI中移除（提升用户体验）
+      console.log('🗑️ Deleting analysis record:', recordToDelete.id);
+      
+      // 1. 从records store中删除记录（这会触发UI更新）
+      await deleteRecord(recordToDelete.id);
+      
+      // 2. 从localStorage中删除缓存
       localStorage.removeItem(`analysis_${analysisId}`);
       console.log('✅ Analysis cache deleted:', analysisId);
-      alert('分析记录已删除');
+      
+      console.log('✅ Analysis record deleted successfully');
     } catch (error) {
       console.error('❌ Failed to delete analysis:', error);
+      // 只在真正失败时显示错误
       alert('删除分析记录失败，请重试');
     }
-  };
+  }, [records, deleteRecord]);
   
   // 空状态
   if (records.length === 0) {
