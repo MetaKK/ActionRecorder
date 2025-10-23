@@ -132,8 +132,11 @@ process.on('SIGINT', () => {
   process.exit(0)
 })
 
-// Start the server
-startServer()
+// Start the server (only in non-Vercel environments)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  startServer()
+}
 
+// Export for Vercel
 export default app
 

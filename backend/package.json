@@ -2,6 +2,7 @@
   "name": "life-recorder-backend",
   "version": "1.0.0",
   "description": "Life Recorder Backend Service",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc && tsc-alias",
@@ -14,7 +15,9 @@
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "lint": "eslint src --ext .ts",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "vercel-build": "npm run prisma:generate && npm run build",
+    "vercel-dev": "npm run dev"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
@@ -57,4 +60,3 @@
     "node": ">=20.0.0"
   }
 }
-
