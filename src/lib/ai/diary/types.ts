@@ -120,6 +120,10 @@ export interface HistoricalContext {
   emotionalTone: string;        // 情绪基调
   recentPatterns: string[];     // 最近的生活模式
   previousDiaries: DiaryPreview[]; // 最近几天的日记预览
+  // 新增：Aha moment相关分析
+  historicalInsights: string[];  // 历史洞察
+  recurringThemes: string[];    // 重复主题
+  growthIndicators: string[];   // 成长指标
 }
 
 /**

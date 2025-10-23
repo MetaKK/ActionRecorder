@@ -12,6 +12,7 @@
 
 import { DiaryContext } from './types';
 import { getWriterStyle } from './writer-styles';
+import { identifyAhaTriggers } from './analyzer';
 
 /**
  * 根据作家风格生成日记 Prompt
@@ -36,10 +37,13 @@ export function generateWriterStylePrompt(
  * 世界级传记作家视角的日记创作 Prompt（通用版本）
  */
 export function generateMasterDiaryPrompt(context: DiaryContext): string {
-  const { date, dayOfWeek, analysis, sources } = context;
+  const { date, dayOfWeek, analysis, sources, historicalContext } = context;
   
   // 选择3-5个最有故事性的片段
   const keyMoments = selectKeyMoments(sources.records);
+  
+  // 识别Aha moment触发点
+  const ahaTriggers = identifyAhaTriggers(sources.records);
   
   return `你是一位获得普利策奖的传记作家，正在为一个真实的人创作私密日记。
 
@@ -49,6 +53,12 @@ export function generateMasterDiaryPrompt(context: DiaryContext): string {
 
 ${formatKeyMoments(keyMoments)}
 ${sources.chats.length > 0 ? formatInnerThoughts(sources.chats) : ''}
+
+## Aha Moment 触发点
+${formatAhaTriggers(ahaTriggers)}
+
+## 历史洞察
+${formatHistoricalInsights(historicalContext)}
 
 ## 创作原则（传记大师的技艺）
 
@@ -264,6 +274,65 @@ ${moments.map((m, i) => {
   }) : '';
   return `${i + 1}. ${time ? `[${time}] ` : ''}${moment.content || ''}`;
 }).join('\n')}`;
+}
+
+/**
+ * 格式化Aha Moment触发点
+ */
+function formatAhaTriggers(triggers: {
+  contradictions: string[];
+  contrasts: string[];
+  turningPoints: string[];
+  emotionalShifts: string[];
+}): string {
+  const sections = [];
+  
+  if (triggers.contradictions.length > 0) {
+    sections.push(`**内心矛盾**：\n${triggers.contradictions.map(c => `• ${c}`).join('\n')}`);
+  }
+  
+  if (triggers.contrasts.length > 0) {
+    sections.push(`**对比时刻**：\n${triggers.contrasts.map(c => `• ${c}`).join('\n')}`);
+  }
+  
+  if (triggers.turningPoints.length > 0) {
+    sections.push(`**转折点**：\n${triggers.turningPoints.map(t => `• ${t}`).join('\n')}`);
+  }
+  
+  if (triggers.emotionalShifts.length > 0) {
+    sections.push(`**情感变化**：\n${triggers.emotionalShifts.map(e => `• ${e}`).join('\n')}`);
+  }
+  
+  if (sections.length === 0) {
+    return '（今日无明显触发点）';
+  }
+  
+  return sections.join('\n\n');
+}
+
+/**
+ * 格式化历史洞察
+ */
+function formatHistoricalInsights(context: any): string {
+  const insights = [];
+  
+  if (context.historicalInsights && context.historicalInsights.length > 0) {
+    insights.push(`**历史模式**：\n${context.historicalInsights.map((h: string) => `• ${h}`).join('\n')}`);
+  }
+  
+  if (context.recurringThemes && context.recurringThemes.length > 0) {
+    insights.push(`**重复主题**：${context.recurringThemes.join('、')}`);
+  }
+  
+  if (context.growthIndicators && context.growthIndicators.length > 0) {
+    insights.push(`**成长迹象**：\n${context.growthIndicators.map((g: string) => `• ${g}`).join('\n')}`);
+  }
+  
+  if (insights.length === 0) {
+    return '（暂无历史洞察）';
+  }
+  
+  return insights.join('\n\n');
 }
 
 /**

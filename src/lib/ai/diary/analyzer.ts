@@ -225,6 +225,90 @@ function extractReflections(sources: DiarySource[]): string[] {
 }
 
 /**
+ * 识别潜在的Aha Moment触发点
+ * 分析记录中的矛盾、对比、转折点
+ */
+export function identifyAhaTriggers(sources: DiarySource[]): {
+  contradictions: string[];
+  contrasts: string[];
+  turningPoints: string[];
+  emotionalShifts: string[];
+} {
+  const contradictions: string[] = [];
+  const contrasts: string[] = [];
+  const turningPoints: string[] = [];
+  const emotionalShifts: string[] = [];
+
+  // 矛盾词汇：表示内心冲突
+  const contradictionWords = ['但是', '然而', '不过', '虽然', '尽管', '可是', '却', '反而'];
+  // 对比词汇：表示前后对比
+  const contrastWords = ['以前', '现在', '突然', '忽然', '终于', '原来', '竟然', '居然'];
+  // 转折词汇：表示重要变化
+  const turningWords = ['决定', '选择', '改变', '放弃', '开始', '结束', '转折', '分水岭'];
+  // 情感变化词汇：表示情绪波动
+  const emotionWords = ['开心', '难过', '愤怒', '平静', '焦虑', '兴奋', '失望', '惊喜'];
+
+  sources.forEach(source => {
+    const content = source.content;
+    
+    // 检测矛盾
+    contradictionWords.forEach(word => {
+      if (content.includes(word)) {
+        const sentences = content.split(/[。！？]/);
+        sentences.forEach(sentence => {
+          if (sentence.includes(word) && sentence.length > 15 && sentence.length < 150) {
+            contradictions.push(sentence.trim());
+          }
+        });
+      }
+    });
+
+    // 检测对比
+    contrastWords.forEach(word => {
+      if (content.includes(word)) {
+        const sentences = content.split(/[。！？]/);
+        sentences.forEach(sentence => {
+          if (sentence.includes(word) && sentence.length > 15 && sentence.length < 150) {
+            contrasts.push(sentence.trim());
+          }
+        });
+      }
+    });
+
+    // 检测转折点
+    turningWords.forEach(word => {
+      if (content.includes(word)) {
+        const sentences = content.split(/[。！？]/);
+        sentences.forEach(sentence => {
+          if (sentence.includes(word) && sentence.length > 15 && sentence.length < 150) {
+            turningPoints.push(sentence.trim());
+          }
+        });
+      }
+    });
+
+    // 检测情感变化
+    emotionWords.forEach(word => {
+      if (content.includes(word)) {
+        const sentences = content.split(/[。！？]/);
+        sentences.forEach(sentence => {
+          if (sentence.includes(word) && sentence.length > 15 && sentence.length < 150) {
+            emotionalShifts.push(sentence.trim());
+          }
+        });
+      }
+    });
+  });
+
+  return {
+    contradictions: Array.from(new Set(contradictions)).slice(0, 3),
+    contrasts: Array.from(new Set(contrasts)).slice(0, 3),
+    turningPoints: Array.from(new Set(turningPoints)).slice(0, 3),
+    emotionalShifts: Array.from(new Set(emotionalShifts)).slice(0, 3),
+  };
+}
+
+/**
  * 提取讨论主题
  */
 function extractTopics(sources: DiarySource[]): string[] {
@@ -315,13 +399,163 @@ export function analyzeHistoricalContext(
     return daysDiff <= 7;
   });
 
+  // 分析更长期的历史模式（30天）
+  const historicalRecords = allRecords.filter(record => {
+    const daysDiff = (Date.now() - record.createdAt.getTime()) / (1000 * 60 * 60 * 24);
+    return daysDiff <= 30;
+  });
+
   return {
     writingStyle: inferWritingStyle(recentRecords),
     interests: extractInterests(recentRecords),
     emotionalTone: inferEmotionalTone(recentRecords),
     recentPatterns: identifyPatterns(recentRecords),
     previousDiaries: previousDiaries?.slice(0, 3) || [],
+    // 新增：历史洞察分析
+    historicalInsights: analyzeHistoricalInsights(historicalRecords),
+    recurringThemes: identifyRecurringThemes(historicalRecords),
+    growthIndicators: detectGrowthIndicators(historicalRecords),
   };
+}
+
+/**
+ * 分析历史洞察
+ * 寻找可以产生Aha moment的历史模式
+ */
+function analyzeHistoricalInsights(records: Record[]): string[] {
+  const insights: string[] = [];
+  
+  // 寻找重复出现的主题或情感
+  const themes = new Map<string, number>();
+  const emotions = new Map<string, number>();
+  
+  records.forEach(record => {
+    const content = record.content.toLowerCase();
+    
+    // 统计主题词频
+    const themeWords = ['工作', '学习', '关系', '健康', '梦想', '家庭', '朋友', '未来'];
+    themeWords.forEach(theme => {
+      if (content.includes(theme)) {
+        themes.set(theme, (themes.get(theme) || 0) + 1);
+      }
+    });
+    
+    // 统计情感词频
+    const emotionWords = ['开心', '难过', '焦虑', '平静', '兴奋', '失望', '满足', '迷茫'];
+    emotionWords.forEach(emotion => {
+      if (content.includes(emotion)) {
+        emotions.set(emotion, (emotions.get(emotion) || 0) + 1);
+      }
+    });
+  });
+  
+  // 生成洞察
+  const topThemes = Array.from(themes.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+  
+  const topEmotions = Array.from(emotions.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+  
+  topThemes.forEach(([theme, count]) => {
+    if (count >= 3) {
+      insights.push(`最近频繁思考${theme}相关的话题`);
+    }
+  });
+  
+  topEmotions.forEach(([emotion, count]) => {
+    if (count >= 3) {
+      insights.push(`最近经常感受到${emotion}的情绪`);
+    }
+  });
+  
+  return insights.slice(0, 3);
+}
+
+/**
+ * 识别重复主题
+ */
+function identifyRecurringThemes(records: Record[]): string[] {
+  const themes: string[] = [];
+  
+  // 分析最近30天的记录，寻找重复出现的主题
+  const recent30Days = records.filter(record => {
+    const daysDiff = (Date.now() - record.createdAt.getTime()) / (1000 * 60 * 60 * 24);
+    return daysDiff <= 30;
+  });
+  
+  // 简单的主题识别（可以后续用NLP优化）
+  const commonThemes = {
+    '工作': ['工作', '上班', '项目', '会议', '同事', '老板'],
+    '学习': ['学习', '读书', '课程', '知识', '技能', '考试'],
+    '关系': ['朋友', '家人', '恋爱', '社交', '沟通', '理解'],
+    '健康': ['运动', '锻炼', '身体', '健康', '饮食', '睡眠'],
+    '成长': ['改变', '进步', '成长', '突破', '挑战', '目标'],
+  };
+  
+  Object.entries(commonThemes).forEach(([theme, keywords]) => {
+    let count = 0;
+    recent30Days.forEach(record => {
+      keywords.forEach(keyword => {
+        if (record.content.includes(keyword)) {
+          count++;
+        }
+      });
+    });
+    
+    if (count >= 5) { // 出现5次以上认为是重复主题
+      themes.push(theme);
+    }
+  });
+  
+  return themes;
+}
+
+/**
+ * 检测成长指标
+ */
+function detectGrowthIndicators(records: Record[]): string[] {
+  const indicators: string[] = [];
+  
+  // 检测积极词汇的增长趋势
+  const positiveWords = ['进步', '成长', '学习', '改变', '突破', '收获', '理解', '明白'];
+  const negativeWords = ['困难', '挫折', '失败', '迷茫', '困惑', '焦虑', '压力'];
+  
+  const recent15Days = records.filter(record => {
+    const daysDiff = (Date.now() - record.createdAt.getTime()) / (1000 * 60 * 60 * 24);
+    return daysDiff <= 15;
+  });
+  
+  const older15Days = records.filter(record => {
+    const daysDiff = (Date.now() - record.createdAt.getTime()) / (1000 * 60 * 60 * 24);
+    return daysDiff > 15 && daysDiff <= 30;
+  });
+  
+  // 比较最近15天和之前15天的积极词汇使用
+  const recentPositive = recent15Days.reduce((count, record) => {
+    return count + positiveWords.filter(word => record.content.includes(word)).length;
+  }, 0);
+  
+  const olderPositive = older15Days.reduce((count, record) => {
+    return count + positiveWords.filter(word => record.content.includes(word)).length;
+  }, 0);
+  
+  if (recentPositive > olderPositive) {
+    indicators.push('最近在积极词汇使用上有所增长');
+  }
+  
+  // 检测反思深度的变化
+  const reflectionWords = ['思考', '反思', '理解', '明白', '意识到', '发现'];
+  const recentReflection = recent15Days.reduce((count, record) => {
+    return count + reflectionWords.filter(word => record.content.includes(word)).length;
+  }, 0);
+  
+  if (recentReflection >= 3) {
+    indicators.push('最近反思和思考的频率较高');
+  }
+  
+  return indicators;
 }
 
 /**
