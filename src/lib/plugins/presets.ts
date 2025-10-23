@@ -215,12 +215,34 @@ export const diaryPlugin: Plugin = {
 };
 
 /**
+ * 英语场景练习插件
+ */
+export const scenePracticePlugin: Plugin = {
+  metadata: {
+    id: "scene-practice",
+    name: "英语场景",
+    description: "基于日常行为的英语场景对话练习",
+    version: "1.0.0",
+    category: PluginCategory.LEARNING,
+    icon: "🎯",
+    color: "from-blue-500 to-indigo-600",
+    enabled: true,
+    weight: 75,
+  },
+  config: {
+    type: PluginType.ROUTE,
+    route: "/ai/scene-practice",
+  },
+};
+
+/**
  * 所有预设插件列表
  */
 export const presetPlugins: Plugin[] = [
   focusPlugin,
   chatPlugin,
   diaryPlugin,
+  scenePracticePlugin,
   analyzePlugin,
   insightPlugin,
   memoryPlugin,
