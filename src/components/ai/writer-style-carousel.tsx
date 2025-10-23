@@ -28,6 +28,14 @@ export function WriterStyleCarousel({
 
   // 性能优化：缓存当前样式
   const currentStyle = useMemo(() => styles[currentIndex], [styles, currentIndex]);
+  
+  // 强制光晕重新渲染的状态
+  const [glowKey, setGlowKey] = useState(0);
+  
+  // 当卡片切换时，强制光晕重新渲染
+  useEffect(() => {
+    setGlowKey(prev => prev + 1);
+  }, [currentIndex]);
 
   const handleNext = useCallback(() => {
     setDirection(1);
@@ -202,23 +210,80 @@ export function WriterStyleCarousel({
                   transformStyle: 'preserve-3d',
                 }}
               >
-                {/* 光晕层 - 使用伪元素模拟，移动端效果更好 */}
+                {/* 光晕层 - 优化移动端渲染，确保每次切换都有光晕效果 */}
                 {normalizedOffset === 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <motion.div 
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ 
+                      duration: 0.4, 
+                      ease: "easeOut",
+                      opacity: { duration: 0.3 },
+                      scale: { duration: 0.4 }
+                    }}
+                    key={`glow-${style.id}-${glowKey}`} // 使用状态强制重新渲染
+                    style={{
+                      // 确保光晕层在移动端正确渲染
+                      WebkitTransform: 'translateZ(0)',
+                      WebkitBackfaceVisibility: 'hidden',
+                      backfaceVisibility: 'hidden',
+                      transformStyle: 'preserve-3d',
+                    }}
+                  >
+                    {/* 主光晕层 */}
                     <div 
                       className="absolute w-full max-w-md h-[450px] sm:h-[550px] rounded-3xl"
                       style={{
-                        background: `radial-gradient(ellipse at center, ${style.color.accent}25 0%, ${style.color.accent}15 30%, transparent 70%)`,
-                        filter: 'blur(40px)',
-                        transform: 'scale(1.15)',
-                        willChange: 'transform',
-                        // 强制硬件加速
-                        WebkitTransform: 'translateZ(0)',
+                        background: `radial-gradient(ellipse at center, ${style.color.accent}30 0%, ${style.color.accent}20 25%, ${style.color.accent}10 50%, transparent 75%)`,
+                        filter: 'blur(35px)',
+                        transform: 'scale(1.2)',
+                        willChange: 'transform, opacity',
+                        // 移动端硬件加速优化
+                        WebkitTransform: 'translateZ(0) scale(1.2)',
                         WebkitBackfaceVisibility: 'hidden',
                         WebkitPerspective: 1000,
+                        WebkitFontSmoothing: 'antialiased',
+                        backfaceVisibility: 'hidden',
+                        transformStyle: 'preserve-3d',
+                        position: 'absolute',
+                        zIndex: 2,
+                        // 强制重新渲染
+                        animation: 'none',
                       }}
                     />
-                  </div>
+                    {/* 外圈光晕层 - 更柔和的效果 */}
+                    <div 
+                      className="absolute w-full max-w-md h-[450px] sm:h-[550px] rounded-3xl"
+                      style={{
+                        background: `radial-gradient(ellipse at center, ${style.color.accent}15 0%, ${style.color.accent}08 30%, transparent 60%)`,
+                        filter: 'blur(50px)',
+                        transform: 'scale(1.4)',
+                        willChange: 'transform, opacity',
+                        WebkitTransform: 'translateZ(0) scale(1.4)',
+                        WebkitBackfaceVisibility: 'hidden',
+                        backfaceVisibility: 'hidden',
+                        position: 'absolute',
+                        zIndex: 1,
+                      }}
+                    />
+                    {/* 内圈光晕层 - 增强中心亮度 */}
+                    <div 
+                      className="absolute w-full max-w-md h-[450px] sm:h-[550px] rounded-3xl"
+                      style={{
+                        background: `radial-gradient(ellipse at center, ${style.color.accent}40 0%, ${style.color.accent}25 15%, transparent 40%)`,
+                        filter: 'blur(20px)',
+                        transform: 'scale(1.05)',
+                        willChange: 'transform, opacity',
+                        WebkitTransform: 'translateZ(0) scale(1.05)',
+                        WebkitBackfaceVisibility: 'hidden',
+                        backfaceVisibility: 'hidden',
+                        position: 'absolute',
+                        zIndex: 3,
+                      }}
+                    />
+                  </motion.div>
                 )}
                 
                 <div
