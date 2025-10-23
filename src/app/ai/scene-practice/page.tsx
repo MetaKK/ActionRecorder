@@ -12,10 +12,10 @@ import { motion, AnimatePresence } from "framer-motion";
 
 // 评分维度
 interface ScoreDimensions {
-  grammar: number;        // 语法 (25%)
-  vocabulary: number;     // 词汇 (25%)
-  relevance: number;      // 相关性 (25%)
-  fluency: number;        // 流畅度 (25%)
+  communication: number;  // 交际效果 (30%)
+  accuracy: number;      // 语言准确性 (25%)
+  scenario: number;      // 场景掌握 (25%)
+  fluency: number;       // 对话流畅度 (20%)
 }
 
 // 对话消息
@@ -84,6 +84,7 @@ export default function ScenePracticePage() {
   const [currentTurn, setCurrentTurn] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
   const [scoreChange, setScoreChange] = useState<number | null>(null); // 用于显示分数变化动画
+  const [turnScores, setTurnScores] = useState<number[]>([]); // 存储每轮的分数
   const [isGeneratingScene, setIsGeneratingScene] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -95,6 +96,28 @@ export default function ScenePracticePage() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // 动态评分调整函数 - 针对口语练习优化
+  const calculateScoreAdjustment = (currentScore: number, historicalAverage: number, variance: number): number => {
+    const scoreDiff = currentScore - historicalAverage;
+    
+    // 口语练习更宽松的调整策略
+    if (historicalAverage >= 75) {
+      return Math.min(0, scoreDiff * 0.05); // 轻微调整，避免过于严格
+    }
+    
+    // 低水平用户给予更多鼓励
+    if (historicalAverage <= 50) {
+      return Math.max(0, scoreDiff * 0.15); // 更多鼓励
+    }
+    
+    // 中等水平用户保持稳定
+    if (Math.abs(scoreDiff) > 25) {
+      return scoreDiff * 0.08; // 更温和的调整
+    }
+    
+    return 0; // 无需调整
+  };
   
   // 添加调试日志
   console.log('[Scene Practice] Render state:', {
@@ -324,86 +347,133 @@ Example output:
         content: m.content
       }));
 
-      const evaluationPrompt = `You are a strict but fair English teacher evaluating a student in a conversation practice scenario.
+
+      // 计算历史评分数据用于动态调整
+      const historicalScores = turnScores.filter((score: number) => score > 0);
+      const averageHistoricalScore = historicalScores.length > 0 
+        ? historicalScores.reduce((sum: number, score: number) => sum + score, 0) / historicalScores.length 
+        : 50;
+      
+      const scoreVariance = historicalScores.length > 1 
+        ? Math.sqrt(historicalScores.reduce((sum: number, score: number) => sum + Math.pow(score - averageHistoricalScore, 2), 0) / historicalScores.length)
+        : 10;
+
+      const evaluationPrompt = `You are an advanced English teacher with expertise in adaptive assessment. Evaluate the student's response using a sophisticated, dynamic scoring system.
 
 **Context:**
 - Scenario: ${scene.title}
 - Goal: ${scene.goal}
 - Turn: ${currentTurn + 1}/${MAX_TURNS}
 - Current Score: ${totalScore}/100
+- Historical Average: ${Math.round(averageHistoricalScore)}
+- Score Variance: ${Math.round(scoreVariance)}
 
 **Student's Response:** "${userMessage.content}"
 **Word Count:** ${userMessage.content.trim().split(/\s+/).length} words
 
-**IMPORTANT: Be STRICT in your evaluation. This is a learning exercise, not just casual chat.**
+**COMPREHENSIVE EVALUATION CRITERIA (0-100 each):**
 
-**Evaluation Criteria (0-100 each):**
+**Communication Effectiveness (30%):**
+- Excellent (85-100): Natural, engaging, culturally appropriate, shows personality
+- Good (70-84): Clear communication, mostly natural, contextually appropriate
+- Fair (55-69): Understandable, some awkwardness but functional
+- Basic (40-54): Basic communication, limited naturalness
+- Needs work (0-39): Difficult to understand or inappropriate
 
-**Grammar (25%):**
-- Perfect (90-100): No errors, complex structures (e.g., relative clauses, conditionals, perfect tenses)
-- Good (75-89): 1-2 minor errors, uses compound sentences
-- Adequate (60-74): 3-4 errors but meaning clear, mostly simple sentences
-- Needs work (0-59): 5+ errors or major grammar mistakes
+**Language Accuracy (25%):**
+- Excellent (85-100): Accurate grammar, rich vocabulary, proper pronunciation patterns
+- Good (70-84): Mostly accurate, good vocabulary range, minor errors
+- Fair (55-69): Some errors but meaning clear, basic vocabulary
+- Basic (40-54): Several errors but understandable
+- Needs work (0-39): Many errors affecting comprehension
 
-**Vocabulary (25%):**
-- Excellent (90-100): Rich, varied, 8+ different meaningful words, contextually perfect
-- Good (75-89): Appropriate, 5-7 varied words, some descriptive language
-- Basic (60-74): Simple but correct, 3-4 basic words, repetitive
-- Limited (0-59): Very limited (< 3 words) or inappropriate choices
+**Scenario Mastery (25%):**
+- Excellent (85-100): Perfectly fits context, shows deep understanding, cultural awareness
+- Good (70-84): Appropriate for situation, shows good context awareness
+- Fair (55-69): Mostly relevant, some context issues
+- Basic (40-54): Somewhat appropriate but lacks depth
+- Needs work (0-39): Off-topic or inappropriate
 
-**Relevance (25%):**
-- Excellent (90-100): Perfectly addresses situation, advances conversation meaningfully
-- Good (75-89): Addresses situation, provides useful information
-- Partial (60-74): Somewhat relevant but lacks detail or completion
-- Off-topic (0-59): Doesn't properly address the scenario or too vague
+**Conversational Fluency (20%):**
+- Excellent (85-100): Natural rhythm, good timing, engaging interaction
+- Good (70-84): Smooth flow, appropriate pacing
+- Fair (55-69): Clear but may have timing issues
+- Basic (40-54): Understandable but lacks natural flow
+- Needs work (0-39): Disrupted flow, hard to follow
 
-**Fluency (25%):**
-- Excellent (90-100): Natural, confident, complete thoughts, 15+ words, well-connected
-- Good (75-89): Clear expression, complete sentence, 10-14 words
-- Basic (60-74): Understandable but choppy, 5-9 words, incomplete idea
-- Weak (0-59): Very short (≤ 4 words) or difficult to follow
+**BALANCED SCORING RULES:**
+1. **Communication First:** Prioritize effective communication over perfect grammar
+   - Natural contractions (wanna, gonna, don't, can't): +4-6 points BONUS
+   - Informal expressions (yeah, sure, cool, awesome): +2-4 points BONUS
+   - Phrasal verbs (pick up, hang out, check out): +3-5 points BONUS
+   - Idioms and cultural expressions: +4-8 points BONUS
 
-**STRICT RULES (MUST FOLLOW):**
-1. **Word count matters:**
-   - ≤ 4 words: Max total 50 points (too short, incomplete)
-   - 5-6 words: Max 65 points (minimal effort)
-   - 7-9 words: Max 75 points (acceptable)
-   - 10-14 words: Max 85 points (good)
-   - 15+ words: Can reach 90-100 (excellent)
+2. **Balanced Expectations:**
+   - Reward both accuracy and naturalness
+   - Encourage authentic communication patterns
+   - Value cultural appropriateness
 
-2. **Chinese text:** -10 points from total
+3. **Flexible Word Count Guidelines:**
+   - 1-3 words: 40-60 points (appropriate for quick responses)
+   - 4-6 words: 50-75 points (good conversational length)
+   - 7-12 words: 60-85 points (excellent detail)
+   - 13+ words: 70-95 points (comprehensive responses)
 
-3. **Missing key elements:**
-   - No verb: -15 points
-   - Just "yes/no": Max 40 points
-   - One-word answer: Max 30 points
+4. **Comprehensive Bonuses:**
+   - Natural contractions: +4-6 points
+   - Informal expressions: +2-4 points
+   - Phrasal verbs: +3-5 points
+   - Idioms/slang: +4-8 points
+   - Cultural awareness: +3-5 points
+   - Personality/humor: +2-4 points
+   - Advanced vocabulary: +2-4 points
+   - Complex grammar: +2-3 points
 
-4. **Early turns (1-3):** Be extra strict - students need to warm up
+5. **Balanced Penalties:**
+   - Minor grammar errors: -2-4 points
+   - Simple vocabulary: -1-3 points
+   - Slightly off-topic: -3-6 points
+   - Major grammar errors: -5-8 points
 
-5. **Quality over politeness:** 
-   - "Please" alone doesn't make it good
-   - Need complete, natural sentences
-   - Should show real language use
+6. **Learning Encouragement:**
+   - First attempts at new expressions: +2-4 points
+   - Risk-taking with language: +3-5 points
+   - Showing personality: +2-3 points
+   - Cultural references: +2-4 points
 
-**Examples of scoring:**
-- "I need apples" (3 words): Grammar 60, Vocab 50, Relevance 65, Fluency 45 → Avg 55
-- "I need some apples please" (5 words): Grammar 70, Vocab 60, Relevance 70, Fluency 55 → Avg 64
-- "I'm looking for fresh apples" (5 words): Grammar 75, Vocab 70, Relevance 75, Fluency 60 → Avg 70
-- "Could you help me find some fresh apples?" (8 words): Grammar 85, Vocab 80, Relevance 85, Fluency 75 → Avg 81
-- "I'm looking for fresh apples. Do you have any organic ones?" (12 words): Grammar 90, Vocab 85, Relevance 90, Fluency 85 → Avg 88
+**CONVERSATION END ASSESSMENT:**
+After scoring, evaluate if the conversation should end:
+- Goal achieved: Student has successfully completed the scenario objective
+- Natural conclusion: Conversation has reached a logical endpoint
+- Repetitive content: Student is repeating similar responses
+- Low engagement: Student responses are becoming shorter/less detailed
+- Time limit: Approaching maximum turns without significant progress
 
 **Response Format (ONLY JSON, no markdown):**
 {
   "scores": {
-    "grammar": 75,
-    "vocabulary": 80,
-    "relevance": 90,
+    "communication": 85,
+    "accuracy": 80,
+    "scenario": 90,
     "fluency": 85
   },
-  "feedback": "Great use of polite expressions!",
+  "feedback": "Great use of natural expressions!",
   "response": "Sure! The tomatoes are $2.99 per pound. Would you like anything else?",
-  "hasChinese": false
+  "hasChinese": false,
+  "shouldEnd": false,
+  "endReason": "none",
+  "confidence": "high",
+  "nextTurnExpectation": "What to expect in next turn"
 }
+
+**Scoring Examples for Natural Speech:**
+- "I need apples" → Natural 60, Vocab 50, Relevance 70, Flow 55 = 59 points
+- "I need some apples please" → Natural 65, Vocab 60, Relevance 75, Flow 60 = 65 points  
+- "I'm looking for fresh apples" → Natural 70, Vocab 70, Relevance 80, Flow 65 = 71 points
+- "Could you help me find some fresh apples?" → Natural 75, Vocab 75, Relevance 85, Flow 75 = 78 points
+- "Hey, I'm looking for some fresh apples" → Natural 80, Vocab 80, Relevance 85, Flow 80 = 81 points (BONUS for "Hey")
+- "I wanna get some fresh apples" → Natural 85, Vocab 85, Relevance 85, Flow 85 = 85 points (BONUS for "wanna")
+- "Sure thing! We've got some great organic apples" → Natural 90, Vocab 90, Relevance 90, Flow 90 = 90 points (BONUS for natural response)
 
 **Conversation Tips:**
 - Keep your response natural and in-character
@@ -480,14 +550,26 @@ Example output:
         typeNextChar();
       });
 
-      // 计算分数
+      // 智能评分处理 - 使用综合评分维度
       const scores: ScoreDimensions = evaluation.scores;
-      const turnScore = (scores.grammar + scores.vocabulary + scores.relevance + scores.fluency) / 4;
+      let turnScore = (scores.communication + scores.accuracy + scores.scenario + scores.fluency) / 4;
       
-      // 如果有中文，扣10分
+      // 动态评分调整 - 基于历史表现
+      const scoreAdjustment = calculateScoreAdjustment(turnScore, averageHistoricalScore, scoreVariance);
+      turnScore = Math.max(0, Math.min(100, turnScore + scoreAdjustment));
+      
+      // 应用惩罚和奖励
       let finalTurnScore = turnScore;
       if (evaluation.hasChinese) {
-        finalTurnScore = Math.max(0, turnScore - 10);
+        finalTurnScore = Math.max(0, turnScore - 15);
+      }
+
+      // 口语练习的分数变化控制 - 更宽松
+      const maxScoreChange = Math.max(8, Math.min(20, scoreVariance * 2.5)); // 增加变化范围
+      const previousScore = turnScores[currentTurn] || averageHistoricalScore;
+      const scoreChange = finalTurnScore - previousScore;
+      if (Math.abs(scoreChange) > maxScoreChange) {
+        finalTurnScore = previousScore + (scoreChange > 0 ? maxScoreChange : -maxScoreChange);
       }
 
       // 更新总分（累加平均）
@@ -497,8 +579,24 @@ Example output:
       // 显示分数变化动画
       setScoreChange(scoreDiff);
       setTimeout(() => setScoreChange(null), 2000); // 2秒后消失
+
+      // 检查是否应该结束对话 - 口语练习更宽松的结束条件
+      const shouldEndConversation = evaluation.shouldEnd || 
+        (currentTurn >= 6 && evaluation.endReason && evaluation.endReason !== 'none') ||
+        (currentTurn >= 9 && newTotalScore < 50); // 9轮后分数仍低于50分
+
+      if (shouldEndConversation) {
+        // 提前结束对话
+        setTimeout(() => {
+          setCurrentTurn(MAX_TURNS);
+          setIsFinished(true);
+        }, 2000);
+      }
       
       setTotalScore(newTotalScore);
+
+      // 更新turnScores数组
+      setTurnScores(prev => [...prev, finalTurnScore]);
 
       // 更新用户消息添加评分
       setMessages(prev => prev.map(m => 

@@ -82,6 +82,19 @@ interface AmericanExpression {
   level: 'beginner' | 'intermediate' | 'advanced';
 }
 
+interface ScenarioVocabulary {
+  category: string;
+  words: string[];
+  expressions: string[];
+  usage: string;
+}
+
+interface CulturalNote {
+  aspect: string;
+  description: string;
+  importance: 'high' | 'medium' | 'low';
+}
+
 interface LearningAdvice {
   category: string;
   priority: 'high' | 'medium' | 'low';
@@ -114,6 +127,8 @@ interface DetailedAnalysis {
   grammarErrors: GrammarError[];
   vocabularyIssues: VocabularyIssue[];
   americanExpressions: AmericanExpression[];
+  scenarioVocabulary: ScenarioVocabulary[];
+  culturalNotes: CulturalNote[];
   sentenceAnalysis: SentenceAnalysis[];
   performanceMetrics: PerformanceMetrics;
   overallCharacteristics: string;
@@ -286,6 +301,12 @@ ${userMessages.join('\n')}
 - 完成轮次：${sessionData.currentTurn}
 - 测试结果：${sessionData.passedTest ? '通过' : '未通过'}
 
+**特别要求：**
+1. 针对"${sessionData.scene.title}"场景提供相关的高频词汇和表达
+2. 提供该场景下的常用美式表达、俚语和习语
+3. 建议该场景下的文化注意事项和社交礼仪
+4. 推荐该场景下的进阶表达方式和专业术语
+
 请提供全面、详细的分析，使用以下JSON格式：
 
 {
@@ -334,12 +355,27 @@ ${userMessages.join('\n')}
       "level": "beginner|intermediate|advanced"
     }
   ],
+  "scenarioVocabulary": [
+    {
+      "category": "词汇分类（如：购物、餐厅、旅行等）",
+      "words": ["相关词汇1", "相关词汇2", "相关词汇3"],
+      "expressions": ["相关表达1", "相关表达2"],
+      "usage": "使用说明和例句"
+    }
+  ],
+  "culturalNotes": [
+    {
+      "aspect": "文化方面（如：社交礼仪、商务文化等）",
+      "description": "具体说明",
+      "importance": "high|medium|low"
+    }
+  ],
   "overallCharacteristics": "2-3句话分析学生的整体表现",
   "strengths": ["优势1", "优势2", "优势3"],
   "weaknesses": ["劣势1", "劣势2", "劣势3"],
   "learningAdvice": [
     {
-      "category": "Grammar|Vocabulary|Fluency|Cultural",
+      "category": "Grammar|Vocabulary|Fluency|Cultural|Scenario",
       "priority": "high|medium|low",
       "advice": "具体建议",
       "actionItems": ["行动1", "行动2", "行动3"]
@@ -1180,6 +1216,126 @@ ${userMessages.join('\n')}
                         }`}>
                           {expr.level === 'beginner' ? '初级' : expr.level === 'intermediate' ? '中级' : '高级'}
                         </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Scenario Vocabulary */}
+            {analysis.scenarioVocabulary && analysis.scenarioVocabulary.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-6"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <BookOpen className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                    场景高频词汇
+                  </h3>
+                </div>
+                
+                <div className="space-y-4">
+                  {analysis.scenarioVocabulary.map((vocab, idx) => (
+                    <div key={idx} className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200/50 dark:border-purple-700/50">
+                      <h4 className="text-sm font-bold text-purple-800 dark:text-purple-300 mb-3 uppercase tracking-wide">
+                        {vocab.category}
+                      </h4>
+                      
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <h5 className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">核心词汇</h5>
+                          <div className="flex flex-wrap gap-2">
+                            {vocab.words.map((word, wordIdx) => (
+                              <span key={wordIdx} className="px-2 py-1 bg-purple-100 dark:bg-purple-800/30 text-purple-800 dark:text-purple-300 rounded-md text-sm font-medium">
+                                {word}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h5 className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">常用表达</h5>
+                          <div className="flex flex-wrap gap-2">
+                            {vocab.expressions.map((expr, exprIdx) => (
+                              <span key={exprIdx} className="px-2 py-1 bg-pink-100 dark:bg-pink-800/30 text-pink-800 dark:text-pink-300 rounded-md text-sm font-medium">
+                                {expr}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {vocab.usage && (
+                        <div className="mt-3 p-3 bg-white/60 dark:bg-gray-800/60 rounded-lg">
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            <span className="font-medium">使用说明：</span>{vocab.usage}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Cultural Notes */}
+            {analysis.culturalNotes && analysis.culturalNotes.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.55 }}
+                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-6"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                    <Lightbulb className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                    文化注意事项
+                  </h3>
+                </div>
+                
+                <div className="space-y-3">
+                  {analysis.culturalNotes.map((note, idx) => (
+                    <div key={idx} className={`p-4 rounded-xl border ${
+                      note.importance === 'high'
+                        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                        : note.importance === 'medium'
+                        ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+                        : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
+                    }`}>
+                      <div className="flex items-start gap-3">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          note.importance === 'high'
+                            ? 'bg-red-100 dark:bg-red-800/30'
+                            : note.importance === 'medium'
+                            ? 'bg-yellow-100 dark:bg-yellow-800/30'
+                            : 'bg-gray-100 dark:bg-gray-600'
+                        }`}>
+                          <span className={`text-xs font-bold ${
+                            note.importance === 'high'
+                              ? 'text-red-600 dark:text-red-400'
+                              : note.importance === 'medium'
+                              ? 'text-yellow-600 dark:text-yellow-400'
+                              : 'text-gray-600 dark:text-gray-400'
+                          }`}>
+                            {note.importance === 'high' ? '!' : note.importance === 'medium' ? '•' : '○'}
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-1">
+                            {note.aspect}
+                          </h4>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            {note.description}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   ))}
