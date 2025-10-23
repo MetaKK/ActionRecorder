@@ -322,9 +322,6 @@ export default function DiaryGeneratePage() {
                   <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                     选择写作风格
                   </h1>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm max-w-xl mx-auto m-0">
-                    从10位文学大师中选择你喜欢的风格，或创建自定义风格
-                  </p>
                 </motion.div>
 
                 {/* 3D卡片轮播 - 包含自定义风格卡片 */}

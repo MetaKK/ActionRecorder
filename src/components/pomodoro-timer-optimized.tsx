@@ -294,7 +294,7 @@ export function PomodoroTimerOptimized() {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={SPRING_CONFIG}
-          className="absolute bottom-6 left-6 z-50"
+          className="fixed bottom-6 left-6 z-50"
         >
           <div className="flex items-center gap-2 p-1.5 
             bg-white/90 dark:bg-gray-800/90 backdrop-blur-2xl 
