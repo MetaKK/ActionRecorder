@@ -41,37 +41,100 @@ const MAX_TURNS = 10;
 const PASS_SCORE = 80;
 const MIN_TURNS = 5; // 至少要对话5轮才能通过
 
-// 根据场景生成自然的开场白
-function getSceneGreeting(scene: SceneInfo): string {
-  const greetings = {
-    shop: "Hello! Welcome! What can I help you find today?",
-    restaurant: "Good evening! Welcome to our restaurant. Have you made a reservation?",
-    coffee: "Hi there! What can I get started for you today?",
-    hotel: "Good afternoon! Welcome to our hotel. How may I assist you?",
-    airport: "Hello! Where are you traveling to today?",
-    doctor: "Hello, please come in. What brings you here today?",
-    bank: "Good morning! How can I help you today?",
-    default: "Hello! How can I help you today?"
-  };
-  
-  const context = scene.context.toLowerCase();
-  if (context.includes('store') || context.includes('shop') || context.includes('market')) {
-    return greetings.shop;
-  } else if (context.includes('restaurant') || context.includes('café') || context.includes('cafe')) {
-    return greetings.restaurant;
-  } else if (context.includes('coffee') || context.includes('starbucks')) {
-    return greetings.coffee;
-  } else if (context.includes('hotel')) {
-    return greetings.hotel;
-  } else if (context.includes('airport')) {
-    return greetings.airport;
-  } else if (context.includes('doctor') || context.includes('hospital') || context.includes('clinic')) {
-    return greetings.doctor;
-  } else if (context.includes('bank')) {
-    return greetings.bank;
+// 使用AI生成动态开场白
+async function generateDynamicGreeting(scene: SceneInfo, apiKey: string): Promise<Message> {
+  const greetingPrompt = `You are an AI teacher creating a natural, engaging opening line for an English conversation practice scenario.
+
+**Scenario Details:**
+- Title: ${scene.title}
+- Description: ${scene.description}
+- Context: ${scene.context}
+- Goal: ${scene.goal}
+- Difficulty: ${scene.difficulty}
+
+**Requirements:**
+1. Create a natural, realistic opening line that a real person would say in this scenario
+2. Make it engaging and appropriate for A2-B1 level English learners
+3. Keep it conversational and natural, not formal or robotic
+4. The opening should invite the student to respond and continue the conversation
+5. Use simple, clear English appropriate for intermediate learners
+6. Make it feel authentic to the specific scenario context
+
+**Examples of good openings:**
+- For a coffee shop: "Hi there! What can I get started for you today?"
+- For a hotel: "Good afternoon! Welcome to our hotel. How may I assist you?"
+- For a restaurant: "Good evening! Welcome to our restaurant. Have you made a reservation?"
+- For a store: "Hello! Welcome! What can I help you find today?"
+
+**Important:** 
+- Only return the opening line, nothing else
+- Make it sound natural and conversational
+- Keep it under 20 words
+- Don't include any instructions or explanations
+
+Generate a natural opening line for this scenario:`;
+
+  try {
+    const response = await fetch('/ai/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(apiKey && { 'X-API-Key': apiKey }),
+      },
+      body: JSON.stringify({
+        messages: [
+          {
+            role: 'user',
+            content: greetingPrompt
+          }
+        ],
+        model: 'gpt-4o-mini',
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to generate greeting');
+    }
+
+    const reader = response.body?.getReader();
+    let fullText = "";
+
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        processSSEStream(
+          value,
+          (content: string) => {
+            fullText += content;
+          },
+          () => {}
+        );
+      }
+    }
+
+    // 清理响应文本
+    let cleanText = fullText.trim();
+    cleanText = cleanText.replace(/^```\s*/g, '').replace(/\s*```$/g, '');
+    cleanText = cleanText.replace(/^["']|["']$/g, ''); // 移除可能的引号
+
+    return {
+      id: (Date.now() + 1).toString(),
+      role: "assistant",
+      content: cleanText,
+      timestamp: new Date(),
+    };
+  } catch (error) {
+    console.error('Failed to generate dynamic greeting:', error);
+    // 降级到简单的默认开场白
+    return {
+      id: (Date.now() + 1).toString(),
+      role: "assistant",
+      content: "Hello! How can I help you today?",
+      timestamp: new Date(),
+    };
   }
-  
-  return greetings.default;
 }
 
 export default function ScenePracticePage() {
@@ -272,13 +335,8 @@ Example output:
         timestamp: new Date(),
       };
       
-      // AI 的第一句对话（模拟场景开场）
-      const aiGreeting: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: getSceneGreeting(sceneData),
-        timestamp: new Date(),
-      };
+      // 使用AI生成动态开场白
+      const aiGreeting = await generateDynamicGreeting(sceneData, apiKey);
 
       // 🔥 关键：先设置完所有数据，再修改 isGeneratingScene
       console.log('[Scene Practice] Setting scene and messages...');
